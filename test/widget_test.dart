@@ -1,30 +1,67 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:liqaa_app/core/widgets/primary_button.dart';
+import 'package:liqaa_app/core/widgets/secondary_button.dart';
+import 'package:liqaa_app/core/widgets/yasser_avatar.dart';
 
-import 'package:liqaa_app/main.dart';
+Widget _buildTestApp(Widget child) {
+  return ScreenUtilInit(
+    designSize: const Size(390, 844),
+    builder: (context, _) => MaterialApp(
+      home: Scaffold(body: child),
+    ),
+  );
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Core Reusable Widgets Tests', () {
+    testWidgets('PrimaryButton renders label and triggers callback', (tester) async {
+      var pressed = false;
+      await tester.pumpWidget(
+        _buildTestApp(
+          PrimaryButton(
+            label: 'يلا نبدأ',
+            onPressed: () => pressed = true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(find.text('يلا نبدأ'), findsOneWidget);
+      await tester.tap(find.text('يلا نبدأ'));
+      expect(pressed, true);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets('SecondaryButton renders label and triggers callback', (tester) async {
+      var pressed = false;
+      await tester.pumpWidget(
+        _buildTestApp(
+          SecondaryButton(
+            label: 'السابق',
+            onPressed: () => pressed = true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      expect(find.text('السابق'), findsOneWidget);
+      await tester.tap(find.text('السابق'));
+      expect(pressed, true);
+    });
+
+    testWidgets('YasserAvatar instantiates cleanly for all character poses', (tester) async {
+      for (final pose in YasserPose.values) {
+        await tester.pumpWidget(
+          _buildTestApp(
+            YasserAvatar(
+              pose: pose,
+              animateBreathing: false,
+            ),
+          ),
+        );
+        expect(find.byType(YasserAvatar), findsOneWidget);
+      }
+    });
   });
 }
