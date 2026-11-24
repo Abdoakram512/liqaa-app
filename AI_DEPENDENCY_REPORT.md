@@ -13,7 +13,7 @@ This document reports all runtime dependencies, platform integrations, binary pa
 | `record` | `^6.2.1` | Cross-platform, low-latency audio recording with direct PCM/WAV 16kHz stream extraction. | Android, iOS, Windows, macOS, Linux, Web | ~250 KB |
 | `sherpa_onnx` | `^2.0.3` | Native ONNX runtime wrapper for streaming Zipformer, Conformer, CTC decoders, and Silero VAD. | Android (ARM64, ARMv7, x86_64), iOS (ARM64), Windows, macOS, Linux | Native libs bundled per ABI |
 | `audioplayers` | `^6.7.1` | Low-latency audio playback for child pronunciation verification and celebratory sound effects. | Android, iOS, Windows, macOS, Linux, Web | ~400 KB |
-| `permission_handler` | `^13.0.2` | Runtime permission orchestration for Android `RECORD_AUDIO` and iOS `NSMicrophoneUsageDescription`. | Android, iOS, Windows | ~180 KB |
+| `permission_handler` | `12.0.3` (with `permission_handler_android: 13.0.1`) | Runtime permission orchestration for Android `RECORD_AUDIO` and iOS `NSMicrophoneUsageDescription`. Pinned to prevent Gradle Kotlin DSL receiver type mismatch in AGP multi-project builds. | Android, iOS, Windows | ~180 KB |
 | `path_provider` | `^2.1.6` | Filesystem resolution for locating local cached AI models, dictionary manifests, and WAV buffers. | Android, iOS, Windows, macOS, Linux | ~120 KB |
 | `share_plus` | `^12.0.2` | Diagnostic export of AI benchmark and test results in JSON/CSV formats from Yasser AI Lab. | Android, iOS, Windows, macOS, Linux, Web | ~210 KB |
 

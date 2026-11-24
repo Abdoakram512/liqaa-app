@@ -194,6 +194,7 @@ class AiLabCubit extends Cubit<AiLabState> {
     };
 
     final jsonString = const JsonEncoder.withIndent('  ').convert(report);
+    // ignore: deprecated_member_use
     await Share.share(
       jsonString,
       subject: 'LIQAA AI Lab Diagnostic Report (${DateTime.now().toLocal()})',

@@ -97,7 +97,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                             Text(
                               'تجربة الطفل التفاعلية مع تصحيح النطق الصوتي',
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -219,7 +219,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.12),
+                  color: Colors.green.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

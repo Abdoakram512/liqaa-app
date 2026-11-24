@@ -49,7 +49,7 @@ class PhonemeRecognitionView extends StatelessWidget {
                     ),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<VocabularyWord>(
-                      value: word,
+                      initialValue: word,
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

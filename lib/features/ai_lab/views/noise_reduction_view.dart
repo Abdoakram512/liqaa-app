@@ -75,7 +75,7 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                     ),
                     Switch.adaptive(
                       value: state.noiseReductionEnabled,
-                      activeColor: AppColors.primary,
+                      activeTrackColor: AppColors.primary,
                       onChanged: (val) {
                         context.read<AiLabCubit>().toggleNoiseReduction(val);
                       },
