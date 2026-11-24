@@ -1,0 +1,40 @@
+{
+  "app_name": "LIQAA",
+  "app_tagline": "Phonological & Phonemic Awareness Platform",
+  "splash_welcome": "Welcome to the World of Sounds!",
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "back": "Back",
+    "start": "Let's Begin",
+    "step_of": "Step {current} of {total}",
+    "screen_1": {
+      "badge": "Your Cheerful Companion",
+      "title": "Hello! I'm Yasser, Your Guide",
+      "subtitle": "An engaging journey to explore sounds and letters step by step with warmth and fun."
+    },
+    "screen_2": {
+      "badge": "16 Phonological Skills",
+      "title": "Interactive Play & Sound Cards",
+      "subtitle": "We transformed 103 paper cards into delightful interactive sound games without any stress."
+    },
+    "screen_3": {
+      "badge": "Hero's Launchpad",
+      "title": "Ready to Begin the Adventure?",
+      "subtitle": "Every session is a celebration of growth and discovery. Step in and unlock your phonetic superpowers!"
+    }
+  },
+  "auth": {
+    "title": "Authentication Gateway",
+    "subtitle": "Welcome back to LIQAA!",
+    "notice": "Full specialist and child authentication will be activated in the next phase.",
+    "role_specialist": "Specialist Portal",
+    "role_child": "Young Hero Portal",
+    "restart_onboarding": "Replay Yasser's Tour"
+  },
+  "errors": {
+    "general": "An unexpected error occurred. Please try again.",
+    "network": "Network connection error. Please check your internet connection.",
+    "storage": "Failed to access local storage."
+  }
+}
