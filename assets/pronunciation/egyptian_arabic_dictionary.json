@@ -1,0 +1,1002 @@
+{
+  "version": "1.0.0",
+  "dialect": "Egyptian Arabic (اللهجة المصرية)",
+  "description": "Comprehensive developmental pronunciation dictionary for Egyptian Arabic children with articulation disorder diagnosis rules",
+  "total_words": 28,
+  "words": [
+    {
+      "id": "word_kora",
+      "word_arabic": "كورة",
+      "word_transliteration": "Koora",
+      "meaning_en": "Ball",
+      "target_phoneme": "ك",
+      "target_phoneme_ipa": "k",
+      "phoneme_category": "صوت طبقي انفجاري (Velar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "k",
+        "uː",
+        "r",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ك",
+        "و",
+        "ر",
+        "ة"
+      ],
+      "yasser_tip": "افتح بؤك وخلّي صوت الكاف يطلع من آخر لسانك: كـ كـ كورة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تورة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "ك",
+          "clinical_name": "Fronting (إبدال أمامي)",
+          "feedback_ar": "شاطر جداً! بس بدّلنا صوت الـ ك بصوت الـ ت.. يلا نطلع صوت الكاف من ورا: كـ كورة!",
+          "yasser_pose": "thinking"
+        },
+        {
+          "pronounced_word": "كوة",
+          "error_type": "deletion",
+          "deleted_phoneme": "ر",
+          "target_phoneme": "ر",
+          "clinical_name": "Consonant Deletion (حذف الراء)",
+          "feedback_ar": "قربت قوي! نسيت حرف الراء في النص، يلا نقول: كووو-ر-ة!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_samaka",
+      "word_arabic": "سمكة",
+      "word_transliteration": "Samaka",
+      "meaning_en": "Fish",
+      "target_phoneme": "س",
+      "target_phoneme_ipa": "s",
+      "phoneme_category": "صوت لثوي احتكاكي مهموس (Alveolar Fricative)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "s",
+        "a",
+        "m",
+        "a",
+        "k",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "س",
+        "م",
+        "ك",
+        "ة"
+      ],
+      "yasser_tip": "اقفل سنانك بالراحة وطلع هواء زي الصفارة: سسسـ سمكة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "ثمكة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ث",
+          "target_phoneme": "س",
+          "clinical_name": "Interdental Lisp (لدغة بين الأسنان)",
+          "feedback_ar": "ممتاز! بس لسانك طلع برة سنانك.. خلّي لسانك جوة واصفر: سسسـ سمكة!",
+          "yasser_pose": "thinking"
+        },
+        {
+          "pronounced_word": "تمكة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "س",
+          "clinical_name": "Stopping (إبدال انفجاري)",
+          "feedback_ar": "حلو قوي! بس خلي الهواء يجري مش يقف: سسسـ سمكة!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_arnab",
+      "word_arabic": "أرنب",
+      "word_transliteration": "Arnab",
+      "meaning_en": "Rabbit",
+      "target_phoneme": "ر",
+      "target_phoneme_ipa": "r",
+      "phoneme_category": "صوت لثوي تكراري (Alveolar Trill)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "ʔ",
+        "a",
+        "r",
+        "n",
+        "a",
+        "b"
+      ],
+      "expected_arabic_phonemes": [
+        "أ",
+        "ر",
+        "ن",
+        "ب"
+      ],
+      "yasser_tip": "خلّي طرف لسانك يرفرف ورا سنانك: رررـ أرنب!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "أنلب",
+          "error_type": "substitution",
+          "substituted_phoneme": "ل",
+          "target_phoneme": "ر",
+          "clinical_name": "Lateralization / L-Substitution (لدغة الراء إلى لام)",
+          "feedback_ar": "برافو يا بطل! بدّلنا صوت الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!",
+          "yasser_pose": "thinking"
+        },
+        {
+          "pronounced_word": "أونب",
+          "error_type": "substitution",
+          "substituted_phoneme": "و",
+          "target_phoneme": "ر",
+          "clinical_name": "Gliding (لدغة الراء إلى واو)",
+          "feedback_ar": "قربت خالص! بلاش نضم شفايفنا قوي، ارفع طرف لسانك لفوق: أرنب!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_batta",
+      "word_arabic": "بطة",
+      "word_transliteration": "Batta",
+      "meaning_en": "Duck",
+      "target_phoneme": "ط",
+      "target_phoneme_ipa": "tˤ",
+      "phoneme_category": "صوت لثوي انفجاري مفخم (Emphatic Alveolar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "b",
+        "a",
+        "tˤ",
+        "tˤ",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ب",
+        "ط",
+        "ة"
+      ],
+      "yasser_tip": "خلّي صوت الطاء تخين وقوي: بطططة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "بتة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "ط",
+          "clinical_name": "De-emphasis (ترقيق المفخم)",
+          "feedback_ar": "ممتاز! بس خلي صوت الطاء تخين ومفخم.. طـ مش ت: بـطـة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_shams",
+      "word_arabic": "شمس",
+      "word_transliteration": "Shams",
+      "meaning_en": "Sun",
+      "target_phoneme": "ش",
+      "target_phoneme_ipa": "ʃ",
+      "phoneme_category": "صوت غاري احتكاكي مهموس (Postalveolar Fricative)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "ʃ",
+        "a",
+        "m",
+        "s"
+      ],
+      "expected_arabic_phonemes": [
+        "ش",
+        "م",
+        "س"
+      ],
+      "yasser_tip": "ضم شفايفك شوية وقول شششش زي صوت البحر: شمس!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "سمس",
+          "error_type": "substitution",
+          "substituted_phoneme": "س",
+          "target_phoneme": "ش",
+          "clinical_name": "Depalatalization (إبدال الشين سيناً)",
+          "feedback_ar": "رائع! بس عايزين صوت الـ ش مش الـ س.. ضم شفايفك: شششـ شمس!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_kalb",
+      "word_arabic": "كلب",
+      "word_transliteration": "Kalb",
+      "meaning_en": "Dog",
+      "target_phoneme": "ك",
+      "target_phoneme_ipa": "k",
+      "phoneme_category": "صوت طبقي انفجاري (Velar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "k",
+        "a",
+        "l",
+        "b"
+      ],
+      "expected_arabic_phonemes": [
+        "ك",
+        "ل",
+        "ب"
+      ],
+      "yasser_tip": "صوت الكاف في أول الكلمة: كـ كلب!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تلب",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "ك",
+          "clinical_name": "Fronting",
+          "feedback_ar": "قربت يا بطل! لسانك من ورا بيعمل كاف: كـ كلب!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_tofa7a",
+      "word_arabic": "تفاحة",
+      "word_transliteration": "Toffaha",
+      "meaning_en": "Apple",
+      "target_phoneme": "ح",
+      "target_phoneme_ipa": "ħ",
+      "phoneme_category": "صوت حلقي احتكاكي مهموس (Pharyngeal Fricative)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "t",
+        "u",
+        "f",
+        "f",
+        "aː",
+        "ħ",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ت",
+        "ف",
+        "ا",
+        "ح",
+        "ة"
+      ],
+      "yasser_tip": "صوت الحاء بيطلع دافي من وسط الحلق: تفااااحة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تفاهة",
+          "error_type": "substitution",
+          "substituted_phoneme": "هـ",
+          "target_phoneme": "ح",
+          "clinical_name": "Weakening (إبدال الحاء هاءً)",
+          "feedback_ar": "أحسنت! بس وضّح صوت الحاء من وسط زورك: تفا-حـ-ة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_moza",
+      "word_arabic": "موزة",
+      "word_transliteration": "Moza",
+      "meaning_en": "Banana",
+      "target_phoneme": "ز",
+      "target_phoneme_ipa": "z",
+      "phoneme_category": "صوت لثوي احتكاكي مجهور (Voiced Alveolar Fricative)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "m",
+        "oː",
+        "z",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "م",
+        "و",
+        "ز",
+        "ة"
+      ],
+      "yasser_tip": "صوت الزاي زي صوت النحلة زننن: موووزة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "مودة",
+          "error_type": "substitution",
+          "substituted_phoneme": "د",
+          "target_phoneme": "ز",
+          "clinical_name": "Stopping (إبدال الزاي دالاً)",
+          "feedback_ar": "شاطر! خلّي الهواء يزن زي النحلة: زززـ موزة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_gamal",
+      "word_arabic": "جمل",
+      "word_transliteration": "Gamal",
+      "meaning_en": "Camel",
+      "target_phoneme": "ج",
+      "target_phoneme_ipa": "ɡ",
+      "phoneme_category": "صوت طبقي انفجاري مجهور (Egyptian Voiced Velar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "ɡ",
+        "a",
+        "m",
+        "a",
+        "l"
+      ],
+      "expected_arabic_phonemes": [
+        "ج",
+        "م",
+        "ل"
+      ],
+      "yasser_tip": "في مصر بننطق الجيم قاهرية جميلة: جـ جمل!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "دمل",
+          "error_type": "substitution",
+          "substituted_phoneme": "د",
+          "target_phoneme": "ج",
+          "clinical_name": "Fronting (إبدال الجيم دالاً)",
+          "feedback_ar": "ممتاز! خلّي الجيم تخرج من ورا زي صوت الـ G: جـ جمل!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_7esan",
+      "word_arabic": "حصان",
+      "word_transliteration": "Hessan",
+      "meaning_en": "Horse",
+      "target_phoneme": "ص",
+      "target_phoneme_ipa": "sˤ",
+      "phoneme_category": "صوت لثوي احتكاكي مفخم (Emphatic Alveolar Fricative)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "ħ",
+        "e",
+        "sˤ",
+        "aː",
+        "n"
+      ],
+      "expected_arabic_phonemes": [
+        "ح",
+        "ص",
+        "ا",
+        "ن"
+      ],
+      "yasser_tip": "صوت الصاد قوي ومفخم: حـ-صاااان!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "حسان",
+          "error_type": "substitution",
+          "substituted_phoneme": "س",
+          "target_phoneme": "ص",
+          "clinical_name": "De-emphasis (ترقيق الصاد إلى سين)",
+          "feedback_ar": "جميل جداً! بس فخم صوت الصاد عشان الحصان قوي: حصااان!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_feel",
+      "word_arabic": "فيل",
+      "word_transliteration": "Feel",
+      "meaning_en": "Elephant",
+      "target_phoneme": "ف",
+      "target_phoneme_ipa": "f",
+      "phoneme_category": "صوت أسناني شفوي احتكاكي مهموس (Labiodental Fricative)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "f",
+        "iː",
+        "l"
+      ],
+      "expected_arabic_phonemes": [
+        "ف",
+        "ي",
+        "ل"
+      ],
+      "yasser_tip": "حط سنانك اللي فوق على شفتك اللي تحت: فـ فيل!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "بيل",
+          "error_type": "substitution",
+          "substituted_phoneme": "ب",
+          "target_phoneme": "ف",
+          "clinical_name": "Stopping (إبدال الفاء باءً)",
+          "feedback_ar": "قربت! متقفلش شفايفك الاتنين، سنانك فوق شفتك: فففـ فيل!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_alam",
+      "word_arabic": "قلم",
+      "word_transliteration": "Alam / Qalam",
+      "meaning_en": "Pen",
+      "target_phoneme": "ق",
+      "target_phoneme_ipa": "ʔ",
+      "phoneme_category": "صوت همزة باللهجة المصرية أو لهوي بالفصحى",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "ʔ",
+        "a",
+        "l",
+        "a",
+        "m"
+      ],
+      "expected_arabic_phonemes": [
+        "ق",
+        "ل",
+        "م"
+      ],
+      "yasser_tip": "في كلامنا اليومي بننطقها: ألم!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "كلم",
+          "error_type": "substitution",
+          "substituted_phoneme": "ك",
+          "target_phoneme": "ق",
+          "clinical_name": "Substitution",
+          "feedback_ar": "شاطر! انطقها بنعومة: ألم!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_ketab",
+      "word_arabic": "كتاب",
+      "word_transliteration": "Ketab",
+      "meaning_en": "Book",
+      "target_phoneme": "ت",
+      "target_phoneme_ipa": "t",
+      "phoneme_category": "صوت لثوي انفجاري مهموس (Alveolar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "k",
+        "e",
+        "t",
+        "aː",
+        "b"
+      ],
+      "expected_arabic_phonemes": [
+        "ك",
+        "ت",
+        "ا",
+        "ب"
+      ],
+      "yasser_tip": "كـ-تاااب!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تداب",
+          "error_type": "substitution",
+          "substituted_phoneme": "د",
+          "target_phoneme": "ت",
+          "clinical_name": "Voicing",
+          "feedback_ar": "برافو! وضّح صوت التاء الخفيف: كـ-تـ-اب!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_beit",
+      "word_arabic": "بيت",
+      "word_transliteration": "Beit",
+      "meaning_en": "House",
+      "target_phoneme": "ب",
+      "target_phoneme_ipa": "b",
+      "phoneme_category": "صوت شفوي انفجاري مجهور (Bilabial Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "b",
+        "eː",
+        "t"
+      ],
+      "expected_arabic_phonemes": [
+        "ب",
+        "ي",
+        "ت"
+      ],
+      "yasser_tip": "اقفل شفايفك وافتحهم بقوة: بـ بيت!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "بي",
+          "error_type": "deletion",
+          "deleted_phoneme": "ت",
+          "target_phoneme": "ت",
+          "clinical_name": "Final Consonant Deletion",
+          "feedback_ar": "شاطر بس متنساش حرف التاء في الآخر: بيـت!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_3arabeya",
+      "word_arabic": "عربية",
+      "word_transliteration": "Arabeya",
+      "meaning_en": "Car",
+      "target_phoneme": "ع",
+      "target_phoneme_ipa": "ʕ",
+      "phoneme_category": "صوت حلقي احتكاكي مجهور (Pharyngeal Approximant)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "ʕ",
+        "a",
+        "r",
+        "a",
+        "b",
+        "e",
+        "j",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ع",
+        "ر",
+        "ب",
+        "ي",
+        "ة"
+      ],
+      "yasser_tip": "صوت العين الجميل من وسط الزور: عـ عربية!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "أربية",
+          "error_type": "substitution",
+          "substituted_phoneme": "ء",
+          "target_phoneme": "ع",
+          "clinical_name": "Glottalization (إبدال العين همزة)",
+          "feedback_ar": "ممتاز! بس اضغط شوية على وسط زورك عشان تطلع العين: عـ عربية!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_bab",
+      "word_arabic": "باب",
+      "word_transliteration": "Bab",
+      "meaning_en": "Door",
+      "target_phoneme": "ب",
+      "target_phoneme_ipa": "b",
+      "phoneme_category": "صوت شفوي انفجاري (Bilabial Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "b",
+        "aː",
+        "b"
+      ],
+      "expected_arabic_phonemes": [
+        "ب",
+        "ا",
+        "ب"
+      ],
+      "yasser_tip": "بااااب!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "با",
+          "error_type": "deletion",
+          "deleted_phoneme": "ب",
+          "target_phoneme": "ب",
+          "clinical_name": "Final Consonant Deletion",
+          "feedback_ar": "يا بطل قفلنا الباب بحرف الباء: باااب!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_tayara",
+      "word_arabic": "طيارة",
+      "word_transliteration": "Tayara",
+      "meaning_en": "Airplane",
+      "target_phoneme": "ط",
+      "target_phoneme_ipa": "tˤ",
+      "phoneme_category": "صوت لثوي انفجاري مفخم (Emphatic Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "tˤ",
+        "a",
+        "j",
+        "j",
+        "aː",
+        "r",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ط",
+        "ي",
+        "ا",
+        "ر",
+        "ة"
+      ],
+      "yasser_tip": "طيارة بتطير في الجو بصوت طاء قوي: طيارة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تيارة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "ط",
+          "clinical_name": "De-emphasis",
+          "feedback_ar": "أحسنت! بس خلّي الطاء قوية ومفخمة: طـ طيارة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_walad",
+      "word_arabic": "ولد",
+      "word_transliteration": "Walad",
+      "meaning_en": "Boy",
+      "target_phoneme": "د",
+      "target_phoneme_ipa": "d",
+      "phoneme_category": "صوت لثوي انفجاري مجهور (Alveolar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "w",
+        "a",
+        "l",
+        "a",
+        "d"
+      ],
+      "expected_arabic_phonemes": [
+        "و",
+        "ل",
+        "د"
+      ],
+      "yasser_tip": "و-لـ-د!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "ولت",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "د",
+          "clinical_name": "Devoicing",
+          "feedback_ar": "شاطر! ختّمنا الكلمة بحرف الدال المجهور: ولـد!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_bent",
+      "word_arabic": "بنت",
+      "word_transliteration": "Bent",
+      "meaning_en": "Girl",
+      "target_phoneme": "ن",
+      "target_phoneme_ipa": "n",
+      "phoneme_category": "صوت لثوي أنفي (Nasal)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "b",
+        "e",
+        "n",
+        "t"
+      ],
+      "expected_arabic_phonemes": [
+        "ب",
+        "ن",
+        "ت"
+      ],
+      "yasser_tip": "بـ-نـ-ت!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "بت",
+          "error_type": "deletion",
+          "deleted_phoneme": "ن",
+          "target_phoneme": "ن",
+          "clinical_name": "Nasal Deletion",
+          "feedback_ar": "قربت قوي! متنساش النون الجميلة في النص: بنـت!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_3ein",
+      "word_arabic": "عين",
+      "word_transliteration": "Ein",
+      "meaning_en": "Eye",
+      "target_phoneme": "ع",
+      "target_phoneme_ipa": "ʕ",
+      "phoneme_category": "صوت حلقي (Pharyngeal)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "ʕ",
+        "eː",
+        "n"
+      ],
+      "expected_arabic_phonemes": [
+        "ع",
+        "ي",
+        "ن"
+      ],
+      "yasser_tip": "عـ-يـ-ن!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "أين",
+          "error_type": "substitution",
+          "substituted_phoneme": "ء",
+          "target_phoneme": "ع",
+          "clinical_name": "Glottal Replacement",
+          "feedback_ar": "شاطر بس وضح العين من الحلق: عيـن!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_eid",
+      "word_arabic": "إيد",
+      "word_transliteration": "Eid",
+      "meaning_en": "Hand",
+      "target_phoneme": "د",
+      "target_phoneme_ipa": "d",
+      "phoneme_category": "صوت لثوي انفجاري (Alveolar Plosive)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "ʔ",
+        "iː",
+        "d"
+      ],
+      "expected_arabic_phonemes": [
+        "إ",
+        "ي",
+        "د"
+      ],
+      "yasser_tip": "إيييد!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "إيت",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "د",
+          "clinical_name": "Devoicing",
+          "feedback_ar": "ممتاز! الحرف الأخير دال: إيـد!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_regl",
+      "word_arabic": "رجل",
+      "word_transliteration": "Regl",
+      "meaning_en": "Leg",
+      "target_phoneme": "ر",
+      "target_phoneme_ipa": "r",
+      "phoneme_category": "صوت لثوي تكراري (Alveolar Trill)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "r",
+        "e",
+        "ɡ",
+        "l"
+      ],
+      "expected_arabic_phonemes": [
+        "ر",
+        "ج",
+        "ل"
+      ],
+      "yasser_tip": "ر-جـ-ل!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "لجل",
+          "error_type": "substitution",
+          "substituted_phoneme": "ل",
+          "target_phoneme": "ر",
+          "clinical_name": "Lateralization",
+          "feedback_ar": "برافو! رفرف بلسانك في أول الكلمة: رِجـل!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_ta3lab",
+      "word_arabic": "تعلب",
+      "word_transliteration": "Ta'lab",
+      "meaning_en": "Fox",
+      "target_phoneme": "ت",
+      "target_phoneme_ipa": "t",
+      "phoneme_category": "صوت لثوي (نطق مصري للثعلب)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "t",
+        "a",
+        "ʕ",
+        "l",
+        "a",
+        "b"
+      ],
+      "expected_arabic_phonemes": [
+        "ت",
+        "ع",
+        "ل",
+        "ب"
+      ],
+      "yasser_tip": "تـ-عـ-لـ-ب!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تألب",
+          "error_type": "substitution",
+          "substituted_phoneme": "ء",
+          "target_phoneme": "ع",
+          "clinical_name": "Glottalization",
+          "feedback_ar": "شاطر بس ركز في العين: تعـلب!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_dahab",
+      "word_arabic": "دهب",
+      "word_transliteration": "Dahab",
+      "meaning_en": "Gold",
+      "target_phoneme": "د",
+      "target_phoneme_ipa": "d",
+      "phoneme_category": "صوت لثوي انفجاري (نطق مصري للذهب)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "d",
+        "a",
+        "h",
+        "a",
+        "b"
+      ],
+      "expected_arabic_phonemes": [
+        "د",
+        "هـ",
+        "ب"
+      ],
+      "yasser_tip": "د-هـ-ب بيلمع!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "تهب",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "د",
+          "clinical_name": "Devoicing",
+          "feedback_ar": "ممتاز! صوت الدال في الأول: دَهب!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_zarafa",
+      "word_arabic": "زرافة",
+      "word_transliteration": "Zarafa",
+      "meaning_en": "Giraffe",
+      "target_phoneme": "ز",
+      "target_phoneme_ipa": "z",
+      "phoneme_category": "صوت لثوي احتكاكي مجهور",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "z",
+        "a",
+        "r",
+        "aː",
+        "f",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ز",
+        "ر",
+        "ا",
+        "ف",
+        "ة"
+      ],
+      "yasser_tip": "زرافة رقبتها طويلة: زززـ زرافة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "سرافة",
+          "error_type": "substitution",
+          "substituted_phoneme": "س",
+          "target_phoneme": "ز",
+          "clinical_name": "Devoicing",
+          "feedback_ar": "شاطر! زن بصوت الزاي: زززـ زرافة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_hodhod",
+      "word_arabic": "هدهد",
+      "word_transliteration": "Hodhod",
+      "meaning_en": "Hoopoe",
+      "target_phoneme": "هـ",
+      "target_phoneme_ipa": "h",
+      "phoneme_category": "صوت حنجري مهموس (Glottal Fricative)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "h",
+        "u",
+        "d",
+        "h",
+        "u",
+        "d"
+      ],
+      "expected_arabic_phonemes": [
+        "هـ",
+        "د",
+        "هـ",
+        "د"
+      ],
+      "yasser_tip": "هـ-د-هـ-د طائر جميل!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "أدأد",
+          "error_type": "substitution",
+          "substituted_phoneme": "ء",
+          "target_phoneme": "هـ",
+          "clinical_name": "Glottal Stop Replacement",
+          "feedback_ar": "قربت! طلع هواء الهاء بالراحة: هـُدهـُد!",
+          "yasser_pose": "pointing"
+        }
+      ]
+    },
+    {
+      "id": "word_farasha",
+      "word_arabic": "فراشة",
+      "word_transliteration": "Farasha",
+      "meaning_en": "Butterfly",
+      "target_phoneme": "ف",
+      "target_phoneme_ipa": "f",
+      "phoneme_category": "صوت أسناني شفوي (Labiodental Fricative)",
+      "difficulty_level": 2,
+      "expected_phonemes": [
+        "f",
+        "a",
+        "r",
+        "aː",
+        "ʃ",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ف",
+        "ر",
+        "ا",
+        "ش",
+        "ة"
+      ],
+      "yasser_tip": "فراشة ألوانها تجنن: فـ فراشة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "فلاشة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ل",
+          "target_phoneme": "ر",
+          "clinical_name": "Lateralization",
+          "feedback_ar": "أحسنت! بس خلّي الراء ترفرف: فـ-راااشـة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    },
+    {
+      "id": "word_2etta",
+      "word_arabic": "قطة",
+      "word_transliteration": "Otta / Qetta",
+      "meaning_en": "Cat",
+      "target_phoneme": "ط",
+      "target_phoneme_ipa": "tˤ",
+      "phoneme_category": "صوت لثوي مفخم (Emphatic)",
+      "difficulty_level": 1,
+      "expected_phonemes": [
+        "ʔ",
+        "u",
+        "tˤ",
+        "tˤ",
+        "a"
+      ],
+      "expected_arabic_phonemes": [
+        "ق",
+        "ط",
+        "ة"
+      ],
+      "yasser_tip": "القطة الشقية: قـطة!",
+      "common_child_errors": [
+        {
+          "pronounced_word": "أتة",
+          "error_type": "substitution",
+          "substituted_phoneme": "ت",
+          "target_phoneme": "ط",
+          "clinical_name": "De-emphasis",
+          "feedback_ar": "ممتاز! صوت الطاء مفخم وتخين: قـطّـة!",
+          "yasser_pose": "thinking"
+        }
+      ]
+    }
+  ]
+}

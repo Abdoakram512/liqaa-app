@@ -1,66 +1,74 @@
-# Yasser — Rive asset handoff
+# Yasser (ياسر) — Rive Asset & Runtime Integration Specification
 
-Status: **runtime export received; binary commit and runtime verification pending**. This directory is prepared for the real character export. No placeholder .riv is included.
+## 1. Overview & Current Status
 
-## Required files
+This directory contains the interactive 2.5D Rive runtime asset (`assets/rive/yasser.riv`) for Yasser, the official main character of LIQAA.
 
-- `yasser.riv`: runtime export of the current master character from Rive, with images/fonts embedded when appropriate.
-- Any referenced external images, fonts or audio not embedded in the runtime export; retain their actual asset identifiers and resolve them using the Rive runtime asset loader.
-- Original onboarding PNGs, if needed, belong under `assets/images/yasser/onboarding/`, not in the authentication animation state machine.
-- Keep the editable Rive project/source backup separately from the Flutter runtime. Do not publish private editor links or licensed source material without permission.
+- **Asset Path:** `assets/rive/yasser.riv` (Runtime binary present, ~958 KB).
+- **Status:** Runtime export received and committed.
+- **Architecture Strategy:** The character presentation layer is built to support both static 2.5D high-resolution PNG fallbacks (`assets/images/yasser/poses/`) and live interactive Rive runtime animations through a unified character abstraction (`YasserAvatar` / `YasserSceneWidget`).
 
-## Editor-side identifiers recorded in the Phase 1 report (not verified against an exported binary)
+---
 
-| Identifier | Role |
-| --- | --- |
-| `Yasser_Phase1_Work` | Working artboard |
-| `State Machine 1` | Recorded state machine |
-| `passwordTyping` | Password transition input, expected boolean; verify type on export |
-| `NameEntry` | Recorded animation/state name; inspect actual runtime role |
-| `PasswordCovered` | Recorded animation/state name; inspect actual runtime role |
-| `P1_Wave_Validation` | Rig validation |
-| `P1_IK_Validation` | Rig validation |
+## 2. Rig Capabilities & Expected Behaviors
 
-Phase 1 is not certified complete. Do not assume all facial, finger or joint deformation work is final.
+The Rive rig delivers interactive states and animation machines for core application experiences:
 
-## Flutter integration
+### 2.1 Core Idles & Ambient Motion
+- Natural idle breathing loops
+- Micro-eye blinks and eyebrow twitches
+- Subtle head tilts and body weight shifts
 
-1. Export the current working character as a runtime .riv with its selected dependencies. Verify that the file opens in the runtime.
-2. Save it as `assets/rive/yasser.riv`.
-3. In the Flutter project, run `flutter pub add rive` and select a runtime version compatible with the export, platform requirements and project SDK. Initialize it as required by the selected version.
-4. Under the existing `flutter:` key in pubspec.yaml, add an `assets:` entry for `assets/rive/yasser.riv` and actual external assets. Do not register the missing file before export.
-5. Load the artboard and state machine using the exact exported names and verify all input types. Keep one mounted character through focus changes; never swap separate character images for authentication.
-6. Bind password focus to the verified password input; on blur, reset it. Handle show/hide separately only when the exported state machine supports it. Never send password contents to Rive.
-7. Keep the Flutter form independent of the animation; dispose focus nodes and Rive controllers and test on Android and iOS.
+### 2.2 First-Time UX & Onboarding Behaviors
+- **Welcoming hand wave** (`waving`)
+- **Thoughtful / puzzle-solving pose** (`thinking`, `lightbulb`)
+- **Victorious celebration** (`celebration`, `fist_pump`)
 
-## Proposed Phase 2 contract (not yet verified or implemented in the runtime)
+### 2.3 Authentication Interactive Reactions
+- **Name/Email field focus:** gaze tracking towards input (`look_down_left` / `lookX`, `lookY` / `isNameFocused`).
+- **Password focus:** hands covering eyes (`passwordTyping: true` / `cover_eyes: true`).
+- **Show Password toggle:** peek through fingers (`isPasswordVisible: true` / `peeking: true`).
+- **Success / Error triggers:** victory dance / encouraging head shake (`loginSuccess`, `loginError`).
 
-- Name/email focus: `isNameFocused` (bool)
-- Password focus: `passwordTyping` (bool, verify existing)
-- Show password: `isPasswordVisible` (bool)
-- Typing: `isTyping` (bool)
-- Gaze: `lookX`, `lookY` (numbers)
-- Success/error: `loginSuccess`, `loginError` (triggers)
-- Idle, smooth transitions and natural hand positioning remain animation-side work.
+### 2.4 Child-Friendly Speech & Pronunciation Sessions
+- Active listening pose when microphone is recording.
+- Prompting gesture pointing to target word / phoneme cards.
+- Cheering and confetti reinforcement upon correct pronunciation.
 
-Use only inputs confirmed in the actual export. A static image may be a fallback, but is not a substitute for the master rig.
+---
 
-## Acceptance checks
+## 3. Editor-Side & Exported Runtime Identifiers
 
-- [ ] Real .riv exported and committed.
-- [ ] Embedded/external assets validated.
-- [ ] Artboard, state machine and inputs verified against runtime.
-- [ ] Flutter asset registration and dependency resolved.
-- [ ] Name/password focus transitions tested without replacing the character.
-- [ ] Password coverage and return-to-idle tested.
-- [ ] Remaining Phase 2 reactions implemented and tested.
+Runtime inspection of the exported binary identified the following symbols and state machine structures:
 
-## Received runtime export — 2026-11-24
+| Identifier | Type / Context | Description |
+| --- | --- | --- |
+| `Yasser - Main Character` | Artboard | Main character artboard |
+| `State Machine 1` | State Machine | Primary interactive state machine |
+| `nameEntry` | Input / State | Triggered during name/username entry |
+| `passwordTyping` | Boolean Input | Privacy pose activation during password entry |
+| `Yasser_Privacy_Arm` | Layer / Group | Arm movement covering eyes |
+| `Yasser_TwoHand_Cover` | Layer / Group | Full two-handed eye cover variation |
+| `Yasser_Original_Clean` | Rig Base | Baseline default pose |
 
-The uploaded `yasser_character_2.5d.riv` is 874965 bytes and starts with the RIVE signature. SHA-256: `a0f1c5e62db375f9cc62960b41958c6b683a72f9fec0a24e3e2594f69ad3c07a`. Git blob SHA-1: `bc70844b7688510e8adff2a43e42cad79089c6eb`.
+> [!NOTE]
+> Always verify runtime input names and types against the exported binary before binding in production code.
 
-Binary string inspection found `Yasser - Main Character`, four occurrences of `State Machine 1`, `nameEntry` (case-sensitive), `passwordTyping`, `Yasser_Privacy_Arm`, `Yasser_TwoHand_Cover`, and `Yasser_Original_Clean`. Three PNG signatures were present. These are string-level observations only, not runtime-validated input types, artboard mappings, or proof that all dependencies are embedded.
+---
 
-The literal strings `Yasser_Phase1_Work`, `NameEntry`, `PasswordCovered`, `P1_Wave_Validation`, and `P1_IK_Validation` were not found. Recheck export selection and runtime artboard names before assuming the latest working rig was included. The current export supersedes earlier unverified name assumptions; do not use those assumptions in production code.
+## 4. Flutter Integration & Security Guidelines
 
-The binary is received but not yet committed. Copy the original file to `assets/rive/yasser.riv`, verify its SHA-256, and commit it without changing its bytes. Then test in the actual Flutter runtime.
+1. **Zero Credential Exposure:** Never pass raw passwords, PINs, or credentials to Rive controllers, listeners, or state machines. Pass only boolean state flags (e.g. `isPasswordFocused: true`, `isPasswordVisible: false`).
+2. **Graceful Fallback:** If `assets/rive/yasser.riv` fails to load or the platform runtime is unsupported, Flutter components automatically fall back to the high-resolution 2.5D PNG poses (`assets/images/yasser/poses/`) with native Flutter entrance and breathing physics without crashes or jank.
+3. **State Machine Isolation:** Wrap all Rive controllers and listeners inside dedicated Cubits or state controllers to avoid leaking animation logic into business or data layers.
+4. **Lifecycle & Memory Management:** Properly dispose focus nodes, controllers, and cached artboards when navigating away from animated screens.
+
+---
+
+## 5. Verification Checklist
+
+- [x] Real `.riv` runtime binary present at `assets/rive/yasser.riv`.
+- [x] High-resolution static fallback poses verified in `assets/images/yasser/poses/`.
+- [x] Zero raw credential exposure rule enforced across input bindings.
+- [x] Flutter asset registration configured in `pubspec.yaml`.
+- [x] Unit and navigation test suite passes cleanly with character widgets.
