@@ -22,6 +22,7 @@ abstract final class AppColors {
 
   // Backgrounds & Surface
   static const Color background = Color(0xFFFFF7EA); // Website primary canvas
+  static const Color backgroundCream = Color(0xFFFFF7EA);
   static const Color backgroundLight = Color(0xFFFFFDF9);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceCard = Color(0xFFFFFDF9);

@@ -101,40 +101,28 @@ class AuthPlaceholderView extends StatelessWidget {
 
                 // Role Action Buttons
                 PrimaryButton(
-                  label: LocaleKeys.authRoleSpecialist.tr(),
+                  label: 'مختبر الذكاء الاصطناعي (AI Lab)',
                   icon: const Icon(
                     Icons.psychology_alt_rounded,
                     color: Colors.white,
                     size: 20,
                   ),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(LocaleKeys.authNotice.tr()),
-                        backgroundColor: AppColors.textPrimary,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                    context.push(AppRoutes.aiLab);
                   },
                 ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
 
                 SizedBox(height: 12.h),
 
                 SecondaryButton(
-                  label: LocaleKeys.authRoleChild.tr(),
+                  label: 'ابدأ اللعبة: انطق مع ياسر',
                   icon: const Icon(
-                    Icons.child_care_rounded,
+                    Icons.sports_esports_rounded,
                     color: AppColors.textPrimary,
                     size: 20,
                   ),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(LocaleKeys.authNotice.tr()),
-                        backgroundColor: AppColors.textPrimary,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                    context.push(AppRoutes.game);
                   },
                 ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
 

@@ -21,6 +21,50 @@ abstract final class AppTextStyles {
     height: 1.3,
   );
 
+  static TextStyle get displaySmall => _baseCairo.copyWith(
+    fontSize: 24.sp,
+    fontWeight: FontWeight.w800,
+    height: 1.3,
+  );
+
+  // Title Styles
+  static TextStyle get titleLarge => _baseCairo.copyWith(
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w700,
+    height: 1.35,
+  );
+
+  static TextStyle get titleMedium => _baseCairo.copyWith(
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+  );
+
+  static TextStyle get titleSmall => _baseCairo.copyWith(
+    fontSize: 14.sp,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+  );
+
+  // Label Styles
+  static TextStyle get labelLarge => _baseCairo.copyWith(
+    fontSize: 14.sp,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
+  static TextStyle get labelMedium => _baseCairo.copyWith(
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
+  static TextStyle get labelSmall => _baseCairo.copyWith(
+    fontSize: 10.sp,
+    fontWeight: FontWeight.w500,
+    height: 1.3,
+  );
+
   // Headline Styles
   static TextStyle get headlineLarge => _baseCairo.copyWith(
     fontSize: 24.sp,
