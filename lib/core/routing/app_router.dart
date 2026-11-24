@@ -13,6 +13,7 @@ import '../../features/ai_lab/views/noise_reduction_view.dart';
 import '../../features/ai_lab/views/phoneme_recognition_view.dart';
 import '../../features/ai_lab/views/speech_to_text_view.dart';
 import '../../features/animation_lab/presentation/views/animation_lab_view.dart';
+import '../../features/animation_lab/presentation/views/rive_diagnostic_view.dart';
 import '../../features/authentication/presentation/cubits/auth_cubit.dart';
 import '../../features/authentication/presentation/views/auth_gateway_view.dart';
 import '../../features/authentication/presentation/views/forgot_password_view.dart';
@@ -126,6 +127,11 @@ abstract final class AppRouter {
         path: AppRoutes.animationLab,
         name: 'animationLab',
         builder: (context, state) => const AnimationLabView(),
+      ),
+      GoRoute(
+        path: AppRoutes.riveDiagnostic,
+        name: 'riveDiagnostic',
+        builder: (context, state) => const RiveDiagnosticView(),
       ),
 
       // Speak With Yasser Game

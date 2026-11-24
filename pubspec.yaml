@@ -45,7 +45,7 @@ dependencies:
   permission_handler: 12.0.3
   share_plus: ^12.0.2
   sherpa_onnx: ^2.0.3
-  rive: 0.13.20
+  rive: 0.14.11
 
 dependency_overrides:
   permission_handler_android: 13.0.1

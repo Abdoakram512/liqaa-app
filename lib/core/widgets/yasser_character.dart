@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart' as rive;
 
+import '../animation/yasser/yasser_animation_capabilities.dart';
 import '../animation/yasser/yasser_animation_mapper.dart';
 import '../animation/yasser/yasser_animation_state.dart';
 import '../animation/yasser/yasser_controller.dart';
 
 /// Flagship unified character widget for Yasser (ياسر).
 ///
-/// Intelligently renders the interactive Rive character when runtime
-/// support is active, or seamlessly displays high-resolution 2.5D
-/// character poses with native Flutter breathing, micro-floating,
-/// and eye-blink physics without crashes or visual jank.
+/// Features modern Rive 0.14+ runtime architecture with Factory.rive renderer,
+/// FileLoader asset deduplication, RiveWidget, and RiveWidgetController.
+/// Seamlessly falls back to high-resolution 2.5D character poses with native
+/// Flutter breathing and micro-physics if runtime support is unavailable.
 class YasserCharacter extends StatefulWidget {
   /// Global toggle allowing test environments or platforms lacking native
   /// dynamic libraries to enforce the 2.5D illustration fallback.
   static bool enableRiveRuntime = true;
+
+  /// Shared static FileLoader ensuring `assets/rive/yasser.riv` is loaded and
+  /// decoded once using the native Rive Renderer (`Factory.rive`).
+  static rive.FileLoader? _sharedFileLoader;
+
+  static rive.FileLoader get sharedFileLoader {
+    return _sharedFileLoader ??= rive.FileLoader.fromAsset(
+      YasserAnimationCapabilities.assetPath,
+      riveFactory: rive.Factory.rive,
+    );
+  }
+
+  /// Reset the shared file loader (useful for testing or reloading).
+  static void resetSharedLoader() {
+    _sharedFileLoader?.dispose();
+    _sharedFileLoader = null;
+  }
 
   final YasserController? controller;
   final YasserAnimationState? state;
@@ -50,6 +68,10 @@ class _YasserCharacterState extends State<YasserCharacter>
   late AnimationController _breathingController;
   late Animation<double> _breathingAnimation;
 
+  rive.RiveWidgetController? _riveWidgetController;
+  bool _isLoadingRive = false;
+  bool _hasRiveError = false;
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +97,52 @@ class _YasserCharacterState extends State<YasserCharacter>
         curve: Curves.easeInOutSine,
       ),
     );
+
+    _initRiveController();
+  }
+
+  Future<void> _initRiveController() async {
+    if (!YasserCharacter.enableRiveRuntime) return;
+    if (_riveWidgetController != null) return;
+
+    if (mounted) {
+      setState(() {
+        _isLoadingRive = true;
+        _hasRiveError = false;
+      });
+    }
+
+    try {
+      if (!rive.RiveNative.isInitialized) {
+        await rive.RiveNative.init();
+      }
+
+      final file = await YasserCharacter.sharedFileLoader.file();
+      if (!mounted) return;
+
+      final controller = rive.RiveWidgetController(
+        file,
+        artboardSelector: rive.ArtboardNamed(_controller.config.artboardName),
+        stateMachineSelector:
+            rive.StateMachineNamed(_controller.config.stateMachineName),
+      );
+
+      _riveWidgetController = controller;
+      _controller.attachWidgetController(controller);
+
+      if (mounted) {
+        setState(() {
+          _isLoadingRive = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('[YasserCharacter] Rive loading note (using 2.5D fallback): $e');
+      setState(() {
+        _isLoadingRive = false;
+        _hasRiveError = true;
+      });
+    }
   }
 
   @override
@@ -83,11 +151,20 @@ class _YasserCharacterState extends State<YasserCharacter>
     if (widget.state != null && widget.state != oldWidget.state) {
       _controller.engine.triggerState(widget.state!);
     }
+    if (YasserCharacter.enableRiveRuntime &&
+        _riveWidgetController == null &&
+        !_hasRiveError &&
+        !_isLoadingRive) {
+      _initRiveController();
+    }
   }
 
   @override
   void dispose() {
     _breathingController.dispose();
+    _controller.detachWidgetController();
+    _riveWidgetController?.dispose();
+    _riveWidgetController = null;
     if (_ownsController) {
       _controller.dispose();
     }
@@ -111,53 +188,45 @@ class _YasserCharacterState extends State<YasserCharacter>
         return GestureDetector(
           onTap: _handleTap,
           behavior: HitTestBehavior.opaque,
-          child: AnimatedBuilder(
-            animation: _breathingAnimation,
-            builder: (context, _) {
-              return Transform.scale(
-                scale: _breathingAnimation.value,
-                child: SizedBox(
-                  width: targetWidth,
-                  height: targetHeight,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Organic Ground Shadow
-                      if (widget.showShadow)
-                        Positioned(
-                          bottom: 2,
-                          child: Container(
-                            width: targetWidth * 0.55,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.all(
-                                Radius.elliptical(targetWidth * 0.55, 16),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF1E293B).withOpacity(0.18),
-                                  blurRadius: 18,
-                                  spreadRadius: 2,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
+          child: SizedBox(
+            width: targetWidth,
+            height: targetHeight,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              clipBehavior: Clip.none,
+              children: [
+                // Organic Ground Shadow
+                if (widget.showShadow)
+                  Positioned(
+                    bottom: 2,
+                    child: Container(
+                      width: targetWidth * 0.55,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.elliptical(targetWidth * 0.55, 16),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1E293B).withOpacity(0.18),
+                            blurRadius: 18,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-
-                      // Character Render Layer (Rive or Fallback)
-                      Positioned.fill(
-                        child: Align(
-                          alignment: widget.alignment,
-                          child: _buildCharacterContent(mapping),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ),
+
+                // Character Render Layer (Rive or Fallback)
+                Positioned.fill(
+                  child: Align(
+                    alignment: widget.alignment,
+                    child: _buildCharacterContent(mapping),
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         );
       },
@@ -165,40 +234,47 @@ class _YasserCharacterState extends State<YasserCharacter>
   }
 
   Widget _buildCharacterContent(YasserStateMapping mapping) {
-    if (!YasserCharacter.enableRiveRuntime) {
+    // If Rive runtime is disabled, failed, or still loading first frame, show 2.5D fallback
+    if (!YasserCharacter.enableRiveRuntime ||
+        _hasRiveError ||
+        _riveWidgetController == null) {
       return _build2DFallback(mapping);
     }
 
-    return rive.RiveAnimation.asset(
-      'assets/rive/yasser.riv',
-      artboard: _controller.config.artboardName,
-      stateMachines: [_controller.config.stateMachineName],
-      fit: BoxFit.contain,
+    // Render native Rive 0.14+ widget using Factory.rive
+    return rive.RiveWidget(
+      controller: _riveWidgetController!,
+      fit: rive.Fit.contain,
       alignment: widget.alignment,
-      placeHolder: _build2DFallback(mapping),
-      onInit: (artboard) {
-        _controller.attachArtboard(artboard);
-      },
     );
   }
 
   Widget _build2DFallback(YasserStateMapping mapping) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      switchInCurve: Curves.easeOutBack,
-      switchOutCurve: Curves.easeInQuad,
-      child: Image.asset(
-        mapping.fallbackAssetPath,
-        key: ValueKey<String>(mapping.fallbackAssetPath),
-        fit: BoxFit.contain,
-        alignment: widget.alignment,
-        filterQuality: FilterQuality.high,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            'assets/images/yasser/original/yasser_standing.png',
-            fit: BoxFit.contain,
-          );
-        },
+    return AnimatedBuilder(
+      animation: _breathingAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _breathingAnimation.value,
+          child: child,
+        );
+      },
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOutBack,
+        switchOutCurve: Curves.easeInQuad,
+        child: Image.asset(
+          mapping.fallbackAssetPath,
+          key: ValueKey<String>(mapping.fallbackAssetPath),
+          fit: BoxFit.contain,
+          alignment: widget.alignment,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) {
+            return Image.asset(
+              'assets/images/yasser/original/yasser_standing.png',
+              fit: BoxFit.contain,
+            );
+          },
+        ),
       ),
     );
   }

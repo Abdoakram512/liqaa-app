@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rive/rive.dart';
+import 'package:rive/rive.dart' as rive;
 
 import 'yasser_animation_config.dart';
 import 'yasser_animation_mapper.dart';
@@ -8,16 +8,16 @@ import 'yasser_interaction_engine.dart';
 
 /// Central controller for the Yasser character.
 ///
-/// Orchestrates the Rive state machine when available, or drives
-/// the fallback high-resolution 2.5D presentation seamlessly.
+/// Orchestrates the modern Rive 0.14.x state machine when available,
+/// or seamlessly drives the fallback high-resolution 2.5D presentation.
 class YasserController extends ChangeNotifier {
   final YasserInteractionEngine engine;
   final YasserAnimationConfig config;
 
-  // Rive runtime bindings
-  Artboard? _artboard;
-  StateMachineController? _stateMachineController;
-  SMIBool? _passwordTypingInput;
+  // Modern Rive 0.14+ runtime bindings
+  rive.RiveWidgetController? _widgetController;
+  rive.StateMachine? _stateMachine;
+  rive.BooleanInput? _passwordTypingInput;
   bool _isRiveInitialized = false;
 
   YasserController({
@@ -28,37 +28,36 @@ class YasserController extends ChangeNotifier {
   }
 
   bool get isRiveInitialized => _isRiveInitialized;
-  Artboard? get artboard => _artboard;
-  StateMachineController? get stateMachineController => _stateMachineController;
+  rive.RiveWidgetController? get widgetController => _widgetController;
+  rive.StateMachine? get stateMachine => _stateMachine;
   YasserAnimationState get currentState => engine.currentState;
   YasserStateMapping get currentMapping => engine.currentMapping;
   ValueNotifier<YasserStateMapping> get stateNotifier => engine.stateNotifier;
   List<CharacterEventLog> get eventHistory => engine.eventHistory;
 
-  /// Attach the Rive artboard and locate state machine inputs.
-  void attachArtboard(Artboard artboard) {
+  /// Attach the RiveWidgetController and locate state machine inputs.
+  void attachWidgetController(rive.RiveWidgetController controller) {
     try {
-      _artboard = artboard;
-      _stateMachineController = StateMachineController.fromArtboard(
-        artboard,
-        config.stateMachineName,
-      );
+      _widgetController = controller;
+      _stateMachine = controller.stateMachine;
+      _passwordTypingInput = _stateMachine?.boolean(config.passwordInputName);
 
-      if (_stateMachineController != null) {
-        artboard.addController(_stateMachineController!);
-        _passwordTypingInput = _stateMachineController!.findInput<bool>(
-          config.passwordInputName,
-        ) as SMIBool?;
-
-        _isRiveInitialized = true;
-        _syncRiveInputs(engine.currentMapping);
-        notifyListeners();
-      }
+      _isRiveInitialized = true;
+      _syncRiveInputs(engine.currentMapping);
+      notifyListeners();
     } catch (e) {
       // Graceful fallback: If Rive initialization fails, mark false and use 2.5D poses
       _isRiveInitialized = false;
       notifyListeners();
     }
+  }
+
+  /// Detach and reset the Rive controller reference.
+  void detachWidgetController() {
+    _widgetController = null;
+    _stateMachine = null;
+    _passwordTypingInput = null;
+    _isRiveInitialized = false;
   }
 
   void _onEngineStateChanged() {
@@ -161,7 +160,7 @@ class YasserController extends ChangeNotifier {
   @override
   void dispose() {
     engine.stateNotifier.removeListener(_onEngineStateChanged);
-    _stateMachineController?.dispose();
+    _widgetController?.dispose();
     engine.dispose();
     super.dispose();
   }

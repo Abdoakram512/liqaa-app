@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/animation/yasser/yasser_animation_capabilities.dart';
 import '../../../../core/animation/yasser/yasser_animation_state.dart';
 import '../../../../core/animation/yasser/yasser_controller.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/yasser_character.dart';
@@ -107,6 +109,13 @@ class _AnimationLabViewState extends State<AnimationLabView>
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            tooltip: 'فحص Rive المباشر',
+            onPressed: () => context.push(AppRoutes.riveDiagnostic),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,

@@ -12,6 +12,7 @@ abstract final class AppRoutes {
 
   // Character & Lab Routes
   static const String animationLab = '/animation-lab';
+  static const String riveDiagnostic = '/rive-diagnostic';
 
   // Game & AI Lab Routes
   static const String game = '/game';
