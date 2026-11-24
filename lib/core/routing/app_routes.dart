@@ -1,7 +1,17 @@
 abstract final class AppRoutes {
   static const String splash = '/';
   static const String onboarding = '/onboarding';
+
+  // Authentication Routes
   static const String auth = '/auth';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
+  static const String otpVerification = '/otp-verification';
+  static const String resetPassword = '/reset-password';
+
+  // Character & Lab Routes
+  static const String animationLab = '/animation-lab';
 
   // Game & AI Lab Routes
   static const String game = '/game';

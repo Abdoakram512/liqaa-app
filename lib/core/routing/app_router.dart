@@ -5,14 +5,21 @@ import 'package:go_router/go_router.dart';
 import '../../app/dependency_injection/service_locator.dart';
 import '../../features/ai_lab/cubits/ai_lab_cubit.dart';
 import '../../features/ai_lab/views/ai_lab_hub_view.dart';
-import '../../features/ai_lab/views/model_manager_view.dart';
+import '../../features/ai_lab/views/full_pipeline_view.dart';
 import '../../features/ai_lab/views/mic_vad_view.dart';
+import '../../features/ai_lab/views/model_comparison_view.dart';
+import '../../features/ai_lab/views/model_manager_view.dart';
 import '../../features/ai_lab/views/noise_reduction_view.dart';
 import '../../features/ai_lab/views/phoneme_recognition_view.dart';
 import '../../features/ai_lab/views/speech_to_text_view.dart';
-import '../../features/ai_lab/views/model_comparison_view.dart';
-import '../../features/ai_lab/views/full_pipeline_view.dart';
-import '../../features/authentication/presentation/views/auth_placeholder_view.dart';
+import '../../features/animation_lab/presentation/views/animation_lab_view.dart';
+import '../../features/authentication/presentation/cubits/auth_cubit.dart';
+import '../../features/authentication/presentation/views/auth_gateway_view.dart';
+import '../../features/authentication/presentation/views/forgot_password_view.dart';
+import '../../features/authentication/presentation/views/login_view.dart';
+import '../../features/authentication/presentation/views/otp_verification_view.dart';
+import '../../features/authentication/presentation/views/register_view.dart';
+import '../../features/authentication/presentation/views/reset_password_view.dart';
 import '../../features/onboarding/presentation/views/onboarding_view.dart';
 import '../../features/pronunciation_game/cubits/pronunciation_game_cubit.dart';
 import '../../features/pronunciation_game/views/pronunciation_game_view.dart';
@@ -47,12 +54,17 @@ abstract final class AppRouter {
           transitionDuration: const Duration(milliseconds: 400),
         ),
       ),
+
+      // Authentication Portal & Routes
       GoRoute(
         path: AppRoutes.auth,
         name: 'auth',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const AuthPlaceholderView(),
+          child: BlocProvider<AuthCubit>(
+            create: (_) => sl<AuthCubit>(),
+            child: const AuthGatewayView(),
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: CurveTween(curve: Curves.easeIn).animate(animation),
@@ -62,6 +74,60 @@ abstract final class AppRouter {
           transitionDuration: const Duration(milliseconds: 350),
         ),
       ),
+      GoRoute(
+        path: AppRoutes.login,
+        name: 'login',
+        builder: (context, state) => BlocProvider<AuthCubit>(
+          create: (_) => sl<AuthCubit>(),
+          child: const LoginView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        name: 'register',
+        builder: (context, state) => BlocProvider<AuthCubit>(
+          create: (_) => sl<AuthCubit>(),
+          child: const RegisterView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        name: 'forgotPassword',
+        builder: (context, state) => BlocProvider<AuthCubit>(
+          create: (_) => sl<AuthCubit>(),
+          child: const ForgotPasswordView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.otpVerification,
+        name: 'otpVerification',
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ?? '';
+          return BlocProvider<AuthCubit>(
+            create: (_) => sl<AuthCubit>(),
+            child: OtpVerificationView(email: email),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        name: 'resetPassword',
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ?? '';
+          return BlocProvider<AuthCubit>(
+            create: (_) => sl<AuthCubit>(),
+            child: ResetPasswordView(email: email),
+          );
+        },
+      ),
+
+      // Developer Animation Lab Route
+      GoRoute(
+        path: AppRoutes.animationLab,
+        name: 'animationLab',
+        builder: (context, state) => const AnimationLabView(),
+      ),
+
       // Speak With Yasser Game
       GoRoute(
         path: AppRoutes.game,
@@ -71,6 +137,7 @@ abstract final class AppRouter {
           child: const PronunciationGameView(),
         ),
       ),
+
       // AI Lab Hub & Developer Screens
       GoRoute(
         path: AppRoutes.aiLab,

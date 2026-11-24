@@ -16,6 +16,9 @@ import '../../core/networking/dio_factory.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import '../../features/ai_lab/cubits/ai_lab_cubit.dart';
+import '../../features/authentication/data/repos/auth_repo.dart';
+import '../../features/authentication/data/sources/auth_local_data_source.dart';
+import '../../features/authentication/presentation/cubits/auth_cubit.dart';
 import '../../features/onboarding/data/repos/onboarding_repo.dart';
 import '../../features/onboarding/data/src/onboarding_local_data_source.dart';
 import '../../features/onboarding/presentation/cubits/onboarding_cubit.dart';
@@ -38,6 +41,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<ApiClient>(() => ApiClient(sl()));
 
   // Data Sources & Repositories
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<AuthRepo>(() => MockAuthRepo(sl()));
   sl.registerLazySingleton<OnboardingLocalDataSource>(
     () => OnboardingLocalDataSourceImpl(sl()),
   );
@@ -66,6 +73,7 @@ Future<void> setupServiceLocator() async {
   // Cubits
   sl.registerFactory<SplashCubit>(() => SplashCubit(sl()));
   sl.registerFactory<OnboardingCubit>(() => OnboardingCubit(sl()));
+  sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
   sl.registerFactory<AiLabCubit>(() => AiLabCubit(sl()));
   sl.registerFactory<PronunciationGameCubit>(() => PronunciationGameCubit(sl()));
 }
