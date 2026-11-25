@@ -2,6 +2,8 @@ import 'package:rive/rive.dart' as rive;
 
 import 'yasser_animation_config.dart';
 import 'yasser_animation_mapper.dart';
+import 'yasser_animation_state.dart';
+import 'yasser_rig_motion.dart';
 
 /// Drives the Phase 1 rig and its authored wave on the same artboard.
 final class YasserRiveController extends rive.RiveWidgetController {
@@ -11,9 +13,18 @@ final class YasserRiveController extends rive.RiveWidgetController {
   late final rive.ViewModelInstanceBoolean _passwordTyping;
   late final rive.Animation? _wave;
   bool _waving = false;
+  bool reducedMotion = false;
+  late final YasserRigMotion _motion;
+  final double _breathingPeriod;
+  YasserStateMapping _mapping = YasserAnimationMapper.map(
+    YasserAnimationState.idle,
+  );
 
   YasserRiveController(super.file, YasserAnimationConfig config)
-    : super(
+    : _breathingPeriod =
+          config.breathingDuration.inMicroseconds /
+          Duration.microsecondsPerSecond,
+      super(
         artboardSelector: rive.ArtboardNamed(config.artboardName),
         stateMachineSelector: rive.StateMachineNamed(config.stateMachineName),
       ) {
@@ -27,6 +38,7 @@ final class YasserRiveController extends rive.RiveWidgetController {
           ));
       _viewModel = viewModel;
       _wave = artboard.animationNamed(_waveTimeline);
+      _motion = YasserRigMotion(artboard);
     } catch (_) {
       super.dispose();
       viewModel?.dispose();
@@ -35,9 +47,13 @@ final class YasserRiveController extends rive.RiveWidgetController {
   }
 
   void applyMapping(YasserStateMapping mapping) {
-    setPasswordTyping(mapping.rivePasswordTyping);
+    _mapping = mapping;
+    _setPasswordTyping(mapping.rivePasswordTyping);
+    scheduleRepaint();
     final wave = _wave;
-    if (wave != null && mapping.riveAnimationTrigger == _waveTimeline) {
+    if (wave != null &&
+        !reducedMotion &&
+        mapping.riveAnimationTrigger == _waveTimeline) {
       wave.time = 0;
       _waving = true;
       scheduleRepaint();
@@ -46,7 +62,13 @@ final class YasserRiveController extends rive.RiveWidgetController {
     }
   }
 
-  void setPasswordTyping(bool value) {
+  void setPasswordTyping(bool value) => applyMapping(
+    YasserAnimationMapper.map(
+      value ? YasserAnimationState.coveringEyes : YasserAnimationState.idle,
+    ),
+  );
+
+  void _setPasswordTyping(bool value) {
     if (_passwordTyping.value == value) return;
     if (value) _stopWave();
     _passwordTyping.value = value;
@@ -64,8 +86,20 @@ final class YasserRiveController extends rive.RiveWidgetController {
 
   @override
   bool advance(double elapsedSeconds) {
+    _motion.restore();
     final machineChanged = super.advance(elapsedSeconds);
-    if (!_waving) return machineChanged;
+    if (!_waving) {
+      final moving = _motion.apply(
+        _mapping,
+        elapsedSeconds,
+        reducedMotion: reducedMotion,
+        breathingPeriod: _breathingPeriod,
+      );
+      // Flush bone edits without applying the state machine again.
+      // ignore: invalid_use_of_internal_member
+      artboard.updatePass();
+      return active && (machineChanged || moving);
+    }
 
     final wave = _wave!;
     if (wave.time + elapsedSeconds >= wave.duration) {
@@ -78,6 +112,7 @@ final class YasserRiveController extends rive.RiveWidgetController {
 
   @override
   void dispose() {
+    _motion.dispose();
     _wave?.dispose();
     super.dispose();
     _viewModel.dispose();

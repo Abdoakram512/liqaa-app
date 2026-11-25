@@ -2,36 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/yasser_avatar.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/animation/yasser/yasser_animation_state.dart';
+import '../../../core/widgets/yasser_character.dart';
 
 class YasserSpeechFeedbackCard extends StatelessWidget {
   final String message;
   final String poseString;
   final bool isListening;
+  final bool isPlayingAudioPrompt;
 
   const YasserSpeechFeedbackCard({
     super.key,
     required this.message,
     required this.poseString,
     this.isListening = false,
+    this.isPlayingAudioPrompt = false,
   });
 
-  YasserPose get _mappedPose {
-    switch (poseString) {
-      case 'celebrating':
-        return YasserPose.celebrating;
-      case 'thinking':
-        return YasserPose.thinking;
-      case 'pointing':
-      case 'presenting':
-        return YasserPose.presenting;
-      case 'waving':
-      default:
-        return YasserPose.waving;
-    }
+  YasserAnimationState get _animation {
+    if (isListening) return YasserAnimationState.listening;
+    if (isPlayingAudioPrompt) return YasserAnimationState.talking;
+    return switch (poseString) {
+      'celebrating' => YasserAnimationState.celebrating,
+      'thinking' => YasserAnimationState.thinking,
+      'pointing' || 'presenting' => YasserAnimationState.pointing,
+      _ => YasserAnimationState.greeting,
+    };
   }
 
   @override
@@ -40,10 +39,12 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         // Yasser Character Avatar
-        YasserAvatar(
-          pose: _mappedPose,
+        YasserCharacter(
+          state: _animation,
+          width: 98.w,
           height: 140.h,
-          animateBreathing: true,
+          enableTapReaction: false,
+          showShadow: false,
         ),
 
         SizedBox(width: 10.w),
@@ -86,7 +87,10 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
                     if (isListening) ...[
                       SizedBox(width: 8.w),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 6.w,
+                          vertical: 2.h,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(6),

@@ -4,11 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/routing/app_routes.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/phonological_background.dart';
+import '../../../core/routing/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/phonological_background.dart';
 import '../cubits/pronunciation_game_cubit.dart';
 import '../cubits/pronunciation_game_state.dart';
 import '../widgets/phonetic_breakdown_pill.dart';
@@ -71,6 +71,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                             message: state.yasserMessage,
                             poseString: state.yasserPose,
                             isListening: state.isListening,
+                            isPlayingAudioPrompt: state.isPlayingAudioPrompt,
                           ),
 
                           SizedBox(height: 12.h),

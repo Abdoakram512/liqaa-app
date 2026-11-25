@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../../../core/ai/models/vocabulary_word.dart';
-import '../../../../core/ai/models/pronunciation_assessment.dart';
+import '../../../core/ai/models/vocabulary_word.dart';
+import '../../../core/ai/models/pronunciation_assessment.dart';
 
 enum GameStatus {
   initial,

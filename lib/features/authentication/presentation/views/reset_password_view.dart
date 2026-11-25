@@ -37,6 +37,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
+  final _visiblePasswords = <FocusNode, bool>{};
 
   @override
   void initState() {
@@ -61,18 +62,22 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
   void _handlePasswordFocus() {
     if (_passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus) {
-      _yasserController.coverEyes();
+      final field = _passwordFocusNode.hasFocus
+          ? _passwordFocusNode
+          : _confirmPasswordFocusNode;
+      if (_visiblePasswords[field] == true) {
+        _yasserController.peek();
+      } else {
+        _yasserController.coverEyes();
+      }
     } else {
       _yasserController.uncoverEyes();
     }
   }
 
-  void _handleVisibility(bool isVisible) {
-    if (isVisible) {
-      _yasserController.peek();
-    } else {
-      _yasserController.coverEyes();
-    }
+  void _handleVisibility(FocusNode field, bool visible) {
+    _visiblePasswords[field] = visible;
+    if (field.hasFocus) _handlePasswordFocus();
   }
 
   void _submit() {
@@ -104,8 +109,11 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthPasswordResetSuccess) {
+          FocusScope.of(context).unfocus();
           _confettiController.play();
-          _yasserController.celebrate();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _yasserController.celebrate();
+          });
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -183,7 +191,8 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                           focusNode: _passwordFocusNode,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_reset_rounded),
-                          onPasswordVisibilityChanged: _handleVisibility,
+                          onPasswordVisibilityChanged: (visible) =>
+                              _handleVisibility(_passwordFocusNode, visible),
                           validator: (v) {
                             if (v == null || v.length < 6) {
                               return 'يجب أن تتكون من 6 خانات على الأقل';
@@ -202,7 +211,8 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                           isPassword: true,
                           textInputAction: TextInputAction.done,
                           prefixIcon: const Icon(Icons.lock_outline),
-                          onPasswordVisibilityChanged: _handleVisibility,
+                          onPasswordVisibilityChanged: (visible) =>
+                              _handleVisibility(_confirmPasswordFocusNode, visible),
                           onFieldSubmitted: _submit,
                           validator: (v) {
                             if (v != _passwordController.text) {

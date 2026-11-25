@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/ai/pronunciation_repository.dart';
+import '../../../core/ai/pronunciation_repository.dart';
 import 'pronunciation_game_state.dart';
 
 class PronunciationGameCubit extends Cubit<PronunciationGameState> {

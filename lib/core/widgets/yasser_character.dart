@@ -67,6 +67,7 @@ class _YasserCharacterState extends State<YasserCharacter>
   YasserRiveController? _riveWidgetController;
   bool _isLoadingRive = false;
   bool _hasRiveError = false;
+  bool _reducedMotion = false;
 
   @override
   void initState() {
@@ -113,7 +114,8 @@ class _YasserCharacterState extends State<YasserCharacter>
           YasserCharacter._loadFile());
       if (!mounted) return;
 
-      final controller = YasserRiveController(file, _controller.config);
+      final controller = YasserRiveController(file, _controller.config)
+        ..reducedMotion = _reducedMotion;
       _riveWidgetController = controller;
       _controller.attachWidgetController(controller);
       _breathingController.stop();
@@ -136,10 +138,24 @@ class _YasserCharacterState extends State<YasserCharacter>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reducedMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final controller = _riveWidgetController;
+    if (controller != null && controller.reducedMotion != _reducedMotion) {
+      controller.reducedMotion = _reducedMotion;
+      controller.applyMapping(_controller.currentMapping);
+    }
+  }
+
+  @override
   void didUpdateWidget(covariant YasserCharacter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.state != null && widget.state != oldWidget.state) {
-      _controller.engine.triggerState(widget.state!);
+    if (widget.state != oldWidget.state) {
+      _controller.returnToIdle();
+      if (widget.state != null) {
+        _controller.engine.triggerState(widget.state!);
+      }
     }
     if (YasserCharacter.enableRiveRuntime &&
         _riveWidgetController == null &&

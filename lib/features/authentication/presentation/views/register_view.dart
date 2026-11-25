@@ -41,6 +41,7 @@ class _RegisterViewState extends State<RegisterView> {
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
+  final _visiblePasswords = <FocusNode, bool>{};
 
   String _enteredName = '';
   UserRole _selectedRole = UserRole.child;
@@ -51,6 +52,8 @@ class _RegisterViewState extends State<RegisterView> {
     _yasserController = YasserController();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
 
+    _nameController.addListener(_updateNameGaze);
+    _emailController.addListener(_updateEmailGaze);
     _nameFocusNode.addListener(_handleCharacterFocus);
     _emailFocusNode.addListener(_handleCharacterFocus);
     _passwordFocusNode.addListener(_handleCharacterFocus);
@@ -59,6 +62,8 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   void dispose() {
+    _nameController.removeListener(_updateNameGaze);
+    _emailController.removeListener(_updateEmailGaze);
     _nameFocusNode.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
@@ -74,28 +79,45 @@ class _RegisterViewState extends State<RegisterView> {
 
   void _handleCharacterFocus() {
     if (_isAnyPasswordFocused()) {
-      _yasserController.coverEyes();
+      final field = _passwordFocusNode.hasFocus
+          ? _passwordFocusNode
+          : _confirmPasswordFocusNode;
+      if (_visiblePasswords[field] == true) {
+        _yasserController.peek();
+      } else {
+        _yasserController.coverEyes();
+      }
       return;
     }
 
     _yasserController.returnToIdle();
     if (_nameFocusNode.hasFocus) {
-      _yasserController.wave();
+      _updateNameGaze();
     } else if (_emailFocusNode.hasFocus) {
-      _yasserController.lookAtInput(normalizedY: 0.35);
+      _updateEmailGaze();
     }
+  }
+
+  void _updateNameGaze() => _updateCaret(_nameFocusNode, _nameController);
+
+  void _updateEmailGaze() => _updateCaret(_emailFocusNode, _emailController);
+
+  void _updateCaret(FocusNode focus, TextEditingController text) {
+    if (!focus.hasFocus) return;
+    _yasserController.followCaret(
+      text.selection.extentOffset,
+      textLength: text.text.length,
+      rightToLeft: Directionality.of(context) == TextDirection.rtl,
+    );
   }
 
   bool _isAnyPasswordFocused() {
     return _passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus;
   }
 
-  void _handlePasswordVisibility(bool isVisible) {
-    if (isVisible) {
-      _yasserController.peek();
-    } else {
-      _yasserController.coverEyes();
-    }
+  void _handlePasswordVisibility(FocusNode field, bool visible) {
+    _visiblePasswords[field] = visible;
+    if (field.hasFocus) _handleCharacterFocus();
   }
 
   void _submitRegister() {
@@ -130,8 +152,11 @@ class _RegisterViewState extends State<RegisterView> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
+          FocusScope.of(context).unfocus();
           _confettiController.play();
-          _yasserController.celebrate(duration: const Duration(seconds: 3));
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _yasserController.celebrate();
+          });
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -308,7 +333,8 @@ class _RegisterViewState extends State<RegisterView> {
                           focusNode: _passwordFocusNode,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_rounded),
-                          onPasswordVisibilityChanged: _handlePasswordVisibility,
+                          onPasswordVisibilityChanged: (visible) =>
+                              _handlePasswordVisibility(_passwordFocusNode, visible),
                           validator: (v) {
                             if (v == null || v.length < 6) {
                               return 'كلمة المرور يجب ألا تقل عن 6 خانات';
@@ -328,7 +354,8 @@ class _RegisterViewState extends State<RegisterView> {
                           isPassword: true,
                           textInputAction: TextInputAction.done,
                           prefixIcon: const Icon(Icons.lock_clock_rounded),
-                          onPasswordVisibilityChanged: _handlePasswordVisibility,
+                          onPasswordVisibilityChanged: (visible) =>
+                              _handlePasswordVisibility(_confirmPasswordFocusNode, visible),
                           onFieldSubmitted: _submitRegister,
                           validator: (v) {
                             if (v != _passwordController.text) {

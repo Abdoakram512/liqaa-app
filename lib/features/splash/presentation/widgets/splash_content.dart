@@ -8,7 +8,9 @@ import '../../../../core/localization/locale_keys.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/animation/yasser/yasser_animation_state.dart';
 import '../../../../core/widgets/yasser_avatar.dart';
+import '../../../../core/widgets/yasser_character.dart';
 
 class SplashContent extends StatelessWidget {
   const SplashContent({super.key});
@@ -138,10 +140,12 @@ class SplashContent extends StatelessWidget {
                 Positioned(
                   bottom: 0,
                   child:
-                      const YasserAvatar(
-                            pose: YasserPose.waving,
-                            height: 320,
-                            animateBreathing: true,
+                      YasserCharacter(
+                            state: YasserAnimationState.greeting,
+                            height: 320.h,
+                            width: 224.w,
+                            showShadow: false,
+                            enableTapReaction: false,
                           )
                           .animate()
                           .fadeIn(duration: 700.ms)

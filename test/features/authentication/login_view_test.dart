@@ -13,7 +13,10 @@ import 'package:liqaa_app/features/authentication/presentation/views/login_view.
 
 class MockTestAuthRepo implements AuthRepo {
   @override
-  Future<AuthResult<UserModel>> login({required String identity, required String password}) async {
+  Future<AuthResult<UserModel>> login({
+    required String identity,
+    required String password,
+  }) async {
     return AuthResult.success(
       UserModel(
         id: '1',
@@ -25,16 +28,28 @@ class MockTestAuthRepo implements AuthRepo {
   }
 
   @override
-  Future<AuthResult<UserModel>> register({required String name, required String email, required String password, UserRole role = UserRole.child}) async => throw UnimplementedError();
+  Future<AuthResult<UserModel>> register({
+    required String name,
+    required String email,
+    required String password,
+    UserRole role = UserRole.child,
+  }) async => throw UnimplementedError();
 
   @override
-  Future<AuthResult<bool>> sendPasswordReset({required String email}) async => throw UnimplementedError();
+  Future<AuthResult<bool>> sendPasswordReset({required String email}) async =>
+      throw UnimplementedError();
 
   @override
-  Future<AuthResult<bool>> verifyOtp({required String email, required String otp}) async => throw UnimplementedError();
+  Future<AuthResult<bool>> verifyOtp({
+    required String email,
+    required String otp,
+  }) async => throw UnimplementedError();
 
   @override
-  Future<AuthResult<bool>> resetPassword({required String email, required String newPassword}) async => throw UnimplementedError();
+  Future<AuthResult<bool>> resetPassword({
+    required String email,
+    required String newPassword,
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> logout() async {}
@@ -54,38 +69,71 @@ void main() {
     YasserInteractionEngine.enableBlinkTimer = true;
   });
 
-  testWidgets('LoginView releases privacy pose when focus returns to identity', (tester) async {
-    final mockRepo = MockTestAuthRepo();
-    final cubit = AuthCubit(mockRepo);
-    addTearDown(cubit.close);
+  testWidgets(
+    'LoginView releases privacy pose when focus returns to identity',
+    (tester) async {
+      final mockRepo = MockTestAuthRepo();
+      final cubit = AuthCubit(mockRepo);
+      addTearDown(cubit.close);
 
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (context, _) => MaterialApp(
-          home: BlocProvider<AuthCubit>.value(
-            value: cubit,
-            child: const LoginView(),
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (context, _) => MaterialApp(
+            home: BlocProvider<AuthCubit>.value(
+              value: cubit,
+              child: const LoginView(),
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
 
-    // Verify key fields exist
-    expect(find.text('تسجيل الدخول'), findsOneWidget);
-    expect(find.text('انطلق الآن 🚀'), findsOneWidget);
-    expect(find.byType(TextFormField), findsNWidgets(2));
-    final character = tester.widget<YasserCharacter>(find.byType(YasserCharacter));
-    final fields = tester.widgetList<YasserTextField>(find.byType(YasserTextField));
+      // Verify key fields exist
+      expect(find.text('تسجيل الدخول'), findsOneWidget);
+      expect(find.text('انطلق الآن 🚀'), findsOneWidget);
+      expect(find.byType(TextFormField), findsNWidgets(2));
+      final character = tester.widget<YasserCharacter>(
+        find.byType(YasserCharacter),
+      );
+      final fields = tester.widgetList<YasserTextField>(
+        find.byType(YasserTextField),
+      );
 
-    fields.last.focusNode!.requestFocus();
-    await tester.pump();
-    expect(character.controller!.currentState, YasserAnimationState.coveringEyes);
+      fields.last.focusNode!.requestFocus();
+      await tester.pump();
+      expect(
+        character.controller!.currentState,
+        YasserAnimationState.coveringEyes,
+      );
 
-    fields.first.focusNode!.requestFocus();
-    await tester.pump();
-    expect(character.controller!.currentState, YasserAnimationState.followingInput);
-  });
+      final passwordField = find.byType(YasserTextField).last;
+      await tester.tap(
+        find.descendant(of: passwordField, matching: find.byType(IconButton)),
+      );
+      await tester.pump();
+      expect(character.controller!.currentState, YasserAnimationState.peeking);
+
+      fields.first.focusNode!.requestFocus();
+      await tester.pump();
+      expect(
+        character.controller!.currentState,
+        YasserAnimationState.followingInput,
+      );
+
+      final identityField = find.byType(TextFormField).first;
+      final gazeAtStart = character.controller!.currentMapping.gazeTarget;
+      await tester.enterText(identityField, 'example');
+      await tester.pump();
+      expect(
+        character.controller!.currentMapping.gazeTarget,
+        isNot(gazeAtStart),
+      );
+
+      fields.last.focusNode!.requestFocus();
+      await tester.pump();
+      expect(character.controller!.currentState, YasserAnimationState.peeking);
+    },
+  );
 }

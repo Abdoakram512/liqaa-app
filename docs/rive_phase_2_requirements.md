@@ -8,9 +8,15 @@ This document serves as the formal engineering contract for the Rive animation t
 
 ---
 
-## 2. Required Phase 2 State Machine Inputs
+## 2. Flutter implementation
 
-The app loads `State Machine 1` on artboard `Yasser_Phase1_Work`. Password privacy already uses a ViewModel boolean. The remaining rows describe planned authoring.
+Flutter drives procedural motion on the original Rive rig. The startup scenes now use the live character for the greeting, puzzle and celebration. The authentication views pass a normalized caret position for non-password fields. Password visibility drives a one-eye peek while the other eye stays covered. The pronunciation game drives the listening pose and mouth motion from its actual microphone and prompt-playback states.
+
+Flutter implements ambient motion, blinking, gaze, thinking, listening and celebration using exported rig components. The mouth opens and closes during playback. Phoneme-synchronized Arabic visemes and a separate editor-authored Phase 2 export remain open, along with Android frame-rate and visual verification.
+
+## 3. Editor authoring targets
+
+The app loads `State Machine 1` on artboard `Yasser_Phase1_Work`. Password privacy already uses a ViewModel boolean. This table describes the original editor-authoring targets for a future export.
 
 | Input Name | Type | Allowed Values | Default | Target Rig / Bone Components | Expected Transition Behavior |
 | --- | --- | --- | --- | --- | --- |
@@ -28,19 +34,19 @@ The app loads `State Machine 1` on artboard `Yasser_Phase1_Work`. Password priva
 
 ---
 
-## 3. Rig & Animation Quality Standards
+## 4. Rig & Animation Quality Standards
 
-### 3.1 Hand & Arm Anatomical Rules
+### 4.1 Hand & Arm Anatomical Rules
 - **Hand Orientation:** Thumb must always face inward towards the torso in resting position.
 - **Elbow Rotation:** Elbow joints must bend naturally backward; avoid unnatural inward dishing.
 - **Wrist Articulation:** Hand targets must not twist the forearm beyond 80 degrees of axial rotation.
 - **Finger Poses:** Fingers must never overlap into an unnatural single clump; provide distinct silhouette separation.
 
-### 3.2 Eye Tracking & Gaze
+### 4.2 Eye Tracking & Gaze
 - Eye movement must be constrained by an elliptical bounding socket (`P1_EyeLimit`).
 - Pupil movement must be accompanied by subtle secondary eyelid tracking (when looking down, upper eyelid drops slightly).
 
-### 3.3 State Machine Layering Architecture
+### 4.3 State Machine Layering Architecture
 To prevent interactions from interrupting ambient breathing or blinking:
 - **Layer 0 (Base Ambient):** Continuous breathing, spine weighting, idle micro-sway.
 - **Layer 1 (Eye Ambient):** Randomized blinking loop (fires every 3-6s).
@@ -50,7 +56,7 @@ To prevent interactions from interrupting ambient breathing or blinking:
 
 ---
 
-## 4. Acceptance Criteria for Phase 2 Asset Delivery
+## 5. Acceptance Criteria for Phase 2 Asset Delivery
 
 1. Delivered file must replace `assets/rive/yasser.riv` and retain exact artboard name `Yasser_Phase1_Work` and state machine name `State Machine 1`.
 2. Binary size must remain under 2.5 MB.

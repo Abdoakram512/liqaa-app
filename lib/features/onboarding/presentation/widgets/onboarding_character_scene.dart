@@ -2,16 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/animation/yasser/yasser_animation_state.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/yasser_avatar.dart';
+import '../../../../core/widgets/yasser_character.dart';
 import '../../data/models/onboarding_item_model.dart';
 
 class OnboardingCharacterScene extends StatelessWidget {
   final OnboardingItemModel item;
+  final bool isActive;
 
-  const OnboardingCharacterScene({super.key, required this.item});
+  const OnboardingCharacterScene({
+    super.key,
+    required this.item,
+    this.isActive = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -116,10 +123,13 @@ class OnboardingCharacterScene extends StatelessWidget {
           Positioned(
             bottom: 0,
             child:
-                YasserAvatar(
-                      pose: item.pose,
+                YasserCharacter(
+                      state: isActive
+                          ? YasserAnimationState.greeting
+                          : YasserAnimationState.idle,
                       height: 330.h,
-                      animateBreathing: true,
+                      width: 232.w,
+                      showShadow: false,
                     )
                     .animate()
                     .fadeIn(duration: 600.ms)
@@ -227,10 +237,13 @@ class OnboardingCharacterScene extends StatelessWidget {
           Positioned(
             bottom: 0,
             child:
-                YasserAvatar(
-                      pose: item.pose,
+                YasserCharacter(
+                      state: isActive
+                          ? YasserAnimationState.thinking
+                          : YasserAnimationState.idle,
                       height: 330.h,
-                      animateBreathing: true,
+                      width: 232.w,
+                      showShadow: false,
                     )
                     .animate()
                     .fadeIn(duration: 600.ms)
@@ -339,10 +352,13 @@ class OnboardingCharacterScene extends StatelessWidget {
           Positioned(
             bottom: 0,
             child:
-                YasserAvatar(
-                      pose: item.pose,
+                YasserCharacter(
+                      state: isActive
+                          ? YasserAnimationState.celebrating
+                          : YasserAnimationState.idle,
                       height: 330.h,
-                      animateBreathing: true,
+                      width: 232.w,
+                      showShadow: false,
                     )
                     .animate()
                     .fadeIn(duration: 600.ms)

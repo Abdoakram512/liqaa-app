@@ -88,7 +88,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                           cubit.onPageChanged(index);
                         },
                         itemBuilder: (context, index) {
-                          return OnboardingPageItem(item: state.items[index]);
+                          return OnboardingPageItem(
+                              item: state.items[index],
+                              isActive: index == state.currentIndex,
+                            );
                         },
                       ),
                     ),

@@ -38,6 +38,7 @@ class _LoginViewState extends State<LoginView> {
   final _passwordFocusNode = FocusNode();
 
   bool _rememberMe = true;
+  bool _passwordVisible = false;
 
   @override
   void initState() {
@@ -45,12 +46,14 @@ class _LoginViewState extends State<LoginView> {
     _yasserController = YasserController();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
 
+    _identityController.addListener(_updateIdentityGaze);
     _identityFocusNode.addListener(_handleIdentityFocus);
     _passwordFocusNode.addListener(_handlePasswordFocus);
   }
 
   @override
   void dispose() {
+    _identityController.removeListener(_updateIdentityGaze);
     _identityFocusNode.removeListener(_handleIdentityFocus);
     _passwordFocusNode.removeListener(_handlePasswordFocus);
     _identityFocusNode.dispose();
@@ -64,7 +67,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _handleIdentityFocus() {
     if (_identityFocusNode.hasFocus) {
-      _yasserController.lookAtInput(normalizedX: 0.0, normalizedY: 0.35);
+      _updateIdentityGaze();
     } else if (!_passwordFocusNode.hasFocus) {
       _yasserController.returnToIdle();
     }
@@ -72,16 +75,27 @@ class _LoginViewState extends State<LoginView> {
 
   void _handlePasswordFocus() {
     if (_passwordFocusNode.hasFocus) {
-      _yasserController.coverEyes();
+      _handlePasswordVisibility(_passwordVisible);
     } else {
       _yasserController.uncoverEyes();
       if (_identityFocusNode.hasFocus) {
-        _yasserController.lookAtInput(normalizedX: 0.0, normalizedY: 0.35);
+        _updateIdentityGaze();
       }
     }
   }
 
+  void _updateIdentityGaze() {
+    if (!_identityFocusNode.hasFocus) return;
+    _yasserController.followCaret(
+      _identityController.selection.extentOffset,
+      textLength: _identityController.text.length,
+      rightToLeft: Directionality.of(context) == TextDirection.rtl,
+    );
+  }
+
   void _handlePasswordVisibility(bool isVisible) {
+    _passwordVisible = isVisible;
+    if (!_passwordFocusNode.hasFocus) return;
     if (isVisible) {
       _yasserController.peek();
     } else {
@@ -106,8 +120,11 @@ class _LoginViewState extends State<LoginView> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
+          FocusScope.of(context).unfocus();
           _confettiController.play();
-          _yasserController.celebrate(duration: const Duration(seconds: 3));
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _yasserController.celebrate();
+          });
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

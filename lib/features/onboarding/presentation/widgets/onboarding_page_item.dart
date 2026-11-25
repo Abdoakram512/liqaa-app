@@ -11,10 +11,12 @@ import 'onboarding_character_scene.dart';
 
 class OnboardingPageItem extends StatelessWidget {
   final OnboardingItemModel item;
+  final bool isActive;
 
   const OnboardingPageItem({
     super.key,
     required this.item,
+    this.isActive = true,
   });
 
   @override
@@ -33,7 +35,7 @@ class OnboardingPageItem extends StatelessWidget {
                 child: SizedBox(
                   width: 340,
                   height: 360,
-                  child: OnboardingCharacterScene(item: item),
+                  child: OnboardingCharacterScene(item: item, isActive: isActive),
                 ),
               ),
             ),

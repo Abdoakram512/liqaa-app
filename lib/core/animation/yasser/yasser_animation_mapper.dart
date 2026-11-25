@@ -117,6 +117,17 @@ abstract final class YasserAnimationMapper {
       case YasserAnimationState.waiting:
       case YasserAnimationState.listening:
       case YasserAnimationState.talking:
+        return YasserStateMapping(
+          semanticState: state,
+          rivePasswordTyping: false,
+          gazeTarget: const Offset(0, .25),
+          fallbackAssetPath: presentingPose,
+          arabicTitle: switch (state) {
+            YasserAnimationState.listening => 'يستمع',
+            YasserAnimationState.talking => 'يتحدث',
+            _ => 'في الانتظار',
+          },
+        );
       case YasserAnimationState.pointing:
         return const YasserStateMapping(
           semanticState: YasserAnimationState.pointing,

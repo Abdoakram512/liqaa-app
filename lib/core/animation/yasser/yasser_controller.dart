@@ -89,6 +89,18 @@ class YasserController extends ChangeNotifier {
     );
   }
 
+  /// Converts only the caret offset to a gaze coordinate for non-password fields.
+  void followCaret(
+    int offset, {
+    required int textLength,
+    required bool rightToLeft,
+  }) {
+    final span = textLength < 12 ? 12 : textLength;
+    final progress = (offset / span).clamp(0.0, 1.0);
+    final x = (2 * progress - 1) * (rightToLeft ? -1 : 1);
+    lookAtInput(normalizedX: x, normalizedY: .35);
+  }
+
   /// Celebration reaction on successful login, registration, or completed quiz.
   void celebrate({Duration? duration}) {
     engine.triggerState(
