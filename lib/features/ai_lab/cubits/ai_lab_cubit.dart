@@ -131,11 +131,11 @@ class AiLabCubit extends Cubit<AiLabState> {
   }
 
   /// Runs blind phoneme recognition on arbitrary audio without any expected word target (Lab 9)
-  Future<void> runBlindPhonemeTest({Uint8List? audioBytes, String? simulatedText}) async {
+  Future<void> runBlindPhonemeTest({Uint8List? audioBytes}) async {
     emit(state.copyWith(status: AiLabStatus.processing));
     try {
-      final Uint8List bytes = audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
-      if (bytes.isEmpty && simulatedText == null) {
+      final Uint8List raw = audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
+      if (raw.isEmpty) {
         emit(state.copyWith(
           status: AiLabStatus.ready,
           lastBlindTranscript: '',
@@ -144,33 +144,25 @@ class AiLabCubit extends Cubit<AiLabState> {
         return;
       }
 
-      String recognizedText = '';
-      List<PhonemeToken> tokens = const [];
+      final Uint8List pcmBytes = _repository.preprocessor.parseWavPcm(raw);
+      final samples = _repository.preprocessor.pcm16ToFloat32(pcmBytes);
+      final vad = _repository.vadEngine.analyze(samples);
 
-      if (simulatedText != null) {
-        recognizedText = simulatedText;
-        tokens = _repository.phonemeEngine.textToPhonemes(simulatedText);
-      } else {
-        final samples = _repository.preprocessor.pcm16ToFloat32(bytes);
-        final vad = _repository.vadEngine.analyze(samples);
-
-        if (!vad.speechDetected || vad.trimmedSamples == null) {
-          emit(state.copyWith(
-            status: AiLabStatus.ready,
-            lastBlindTranscript: '',
-            lastBlindPhonemes: const [],
-          ));
-          return;
-        }
-
-        final stt = await _repository.sttEngine.transcribe(vad.trimmedSamples!);
-        recognizedText = stt.text;
-        tokens = await _repository.phonemeEngine.recognizePhonemes(vad.trimmedSamples!);
+      if (!vad.speechDetected || vad.trimmedSamples == null || vad.trimmedSamples!.isEmpty) {
+        emit(state.copyWith(
+          status: AiLabStatus.ready,
+          lastBlindTranscript: '',
+          lastBlindPhonemes: const [],
+        ));
+        return;
       }
+
+      final stt = await _repository.sttEngine.transcribe(vad.trimmedSamples!);
+      final tokens = await _repository.phonemeEngine.recognizePhonemes(vad.trimmedSamples!);
 
       emit(state.copyWith(
         status: AiLabStatus.ready,
-        lastBlindTranscript: recognizedText,
+        lastBlindTranscript: stt.text,
         lastBlindPhonemes: tokens,
       ));
     } catch (e) {

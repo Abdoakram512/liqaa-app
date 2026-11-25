@@ -152,8 +152,14 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   Future<void> playYasserAudioPrompt() async {
     emit(state.copyWith(isPlayingAudioPrompt: true));
     try {
-      // In production, plays prerecorded prompt for word
-      await Future.delayed(const Duration(milliseconds: 1000));
+      final word = state.currentWord;
+      if (word != null) {
+        final fixturePath = 'audio_samples/correct_${word.wordTransliteration.toLowerCase()}.wav';
+        await _audioPlayer.stop();
+        await _audioPlayer.play(AssetSource(fixturePath));
+      }
+    } catch (e) {
+      // Audio playback fallback for test environment or missing audio driver
     } finally {
       emit(state.copyWith(isPlayingAudioPrompt: false));
     }

@@ -124,7 +124,7 @@ void main() {
       expect(assessment.passed, isFalse);
       expect(assessment.stars, equals(0));
       expect(assessment.overallScore, equals(0.0));
-      expect(assessment.errorType, equals(AssessmentErrorType.unrecognized));
+      expect(assessment.errorType, equals(AssessmentErrorType.noSpeech));
       expect(assessment.yasserFeedbackMessage, contains('مش سامع صوتك'));
     });
 

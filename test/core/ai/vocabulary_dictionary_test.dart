@@ -22,6 +22,11 @@ void main() {
         expect(vocab.targetPhoneme, isNotEmpty);
         expect(vocab.expectedPhonemes, isNotEmpty);
         expect(vocab.expectedArabicPhonemes, isNotEmpty);
+        expect(
+          vocab.expectedPhonemes.length,
+          equals(vocab.expectedArabicPhonemes.length),
+          reason: 'Phonemes length mismatch in ${vocab.id} (${vocab.wordArabic})',
+        );
         expect(vocab.yasserTip, isNotEmpty);
         expect(vocab.commonChildErrors, isNotEmpty);
       }

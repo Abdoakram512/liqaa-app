@@ -121,7 +121,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                 SizedBox(height: 20.h),
 
                 Text(
-                  'شاشات ومختبرات الذكاء الاصطناعي (9 Developer Labs)',
+                  'شاشات ومختبرات الذكاء الاصطناعي (10 Developer Labs)',
                   style: AppTextStyles.titleSmall.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -193,6 +193,13 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                   icon: Icons.visibility_off_rounded,
                   color: Colors.deepOrange,
                   onTap: () => context.push(AppRoutes.aiLabBlind),
+                ),
+                _buildTestCard(
+                  title: '10. الفحص التشخيصي والاختبارات السلبية (Negative Testing)',
+                  subtitle: 'رفض الصمت، الضوضاء البيضاء، الكلمات غير المطابقة، وتشبع الإشارة',
+                  icon: Icons.gpp_good_rounded,
+                  color: Colors.redAccent,
+                  onTap: () => context.push(AppRoutes.aiLabNegative),
                 ),
               ],
             ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/ai/models/phoneme_token.dart';
+import '../../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../../core/ai/models/vocabulary_word.dart';
-import '../../../../core/ai/phoneme_recognition_engine.dart';
-import '../../../../core/ai/pronunciation_evaluator.dart';
+import '../../../../core/ai/pronunciation_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -18,75 +18,76 @@ class ClinicalBenchmarkView extends StatefulWidget {
 }
 
 class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
-  final PronunciationEvaluator _evaluator = const PronunciationEvaluator();
-  final PhonemeRecognitionEngine _phonemeEngine = PhonemeRecognitionEngine();
+  final PronunciationRepository _repository = PronunciationRepository();
+  bool _isInitialized = false;
+  bool _isRunning = false;
 
   int? _selectedCaseIndex;
-  dynamic _lastAssessment;
+  PronunciationAssessment? _lastAssessment;
 
   final List<Map<String, dynamic>> _testBattery = [
     {
       'title': 'كورة (نطق صحيح ومطابق)',
+      'fixturePath': 'assets/audio_samples/correct_kora.wav',
       'targetWord': 'كورة',
-      'targetPhoneme': 'ك',
-      'spokenText': 'كورة',
-      'expectedResult': 'Pass (3 نجوم)',
+      'targetWordId': 'word_kora',
+      'expectedResult': 'Pass (3 نجوم - نطق سليم)',
       'isPassExpected': true,
     },
     {
       'title': 'تورة (إبدال أمامي - Fronting)',
+      'fixturePath': 'assets/audio_samples/error_tora.wav',
       'targetWord': 'كورة',
-      'targetPhoneme': 'ك',
-      'spokenText': 'تورة',
-      'expectedResult': 'Fail (كشف الإبدال)',
+      'targetWordId': 'word_kora',
+      'expectedResult': 'Fail (كشف إبدال الكاف إلى تاء)',
       'isPassExpected': false,
     },
     {
       'title': 'سمكة (نطق صحيح ومطابق)',
+      'fixturePath': 'assets/audio_samples/correct_samaka.wav',
       'targetWord': 'سمكة',
-      'targetPhoneme': 'س',
-      'spokenText': 'سمكة',
-      'expectedResult': 'Pass (3 نجوم)',
+      'targetWordId': 'word_samaka',
+      'expectedResult': 'Pass (3 نجوم - نطق سليم)',
       'isPassExpected': true,
     },
     {
       'title': 'ثمكة (لدغة بين الأسنان - Lisp)',
+      'fixturePath': 'assets/audio_samples/error_thamaka.wav',
       'targetWord': 'سمكة',
-      'targetPhoneme': 'س',
-      'spokenText': 'ثمكة',
-      'expectedResult': 'Fail (كشف اللدغة)',
+      'targetWordId': 'word_samaka',
+      'expectedResult': 'Fail (كشف لدغة السين إلى ثاء)',
       'isPassExpected': false,
     },
     {
       'title': 'أرنب (نطق صحيح ومطابق)',
+      'fixturePath': 'assets/audio_samples/correct_arnab.wav',
       'targetWord': 'أرنب',
-      'targetPhoneme': 'ر',
-      'spokenText': 'أرنب',
-      'expectedResult': 'Pass (3 نجوم)',
+      'targetWordId': 'word_arnab',
+      'expectedResult': 'Pass (3 نجوم - نطق سليم)',
       'isPassExpected': true,
     },
     {
       'title': 'أنلب (لدغة الراء إلى لام - Lateralization)',
+      'fixturePath': 'assets/audio_samples/error_anlab.wav',
       'targetWord': 'أرنب',
-      'targetPhoneme': 'ر',
-      'spokenText': 'أنلب',
-      'expectedResult': 'Fail (كشف اللدغة)',
+      'targetWordId': 'word_arnab',
+      'expectedResult': 'Fail (كشف لدغة الراء إلى لام)',
       'isPassExpected': false,
     },
     {
       'title': 'مدرسة (نطق كلمة غير مطابقة)',
+      'fixturePath': 'assets/audio_samples/word_madrasa.wav',
       'targetWord': 'كورة',
-      'targetPhoneme': 'ك',
-      'spokenText': 'مدرسة',
-      'expectedResult': 'Fail (كلمة غير مطابقة)',
+      'targetWordId': 'word_kora',
+      'expectedResult': 'Fail (كلمة غير مطابقة تماماً)',
       'isPassExpected': false,
     },
     {
-      'title': 'صمت تام (Silence / No Speech)',
+      'title': 'صوت صمت (Silence / No Speech)',
+      'fixturePath': 'assets/audio_samples/silence.wav',
       'targetWord': 'كورة',
-      'targetPhoneme': 'ك',
-      'spokenText': '',
-      'expectedResult': 'Fail (0 نجوم - صمت)',
+      'targetWordId': 'word_kora',
+      'expectedResult': 'Fail (0 نجوم - صمت تام)',
       'isPassExpected': false,
     },
   ];
@@ -94,107 +95,61 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
   @override
   void initState() {
     super.initState();
-    _phonemeEngine.initialize();
+    _initRepository();
   }
 
-  void _runBenchmarkCase(int index) {
-    final item = _testBattery[index];
-    final String targetWordStr = item['targetWord'] as String;
-    final String spoken = item['spokenText'] as String;
-
-    // Build representative vocabulary word
-    VocabularyWord word;
-    if (targetWordStr == 'كورة') {
-      word = const VocabularyWord(
-        id: 'word_kora',
-        wordArabic: 'كورة',
-        wordTransliteration: 'Koora',
-        meaningEn: 'Ball',
-        targetPhoneme: 'ك',
-        targetPhonemeIpa: 'k',
-        phonemeCategory: 'صوت طبقي انفجاري',
-        difficultyLevel: 1,
-        expectedPhonemes: ['k', 'uː', 'r', 'a'],
-        expectedArabicPhonemes: ['ك', 'و', 'ر', 'ة'],
-        yasserTip: 'افتح بؤك وخلّي صوت الكاف يطلع من ورا',
-        commonChildErrors: [
-          ChildErrorRule(
-            pronouncedWord: 'تورة',
-            errorType: 'substitution',
-            substitutedPhoneme: 'ت',
-            targetPhoneme: 'ك',
-            clinicalName: 'Fronting (إبدال أمامي)',
-            feedbackAr: 'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
-            yasserPose: 'thinking',
-          ),
-        ],
-      );
-    } else if (targetWordStr == 'سمكة') {
-      word = const VocabularyWord(
-        id: 'word_samaka',
-        wordArabic: 'سمكة',
-        wordTransliteration: 'Samaka',
-        meaningEn: 'Fish',
-        targetPhoneme: 'س',
-        targetPhonemeIpa: 's',
-        phonemeCategory: 'صوت لثوي احتكاكي',
-        difficultyLevel: 1,
-        expectedPhonemes: ['s', 'a', 'm', 'a', 'k', 'a'],
-        expectedArabicPhonemes: ['س', 'م', 'ك', 'ة'],
-        yasserTip: 'اقفل سنانك بالراحة وطلع هواء زي الصفارة',
-        commonChildErrors: [
-          ChildErrorRule(
-            pronouncedWord: 'ثمكة',
-            errorType: 'substitution',
-            substitutedPhoneme: 'ث',
-            targetPhoneme: 'س',
-            clinicalName: 'Interdental Lisp (لدغة بين الأسنان)',
-            feedbackAr: 'ممتاز! بس لسانك طلع برة سنانك.. خلّي لسانك جوة واصفر: سسسـ سمكة!',
-            yasserPose: 'thinking',
-          ),
-        ],
-      );
-    } else {
-      word = const VocabularyWord(
-        id: 'word_arnab',
-        wordArabic: 'أرنب',
-        wordTransliteration: 'Arnab',
-        meaningEn: 'Rabbit',
-        targetPhoneme: 'ر',
-        targetPhonemeIpa: 'r',
-        phonemeCategory: 'صوت لثوي تكراري',
-        difficultyLevel: 2,
-        expectedPhonemes: ['ʔ', 'a', 'r', 'n', 'a', 'b'],
-        expectedArabicPhonemes: ['أ', 'ر', 'ن', 'ب'],
-        yasserTip: 'خلّي طرف لسانك يرفرف',
-        commonChildErrors: [
-          ChildErrorRule(
-            pronouncedWord: 'أنلب',
-            errorType: 'substitution',
-            substitutedPhoneme: 'ل',
-            targetPhoneme: 'ر',
-            clinicalName: 'Lateralization (لدغة الراء إلى لام)',
-            feedbackAr: 'برافو يا بطل! بدّلنا الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
-            yasserPose: 'thinking',
-          ),
-        ],
-      );
+  Future<void> _initRepository() async {
+    await _repository.initialize();
+    if (mounted) {
+      setState(() => _isInitialized = true);
     }
+  }
 
-    final List<PhonemeToken> tokens = spoken.isNotEmpty
-        ? _phonemeEngine.textToPhonemes(spoken)
-        : const <PhonemeToken>[];
-
-    final assessment = _evaluator.evaluate(
-      word: word,
-      recognizedTokens: tokens,
-      latencyMs: 42,
-    );
+  Future<void> _runBenchmarkCase(int index) async {
+    if (!_isInitialized || _isRunning) return;
 
     setState(() {
       _selectedCaseIndex = index;
-      _lastAssessment = assessment;
+      _isRunning = true;
     });
+
+    final item = _testBattery[index];
+    final String fixturePath = item['fixturePath'] as String;
+    final String targetWordId = item['targetWordId'] as String;
+
+    try {
+      // 1. Find target word in repository dictionary
+      VocabularyWord? word;
+      for (final w in _repository.vocabulary) {
+        if (w.id == targetWordId) {
+          word = w;
+          break;
+        }
+      }
+      word ??= _repository.vocabulary.first;
+
+      // 2. Load REAL audio WAV fixture bytes from assets
+      final ByteData data = await rootBundle.load(fixturePath);
+      final Uint8List rawAudioBytes = data.buffer.asUint8List();
+
+      // 3. Process through end-to-end real AI pipeline
+      final assessment = await _repository.evaluateAudio(
+        rawAudioBytes: rawAudioBytes,
+        targetWord: word,
+      );
+
+      if (mounted) {
+        setState(() {
+          _lastAssessment = assessment;
+          _isRunning = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ClinicalBenchmarkView] Execution error: $e');
+      if (mounted) {
+        setState(() => _isRunning = false);
+      }
+    }
   }
 
   @override
@@ -235,7 +190,7 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
-                      'حزمة الاختبارات الإكلينيكية القياسية المبنية على معايير تشخيص أمراض النطق لدى الأطفال المصريين (ASMDD Dataset Benchmark).',
+                      'معيار الاختبار الإكلينيكي الحقيقي: معالجة ملفات صوتية حقيقية مسجلة مسبقاً (WAV Audio Fixtures) للتحقق الدقيق من اكتشاف اضطرابات النطق بدون محاكاة نصية.',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: Colors.purple.shade900,
                         fontWeight: FontWeight.w600,
@@ -250,7 +205,7 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
             SizedBox(height: 16.h),
 
             Text(
-              'حالات الاختبار المرجعية (8 Clinical Scenarios):',
+              'حالات الاختبار المرجعية (8 Real Audio Scenarios):',
               style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10.h),
@@ -279,7 +234,7 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                     ),
                   ),
                   subtitle: Text(
-                    'الكلمة: ${item['targetWord']} | المنطوق: "${item['spokenText']}" | المتوقع: ${item['expectedResult']}',
+                    'الملف: ${(item['fixturePath'] as String).split('/').last} | الهدف: ${item['targetWord']} | المتوقع: ${item['expectedResult']}',
                     style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                   ),
                   trailing: ElevatedButton(
@@ -288,8 +243,10 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                       foregroundColor: isSelected ? Colors.white : AppColors.textPrimary,
                       elevation: 0,
                     ),
-                    onPressed: () => _runBenchmarkCase(idx),
-                    child: const Text('اختبر الآن'),
+                    onPressed: _isRunning ? null : () => _runBenchmarkCase(idx),
+                    child: _isRunning && isSelected
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('تشغيل العينة'),
                   ),
                 ),
               );
@@ -300,7 +257,7 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
             // Assessment Inspection Area
             if (_lastAssessment != null) ...[
               Text(
-                'نتائج خوارزمية المحاذاة الديناميكية (DP Assessment Result):',
+                'نتائج الاستدلال والتقييم الفعلي:',
                 style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10.h),
@@ -311,6 +268,13 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusM),
                   border: Border.all(color: AppColors.borderSoft),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadowWarm,
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,96 +283,114 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'النتيجة: ${_lastAssessment.passed ? "اجتاز (PASS)" : "لم يجتز (FAIL)"}',
+                          'الحالة: ${_lastAssessment!.passed ? "اجتاز (Pass)" : "لم يجتز (Fail)"}',
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
-                            color: _lastAssessment.passed ? Colors.green.shade800 : Colors.red.shade800,
+                            color: _lastAssessment!.passed ? Colors.green.shade700 : Colors.red.shade700,
                           ),
                         ),
-                        Text(
-                          'الدرجة: ${_lastAssessment.overallScore}% (${_lastAssessment.stars} نجوم)',
-                          style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                        Row(
+                          children: List.generate(
+                            3,
+                            (i) => Icon(
+                              Icons.star_rounded,
+                              color: i < _lastAssessment!.stars ? Colors.amber : Colors.grey.shade300,
+                              size: 24,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    if (_lastAssessment.clinicalErrorName != null) ...[
-                      SizedBox(height: 6.h),
+                    SizedBox(height: 8.h),
+
+                    Text('الكلمة المستهدفة: ${_lastAssessment!.targetWordArabic}'),
+                    Text('النص المكتشف عبر الذكاء الاصطناعي: "${_lastAssessment!.recognizedTranscript}"'),
+                    Text('الدرجة الكلية: ${_lastAssessment!.overallScore}% | زمن الاستدلال: ${_lastAssessment!.latencyMs}ms'),
+                    if (_lastAssessment!.clinicalErrorName != null) ...[
+                      SizedBox(height: 4.h),
                       Text(
-                        'التشخيص الإكلينيكي: ${_lastAssessment.clinicalErrorName}',
+                        'التشخيص الإكلينيكي: ${_lastAssessment!.clinicalErrorName}',
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          color: Colors.red.shade800,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade900,
                         ),
                       ),
                     ],
+
                     SizedBox(height: 12.h),
+                    const Divider(),
+                    SizedBox(height: 8.h),
 
                     Text(
-                      'مصفوفة المحاذاة الفونيمية (Alignment Matrix):',
-                      style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
+                      'مصفوفة المحاذاة الفونيمية (DP Alignment Matrix):',
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8.h),
 
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: (_lastAssessment.alignments as List).map<Widget>((a) {
-                          final status = a.status as String;
-                          Color bg = Colors.green.shade50;
-                          Color bd = Colors.green.shade400;
-                          if (status == 'substituted') {
-                            bg = Colors.red.shade50;
-                            bd = Colors.red.shade400;
-                          } else if (status == 'deleted') {
-                            bg = Colors.amber.shade50;
-                            bd = Colors.amber.shade400;
-                          }
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: _lastAssessment!.alignments.map((a) {
+                        Color chipColor = Colors.green.shade50;
+                        Color borderColor = Colors.green.shade300;
+                        if (a.status == 'substituted') {
+                          chipColor = Colors.orange.shade50;
+                          borderColor = Colors.orange.shade300;
+                        } else if (a.status == 'deleted') {
+                          chipColor = Colors.red.shade50;
+                          borderColor = Colors.red.shade300;
+                        } else if (a.status == 'inserted') {
+                          chipColor = Colors.purple.shade50;
+                          borderColor = Colors.purple.shade300;
+                        }
 
-                          return Container(
-                            margin: EdgeInsets.only(right: 8.w),
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                            decoration: BoxDecoration(
-                              color: bg,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: bd),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'المتوقع: ${a.expectedArabic.isNotEmpty ? a.expectedArabic : "—"}',
-                                  style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  'المنطوق: ${a.recognizedToken?.arabicSymbol ?? "—"}',
-                                  style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  status,
-                                  style: TextStyle(
-                                    fontSize: 9.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: bd,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                        return Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: chipColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                '${a.expectedArabic.isNotEmpty ? a.expectedArabic : "Ø"} -> ${a.recognizedToken?.arabicSymbol ?? "Ø"}',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                '/${a.expectedPhoneme.isNotEmpty ? a.expectedPhoneme : "Ø"}/ -> /${a.recognizedToken?.symbol ?? "Ø"}/',
+                                style: TextStyle(fontSize: 10.sp, color: AppColors.textSecondary),
+                              ),
+                              Text(
+                                a.status,
+                                style: TextStyle(fontSize: 9.sp, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.all(10.w),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-
-                    SizedBox(height: 14.h),
-                    Text(
-                      'رسالة ياسر للطفل:',
-                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      _lastAssessment.yasserFeedbackMessage as String,
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 20),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              'رسالة ياسر للطفل: ${_lastAssessment!.yasserFeedbackMessage}',
+                              style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade900),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

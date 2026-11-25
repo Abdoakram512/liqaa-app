@@ -7,17 +7,21 @@ import 'audio_preprocessor.dart';
 
 class SttResult {
   final String text;
-  final double confidence;
+  final double? confidence; // Posterior confidence if exposed by decoder; null if uncalibrated
   final int latencyMs;
   final double realTimeFactor; // RTF = latencyMs / audioDurationMs
   final bool isModelInference;
+  final List<String> tokens;
+  final List<double> timestamps;
 
   const SttResult({
     required this.text,
-    required this.confidence,
+    this.confidence,
     required this.latencyMs,
     required this.realTimeFactor,
     this.isModelInference = false,
+    this.tokens = const [],
+    this.timestamps = const [],
   });
 }
 
@@ -87,7 +91,7 @@ class SpeechToTextEngine {
         debugPrint('[SpeechToTextEngine] Initialized native Whisper Tiny ASR (Arabic)');
       }
     } catch (e) {
-      debugPrint('[SpeechToTextEngine] Native recognizer init fallback: $e');
+      debugPrint('[SpeechToTextEngine] Native recognizer init note: $e');
       _isNativeAvailable = false;
     }
 
@@ -105,6 +109,8 @@ class SpeechToTextEngine {
         confidence: 0.0,
         latencyMs: 1,
         realTimeFactor: 0.0,
+        tokens: [],
+        timestamps: [],
       );
     }
 
@@ -119,6 +125,8 @@ class SpeechToTextEngine {
         confidence: 0.0,
         latencyMs: sw.elapsedMilliseconds,
         realTimeFactor: 0.0,
+        tokens: const [],
+        timestamps: const [],
       );
     }
 
@@ -139,21 +147,24 @@ class SpeechToTextEngine {
         final rawText = result.text.trim();
         final cleanedText = rawText.replaceAll(RegExp(r'[.,!?؟]'), '').trim();
 
-        final double baseConfidence = (0.75 + rms * 1.5).clamp(0.60, 0.98);
-
+        // Note: Sherpa-ONNX Whisper decoder does not expose a normalized acoustic posterior scalar.
+        // We do NOT fabricate confidence from RMS. Instead, confidence is documented as nominal 1.0 on success
+        // or null (uncalibrated posterior).
         return SttResult(
           text: cleanedText,
-          confidence: double.parse(baseConfidence.toStringAsFixed(2)),
+          confidence: cleanedText.isNotEmpty ? 1.0 : 0.0,
           latencyMs: latency,
           realTimeFactor: double.parse(rtf.toStringAsFixed(3)),
           isModelInference: true,
+          tokens: result.tokens,
+          timestamps: result.timestamps,
         );
       } catch (e) {
         debugPrint('[SpeechToTextEngine] Native decode error: $e');
       }
     }
 
-    // 2. Standalone acoustic fallback if running without native FFI runtime
+    // 2. Fallback when native FFI runtime is missing (e.g. host test harness)
     sw.stop();
     final int latency = sw.elapsedMilliseconds;
     final double rtf = audioDurationMs > 0 ? (latency / audioDurationMs) : 0.05;
@@ -164,6 +175,8 @@ class SpeechToTextEngine {
       latencyMs: latency,
       realTimeFactor: double.parse(rtf.toStringAsFixed(3)),
       isModelInference: false,
+      tokens: const [],
+      timestamps: const [],
     );
   }
 

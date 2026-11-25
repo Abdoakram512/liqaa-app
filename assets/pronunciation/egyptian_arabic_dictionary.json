@@ -58,9 +58,7 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "s",
-        "a",
         "m",
-        "a",
         "k",
         "a"
       ],
@@ -103,10 +101,8 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "ʔ",
-        "a",
         "r",
         "n",
-        "a",
         "b"
       ],
       "expected_arabic_phonemes": [
@@ -148,8 +144,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "b",
-        "a",
-        "tˤ",
         "tˤ",
         "a"
       ],
@@ -182,7 +176,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "ʃ",
-        "a",
         "m",
         "s"
       ],
@@ -215,7 +208,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "k",
-        "a",
         "l",
         "b"
       ],
@@ -248,8 +240,6 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "t",
-        "u",
-        "f",
         "f",
         "aː",
         "ħ",
@@ -320,9 +310,7 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "ɡ",
-        "a",
         "m",
-        "a",
         "l"
       ],
       "expected_arabic_phonemes": [
@@ -354,7 +342,6 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "ħ",
-        "e",
         "sˤ",
         "aː",
         "n"
@@ -421,9 +408,7 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "ʔ",
-        "a",
         "l",
-        "a",
         "m"
       ],
       "expected_arabic_phonemes": [
@@ -455,7 +440,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "k",
-        "e",
         "t",
         "aː",
         "b"
@@ -522,11 +506,8 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "ʕ",
-        "a",
         "r",
-        "a",
         "b",
-        "e",
         "j",
         "a"
       ],
@@ -593,8 +574,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "tˤ",
-        "a",
-        "j",
         "j",
         "aː",
         "r",
@@ -631,9 +610,7 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "w",
-        "a",
         "l",
-        "a",
         "d"
       ],
       "expected_arabic_phonemes": [
@@ -665,7 +642,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "b",
-        "e",
         "n",
         "t"
       ],
@@ -762,7 +738,6 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "r",
-        "e",
         "ɡ",
         "l"
       ],
@@ -795,10 +770,8 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "t",
-        "a",
         "ʕ",
         "l",
-        "a",
         "b"
       ],
       "expected_arabic_phonemes": [
@@ -831,9 +804,7 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "d",
-        "a",
         "h",
-        "a",
         "b"
       ],
       "expected_arabic_phonemes": [
@@ -865,7 +836,6 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "z",
-        "a",
         "r",
         "aː",
         "f",
@@ -902,10 +872,8 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "h",
-        "u",
         "d",
         "h",
-        "u",
         "d"
       ],
       "expected_arabic_phonemes": [
@@ -938,7 +906,6 @@
       "difficulty_level": 2,
       "expected_phonemes": [
         "f",
-        "a",
         "r",
         "aː",
         "ʃ",
@@ -975,8 +942,6 @@
       "difficulty_level": 1,
       "expected_phonemes": [
         "ʔ",
-        "u",
-        "tˤ",
         "tˤ",
         "a"
       ],

@@ -23,7 +23,8 @@ class VadAnalysisResult {
   final bool speechDetected;
   final int speechStartMs;
   final int speechEndMs;
-  final List<double> speechProbabilities;
+  final List<double> speechProbabilities; // Binary speech mask from Silero segments, or calibrated envelope
+  final List<double> energyEnvelope; // Acoustic energy envelope for visualization
   final Float32List? trimmedSamples;
   final bool isNativeModel;
 
@@ -32,6 +33,7 @@ class VadAnalysisResult {
     required this.speechStartMs,
     required this.speechEndMs,
     required this.speechProbabilities,
+    this.energyEnvelope = const [],
     this.trimmedSamples,
     this.isNativeModel = false,
   });
@@ -50,8 +52,8 @@ class SileroVadEngine {
   String? _modelPath;
 
   SileroVadEngine({
-    this.speechThreshold = 0.35, // 0.35 calibrated for soft pediatric consonant stops
-    this.minSpeechDurationMs = 120, // 120ms
+    this.speechThreshold = 0.35, // Calibrated for soft pediatric speech onset
+    this.minSpeechDurationMs = 120, // 120ms minimum speech chunk
     this.speechSilencePaddingMs = 300, // 300ms trailing padding
   });
 
@@ -59,7 +61,7 @@ class SileroVadEngine {
   bool get isNativeAvailable => _isNativeAvailable;
   String? get modelPath => _modelPath;
 
-  /// Initializes Silero VAD. Loads ONNX model via native bindings when available.
+  /// Initializes Silero VAD ONNX model via Sherpa-ONNX native bindings
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -110,9 +112,14 @@ class SileroVadEngine {
         speechStartMs: 0,
         speechEndMs: 0,
         speechProbabilities: [],
+        energyEnvelope: [],
         trimmedSamples: null,
       );
     }
+
+    const int frameSize = 512;
+    final int numFrames = samples.length ~/ frameSize;
+    final energyEnv = _computeAcousticEnergyEnvelope(samples, frameSize: frameSize);
 
     // 1. If native Silero VAD is available, execute neural inference
     if (_vad != null && _isNativeAvailable) {
@@ -133,14 +140,20 @@ class SileroVadEngine {
           _vad!.pop();
           _vad!.clear();
 
-          // Generate probability curve for visualizer
-          final probs = _computeFrameProbabilities(samples, frameSize: 512);
+          // Construct exact speech segment mask from native Silero detection
+          final speechMask = List<double>.filled(numFrames, 0.0);
+          final int startFrame = (seg.start / frameSize).floor().clamp(0, numFrames - 1);
+          final int endFrame = ((seg.start + seg.samples.length) / frameSize).ceil().clamp(0, numFrames);
+          for (int f = startFrame; f < endFrame; f++) {
+            speechMask[f] = 1.0;
+          }
 
           return VadAnalysisResult(
             speechDetected: true,
             speechStartMs: startMs,
             speechEndMs: endMs,
-            speechProbabilities: probs,
+            speechProbabilities: speechMask,
+            energyEnvelope: energyEnv,
             trimmedSamples: seg.samples.isNotEmpty ? seg.samples : samples,
             isNativeModel: true,
           );
@@ -150,7 +163,8 @@ class SileroVadEngine {
             speechDetected: false,
             speechStartMs: 0,
             speechEndMs: 0,
-            speechProbabilities: _computeFrameProbabilities(samples, frameSize: 512),
+            speechProbabilities: List<double>.filled(numFrames, 0.0),
+            energyEnvelope: energyEnv,
             trimmedSamples: null,
             isNativeModel: true,
           );
@@ -160,13 +174,36 @@ class SileroVadEngine {
       }
     }
 
-    // 2. Calibrated acoustic energy & zero-crossing fallback (used in unit test runner or if native lib missing)
-    return _calibratedAcousticAnalyze(samples, sampleRate: sampleRate);
+    // 2. Calibrated acoustic energy & zero-crossing fallback (used if native FFI library is missing)
+    return _calibratedAcousticAnalyze(samples, sampleRate: sampleRate, energyEnv: energyEnv);
   }
 
-  /// Calibrated acoustic energy, zero-crossing, and spectral flux analysis calibrated against Silero VAD
-  VadAnalysisResult _calibratedAcousticAnalyze(Float32List samples, {required int sampleRate}) {
-    const int frameSize = 512; // 32ms at 16kHz
+  /// Calculates acoustic frame energy envelope for visualizer and diagnostics
+  List<double> _computeAcousticEnergyEnvelope(Float32List samples, {required int frameSize}) {
+    final int numFrames = samples.length ~/ frameSize;
+    if (numFrames == 0) return const [];
+    final List<double> env = [];
+
+    for (int f = 0; f < numFrames; f++) {
+      double frameEnergy = 0.0;
+      final int offset = f * frameSize;
+      for (int i = 0; i < frameSize; i++) {
+        final double s = samples[offset + i];
+        frameEnergy += s * s;
+      }
+      frameEnergy /= frameSize;
+      env.add(math.sqrt(frameEnergy).clamp(0.0, 1.0));
+    }
+    return env;
+  }
+
+  /// Calibrated acoustic energy, zero-crossing fallback
+  VadAnalysisResult _calibratedAcousticAnalyze(
+    Float32List samples, {
+    required int sampleRate,
+    required List<double> energyEnv,
+  }) {
+    const int frameSize = 512;
     final int numFrames = samples.length ~/ frameSize;
     if (numFrames == 0) {
       return const VadAnalysisResult(
@@ -174,26 +211,27 @@ class SileroVadEngine {
         speechStartMs: 0,
         speechEndMs: 0,
         speechProbabilities: [],
+        energyEnvelope: [],
         trimmedSamples: null,
       );
     }
 
     final List<double> speechProbabilities = [];
 
-    // Acoustic energy analysis
     double energySum = 0.0;
     for (int i = 0; i < samples.length; i++) {
       energySum += samples[i] * samples[i];
     }
     final double avgEnergy = energySum / samples.length;
 
-    // Strict threshold: silence or pure low noise has avgEnergy < 0.0001
+    // Strict threshold: silence or pure low noise has avgEnergy < 0.0002
     if (avgEnergy < 0.0002) {
       return VadAnalysisResult(
         speechDetected: false,
         speechStartMs: 0,
         speechEndMs: 0,
-        speechProbabilities: List.filled(numFrames, 0.05),
+        speechProbabilities: List.filled(numFrames, 0.0),
+        energyEnvelope: energyEnv,
         trimmedSamples: null,
         isNativeModel: false,
       );
@@ -245,51 +283,35 @@ class SileroVadEngine {
         speechStartMs: 0,
         speechEndMs: 0,
         speechProbabilities: speechProbabilities,
-        trimmedSamples: null, // Zero speech detected -> null trimmed samples
+        energyEnvelope: energyEnv,
+        trimmedSamples: null,
         isNativeModel: false,
       );
     }
 
-    // Apply safety padding
-    final int paddingFrames = (speechSilencePaddingMs / frameDurationMs).round();
-    final int startFrameClamped = math.max(0, firstSpeechFrame - paddingFrames);
-    final int endFrameClamped = math.min(numFrames - 1, lastSpeechFrame + paddingFrames);
+    // Apply 250ms padding around detected speech
+    final int padFrames = ((speechSilencePaddingMs / 1000.0) * sampleRate / frameSize).round();
+    final int startFramePadded = math.max(0, firstSpeechFrame - padFrames);
+    final int endFramePadded = math.min(numFrames - 1, lastSpeechFrame + padFrames);
 
-    final int startSample = startFrameClamped * frameSize;
-    final int endSample = math.min(samples.length, (endFrameClamped + 1) * frameSize);
+    final int startSample = startFramePadded * frameSize;
+    final int endSample = math.min(samples.length, (endFramePadded + 1) * frameSize);
 
-    final int startMs = (startSample / sampleRate * 1000.0).round();
-    final int endMs = (endSample / sampleRate * 1000.0).round();
-
-    final Float32List trimmed = Float32List.sublistView(samples, startSample, endSample);
+    final Float32List trimmed = samples.sublist(startSample, endSample);
 
     return VadAnalysisResult(
       speechDetected: true,
-      speechStartMs: startMs,
-      speechEndMs: endMs,
+      speechStartMs: (startSample / sampleRate * 1000.0).round(),
+      speechEndMs: (endSample / sampleRate * 1000.0).round(),
       speechProbabilities: speechProbabilities,
+      energyEnvelope: energyEnv,
       trimmedSamples: trimmed,
       isNativeModel: false,
     );
   }
 
-  List<double> _computeFrameProbabilities(Float32List samples, {required int frameSize}) {
-    final int numFrames = samples.length ~/ frameSize;
-    if (numFrames == 0) return const [];
-    final List<double> probs = [];
-    for (int f = 0; f < numFrames; f++) {
-      double e = 0.0;
-      final int off = f * frameSize;
-      for (int i = 0; i < frameSize; i++) {
-        e += samples[off + i] * samples[off + i];
-      }
-      e /= frameSize;
-      probs.add((e * 100.0).clamp(0.0, 1.0));
-    }
-    return probs;
-  }
-
   void dispose() {
+    _vad?.clear();
     _vad?.free();
     _vad = null;
     _isInitialized = false;

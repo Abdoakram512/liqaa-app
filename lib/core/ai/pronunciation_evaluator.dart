@@ -12,7 +12,7 @@ class PronunciationEvaluator {
     required List<PhonemeToken> recognizedTokens,
     int latencyMs = 85,
   }) {
-    // 1. Handle empty / silent / unrecognized audio
+    // 1. Handle empty / silent audio -> NoSpeech failure state
     if (recognizedTokens.isEmpty) {
       return PronunciationAssessment(
         targetWord: word.id,
@@ -20,7 +20,8 @@ class PronunciationEvaluator {
         recognizedTranscript: '',
         overallScore: 0.0,
         stars: 0,
-        errorType: AssessmentErrorType.unrecognized,
+        errorType: AssessmentErrorType.noSpeech,
+        clinicalErrorName: 'صمت تام (No Speech Detected)',
         alignments: word.expectedPhonemes.asMap().entries.map((e) {
           final int idx = e.key;
           final String exp = e.value;
@@ -36,7 +37,7 @@ class PronunciationEvaluator {
           );
         }).toList(),
         recognizedPhonemes: const [],
-        yasserFeedbackMessage: 'مش سامع صوتك كويس يا بطل! علّي صوتك ويلا نجرب تاني.',
+        yasserFeedbackMessage: 'مش سامع صوتك يا بطل! علّي صوتك ويلا نجرب تاني.',
         yasserPose: 'thinking',
         latencyMs: latencyMs,
         passed: false,
@@ -46,7 +47,7 @@ class PronunciationEvaluator {
     final String recognizedArabic = recognizedTokens.map((t) => t.arabicSymbol).join();
     final String recognizedSymbols = recognizedTokens.map((t) => t.symbol).join();
 
-    // 2. Perform True Dynamic Programming (Levenshtein) Alignment
+    // 2. Perform True Dynamic Programming (Wagner-Fischer) Alignment
     final List<PhonemeAlignment> alignments = _alignPhonemesDP(
       expected: word.expectedPhonemes,
       expectedArabic: word.expectedArabicPhonemes,
@@ -80,10 +81,11 @@ class PronunciationEvaluator {
       }
     }
 
-    // 4. Score calculation based on alignment results
+    // 4. Score calculation based on alignment results (penalizing insertions, deletions, substitutions)
     int matches = 0;
     int substitutions = 0;
     int deletions = 0;
+    int insertions = 0;
     double confidenceSum = 0.0;
     bool targetPhonemeMatched = false;
 
@@ -98,16 +100,20 @@ class PronunciationEvaluator {
         substitutions++;
       } else if (a.status == 'deleted') {
         deletions++;
+      } else if (a.status == 'inserted') {
+        insertions++;
       }
     }
 
     final int totalExpected = math.max(1, word.expectedPhonemes.length);
-    final double rawMatchRatio = matches / totalExpected;
+    // Insertion penalty: deduct 0.5 per inserted phoneme
+    final double netMatches = math.max(0.0, matches - (insertions * 0.5));
+    final double rawMatchRatio = netMatches / totalExpected;
     final double avgConfidence = matches > 0 ? (confidenceSum / matches) : 0.5;
 
     double score = (rawMatchRatio * 85.0 + avgConfidence * 15.0).clamp(0.0, 100.0);
 
-    // If completely unrelated word was spoken (e.g. match ratio < 30%)
+    // Completely unrelated word spoken (e.g. match ratio < 30%)
     if (rawMatchRatio < 0.30) {
       return PronunciationAssessment(
         targetWord: word.id,
@@ -115,7 +121,7 @@ class PronunciationEvaluator {
         recognizedTranscript: recognizedArabic.isNotEmpty ? recognizedArabic : recognizedSymbols,
         overallScore: math.min(score, 30.0),
         stars: 1,
-        errorType: AssessmentErrorType.unrecognized,
+        errorType: AssessmentErrorType.unrelatedWord,
         clinicalErrorName: 'كلمة غير مطابقة (Unrelated Word)',
         targetPhoneme: word.targetPhoneme,
         alignments: alignments,
@@ -178,6 +184,11 @@ class PronunciationEvaluator {
       clinicalName = 'حذف صوت (Phonetic Deletion)';
       feedback = 'قربت قوي! نسيت صوت في النص.. يلا ننطق كل الحروف مع بعض: ${word.wordArabic}!';
       pose = 'pointing';
+    } else if (insertions > 0) {
+      errorType = AssessmentErrorType.insertion;
+      clinicalName = 'إضافة أصوات زائدة (Phonetic Insertion)';
+      feedback = 'شاطر! بس زودت أصوات زيادة.. يلا نقول: ${word.wordArabic} من غير زيادة!';
+      pose = 'thinking';
     } else {
       errorType = AssessmentErrorType.distortion;
       clinicalName = 'عدم وضوح كافي (Acoustic Distortion)';
@@ -306,12 +317,24 @@ class PronunciationEvaluator {
     // Egyptian Arabic variants
     // 1. جيم [g] vs [ɡ]
     if ((expAr == 'ج' || expIpa == 'ɡ') && (recAr == 'ج' || recIpa == 'ɡ')) return true;
-    // 2. همزة [ʔ] vs [ء] / [أ] / [إ] / [آ]
-    if (expIpa == 'ʔ' && recIpa == 'ʔ') return true;
+    // 2. همزة [ʔ] vs [ء] / [أ] / [إ] / [آ] / [ق] (Egyptian dialectal Qaf -> glottal stop)
+    if ((expIpa == 'ʔ' || expAr == 'ق' || expAr == 'ء') &&
+        (recIpa == 'ʔ' || recAr == 'ق' || recAr == 'ء' || recAr == 'أ' || recAr == 'إ')) {
+      return true;
+    }
     // 3. Long vs short vowels: [uː] vs [u], [aː] vs [a], [iː] vs [i]
-    if ((expIpa == 'uː' || expIpa == 'u') && (recIpa == 'uː' || recIpa == 'u' || recAr == 'و')) return true;
-    if ((expIpa == 'aː' || expIpa == 'a') && (recIpa == 'aː' || recIpa == 'a' || recAr == 'ا' || recAr == 'ة')) return true;
-    if ((expIpa == 'iː' || expIpa == 'i') && (recIpa == 'iː' || recIpa == 'i' || recAr == 'ي')) return true;
+    if ((expIpa == 'uː' || expIpa == 'u' || expIpa == 'oː') &&
+        (recIpa == 'uː' || recIpa == 'u' || recIpa == 'oː' || recAr == 'و' || recAr == 'ُ')) {
+      return true;
+    }
+    if ((expIpa == 'aː' || expIpa == 'a') &&
+        (recIpa == 'aː' || recIpa == 'a' || recAr == 'ا' || recAr == 'ة' || recAr == 'َ')) {
+      return true;
+    }
+    if ((expIpa == 'iː' || expIpa == 'i' || expIpa == 'eː') &&
+        (recIpa == 'iː' || recIpa == 'i' || recIpa == 'eː' || recAr == 'ي' || recAr == 'ِ')) {
+      return true;
+    }
 
     return false;
   }

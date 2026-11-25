@@ -95,11 +95,58 @@ class PronunciationRepository {
       );
     }
 
-    // 1. Convert to Float32 PCM
-    Float32List samples = preprocessor.pcm16ToFloat32(rawAudioBytes);
+    // 1. Convert to Float32 PCM (handling RIFF/WAVE header if present)
+    final Uint8List pcmBytes = preprocessor.parseWavPcm(rawAudioBytes);
+    Float32List samples = preprocessor.pcm16ToFloat32(pcmBytes);
+
+    if (samples.isEmpty) {
+      sw.stop();
+      return evaluator.evaluate(
+        word: targetWord,
+        recognizedTokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
 
     // 2. Preprocessing: DC-offset removal & Peak Normalization
     samples = preprocessor.removeDcOffset(samples);
+    final double rawRms = preprocessor.calculateRms(samples);
+    final double rawSnr = preprocessor.estimateSnrDb(samples);
+
+    // Severe noise / distortion check (high noise floor, SNR < 2.0 dB)
+    if (rawSnr < 2.0 && rawRms > 0.08) {
+      sw.stop();
+      return PronunciationAssessment(
+        targetWord: targetWord.id,
+        targetWordArabic: targetWord.wordArabic,
+        recognizedTranscript: '',
+        overallScore: 0.0,
+        stars: 0,
+        errorType: AssessmentErrorType.poorAudioQuality,
+        clinicalErrorName: 'جودة صوت منخفضة (Poor SNR / High Noise)',
+        targetPhoneme: targetWord.targetPhoneme,
+        alignments: targetWord.expectedPhonemes.asMap().entries.map((e) {
+          final int idx = e.key;
+          final String exp = e.value;
+          final String expAr = idx < targetWord.expectedArabicPhonemes.length
+              ? targetWord.expectedArabicPhonemes[idx]
+              : exp;
+          return PhonemeAlignment(
+            expectedPhoneme: exp,
+            expectedArabic: expAr,
+            recognizedToken: null,
+            isMatch: false,
+            status: 'deleted',
+          );
+        }).toList(),
+        recognizedPhonemes: const [],
+        yasserFeedbackMessage: 'في دوشة حواليك يا بطل! روح لمكان هادي وقول تاني.',
+        yasserPose: 'thinking',
+        latencyMs: sw.elapsedMilliseconds,
+        passed: false,
+      );
+    }
+
     samples = preprocessor.normalizePeak(samples);
 
     // 3. Silero VAD analysis & silence detection
@@ -155,7 +202,8 @@ class PronunciationRepository {
       );
     }
 
-    Float32List samples = preprocessor.pcm16ToFloat32(rawBytes);
+    final Uint8List pcmBytes = preprocessor.parseWavPcm(rawBytes);
+    Float32List samples = preprocessor.pcm16ToFloat32(pcmBytes);
     samples = preprocessor.removeDcOffset(samples);
 
     final VadAnalysisResult vad = vadEngine.analyze(samples);
@@ -164,6 +212,7 @@ class PronunciationRepository {
     final DenoiseResult denoise = denoiserEngine.process(trimmed);
 
     final double rms = preprocessor.calculateRms(samples);
+    final double peak = preprocessor.calculatePeak(samples);
     final double snr = preprocessor.estimateSnrDb(samples);
     final List<double> waveform = preprocessor.downsampleForWaveform(samples, 64);
 
@@ -173,7 +222,7 @@ class PronunciationRepository {
       speechEndMs: vad.speechEndMs,
       durationMs: vad.durationMs,
       averageRms: double.parse(rms.toStringAsFixed(3)),
-      peakAmplitude: 0.95,
+      peakAmplitude: double.parse(peak.toStringAsFixed(2)),
       snrDb: double.parse(snr.toStringAsFixed(1)),
       snrImprovementDb: double.parse(denoise.snrImprovementDb.toStringAsFixed(1)),
       rawAudioBytes: rawBytes,
@@ -218,7 +267,7 @@ class PronunciationRepository {
         targetPhonemeIpa: 's',
         phonemeCategory: 'صوت لثوي احتكاكي مهموس (Alveolar Fricative)',
         difficultyLevel: 1,
-        expectedPhonemes: ['s', 'a', 'm', 'a', 'k', 'a'],
+        expectedPhonemes: ['s', 'm', 'k', 'a'],
         expectedArabicPhonemes: ['س', 'م', 'ك', 'ة'],
         yasserTip: 'اقفل سنانك بالراحة وطلع هواء زي الصفارة: سسسـ سمكة!',
         commonChildErrors: [
@@ -242,7 +291,7 @@ class PronunciationRepository {
         targetPhonemeIpa: 'r',
         phonemeCategory: 'صوت لثوي تكراري (Alveolar Trill)',
         difficultyLevel: 2,
-        expectedPhonemes: ['ʔ', 'a', 'r', 'n', 'a', 'b'],
+        expectedPhonemes: ['ʔ', 'r', 'n', 'b'],
         expectedArabicPhonemes: ['أ', 'ر', 'ن', 'ب'],
         yasserTip: 'خلّي طرف لسانك يرفرف ورا سنانك: رررـ أرنب!',
         commonChildErrors: [
@@ -252,7 +301,7 @@ class PronunciationRepository {
             substitutedPhoneme: 'ل',
             targetPhoneme: 'ر',
             clinicalName: 'Lateralization (لدغة الراء إلى لام)',
-            feedbackAr: 'برافو يا بطل! بدّلنا الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
+            feedbackAr: 'برافو يا بطل! بدّلنا صوت الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
             yasserPose: 'thinking',
           ),
         ],

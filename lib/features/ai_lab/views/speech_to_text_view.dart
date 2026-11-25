@@ -132,7 +132,10 @@ class SpeechToTextView extends StatelessWidget {
 
                     SizedBox(height: 14.h),
 
-                    _buildMetricRow('نسبة الثقة (Confidence):', '${(stt.confidence * 100).toInt()}%'),
+                    _buildMetricRow(
+                      'نسبة الثقة (Confidence):',
+                      stt.confidence != null ? '${(stt.confidence! * 100).toInt()}%' : 'غير معيرة (Uncalibrated)',
+                    ),
                     _buildMetricRow('زمن المعالجة (Latency):', '${stt.latencyMs} ms'),
                     _buildMetricRow('معدل الوقت الحقيقي (RTF):', '${stt.realTimeFactor}x (${stt.realTimeFactor < 1.0 ? "أسرع من الوقت الفعلي" : "أبطأ"})'),
                   ],

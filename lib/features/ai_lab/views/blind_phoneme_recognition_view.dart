@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -154,9 +155,9 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
 
                 SizedBox(height: 16.h),
 
-                // Test Presets Section (One-click reproducible tests)
+                // Test Presets Section (Real WAV Audio Fixtures)
                 Text(
-                  'عينات سريعة للتحقق (Quick Blind Test Fixtures)',
+                  'عينات صوتية حقيقية للتحقق الفوري (WAV Audio Fixtures):',
                   style: AppTextStyles.titleSmall.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -167,12 +168,12 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: [
-                    _buildPresetChip(context, label: 'كورة (نطق صحيح)', text: 'كورة'),
-                    _buildPresetChip(context, label: 'تورة (إبدال كـ إلى تـ)', text: 'تورة'),
-                    _buildPresetChip(context, label: 'سمكة (نطق صحيح)', text: 'سمكة'),
-                    _buildPresetChip(context, label: 'ثمكة (لدغة ثـ)', text: 'ثمكة'),
-                    _buildPresetChip(context, label: 'مدرسة (كلمة حرة)', text: 'مدرسة'),
-                    _buildPresetChip(context, label: 'صوت صمت (Silence)', text: '', isSilence: true),
+                    _buildFixtureChip(context, label: 'كورة (صوت حقيقي)', fixturePath: 'assets/audio_samples/correct_kora.wav'),
+                    _buildFixtureChip(context, label: 'تورة (إبدال كـ إلى تـ)', fixturePath: 'assets/audio_samples/error_tora.wav'),
+                    _buildFixtureChip(context, label: 'سمكة (صوت حقيقي)', fixturePath: 'assets/audio_samples/correct_samaka.wav'),
+                    _buildFixtureChip(context, label: 'ثمكة (لدغة ثـ)', fixturePath: 'assets/audio_samples/error_thamaka.wav'),
+                    _buildFixtureChip(context, label: 'مدرسة (كلمة حرة)', fixturePath: 'assets/audio_samples/word_madrasa.wav'),
+                    _buildFixtureChip(context, label: 'صوت صمت (Silence)', fixturePath: 'assets/audio_samples/silence.wav', isSilence: true),
                   ],
                 ),
 
@@ -330,10 +331,10 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
     );
   }
 
-  Widget _buildPresetChip(
+  Widget _buildFixtureChip(
     BuildContext context, {
     required String label,
-    required String text,
+    required String fixturePath,
     bool isSilence = false,
   }) {
     return ActionChip(
@@ -345,8 +346,16 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
         size: 16,
         color: isSilence ? Colors.red : AppColors.primary,
       ),
-      onPressed: () {
-        context.read<AiLabCubit>().runBlindPhonemeTest(simulatedText: isSilence ? '' : text);
+      onPressed: () async {
+        try {
+          final data = await rootBundle.load(fixturePath);
+          final bytes = data.buffer.asUint8List();
+          if (context.mounted) {
+            context.read<AiLabCubit>().runBlindPhonemeTest(audioBytes: bytes);
+          }
+        } catch (e) {
+          debugPrint('[BlindPhonemeRecognitionView] Error loading fixture $fixturePath: $e');
+        }
       },
     );
   }

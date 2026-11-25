@@ -8,6 +8,8 @@ class DenoiseResult {
   final double snrAfterDb;
   final double snrImprovementDb;
   final bool wasSuppressionApplied;
+  final bool isNeuralModel;
+  final String filterType;
 
   const DenoiseResult({
     required this.processedSamples,
@@ -15,9 +17,15 @@ class DenoiseResult {
     required this.snrAfterDb,
     required this.snrImprovementDb,
     required this.wasSuppressionApplied,
+    this.isNeuralModel = false,
+    this.filterType = 'dsp_wiener_subtraction',
   });
 }
 
+/// Noise suppression engine.
+///
+/// Executes high-resolution DSP Wiener Spectral Subtraction on 16kHz audio.
+/// When disabled, operates as a bit-exact transparent bypass.
 class RnnoiseDenoiserEngine {
   final AudioPreprocessor _preprocessor;
   bool enabled = true;
@@ -33,7 +41,7 @@ class RnnoiseDenoiserEngine {
 
   Future<void> initialize() async {
     _isInitialized = true;
-    debugPrint('[RnnoiseDenoiserEngine] Initialized (enabled: $enabled)');
+    debugPrint('[RnnoiseDenoiserEngine] Initialized DSP Wiener filter (enabled: $enabled)');
   }
 
   /// Denoises 16kHz audio samples. If enabled == false, acts as zero-latency bypass.
@@ -45,6 +53,8 @@ class RnnoiseDenoiserEngine {
         snrAfterDb: 0.0,
         snrImprovementDb: 0.0,
         wasSuppressionApplied: false,
+        isNeuralModel: false,
+        filterType: 'none',
       );
     }
 
@@ -58,6 +68,8 @@ class RnnoiseDenoiserEngine {
         snrAfterDb: snrBefore,
         snrImprovementDb: 0.0,
         wasSuppressionApplied: false,
+        isNeuralModel: false,
+        filterType: 'bypass',
       );
     }
 
@@ -111,6 +123,8 @@ class RnnoiseDenoiserEngine {
       snrAfterDb: snrAfter,
       snrImprovementDb: snrImprovement,
       wasSuppressionApplied: true,
+      isNeuralModel: false,
+      filterType: 'dsp_wiener_subtraction',
     );
   }
 

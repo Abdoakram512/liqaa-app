@@ -2,12 +2,17 @@ import 'package:equatable/equatable.dart';
 import 'phoneme_token.dart';
 
 enum AssessmentErrorType {
-  correct, // نطـق صحيح
-  substitution, // إبدال فونيمي
-  deletion, // حذف
-  insertion, // إضافة
-  distortion, // تشويه / عدم وضوح
-  unrecognized, // غير واضح أو صمت
+  correct, // نطق صحيح ومطابق
+  substitution, // إبدال فونيمي سريري
+  deletion, // حذف صوتي
+  insertion, // إضافة أصوات زائدة
+  distortion, // تشويه / عدم وضوح صوتي
+  noSpeech, // صمت تام / عدم التقاط صوت
+  poorAudioQuality, // جودة صوت منخفضة / ضوضاء شديدة
+  unrelatedWord, // كلمة غير مطابقة للهدف
+  uncertain, // استدلال غير مؤكد
+  modelUnavailable, // نموذج الذكاء الاصطناعي غير متوفر
+  unrecognized, // حالة غير محددة
 }
 
 class PhonemeAlignment extends Equatable {

@@ -30,6 +30,27 @@ class AudioPreprocessor {
     return pcmBytes;
   }
 
+  /// Extracts raw PCM16 bytes from a standard RIFF/WAVE container
+  Uint8List parseWavPcm(Uint8List wavBytes) {
+    if (wavBytes.length < 44) return wavBytes;
+    // Check "RIFF" and "WAVE" header markers
+    if (wavBytes[0] == 0x52 && wavBytes[1] == 0x49 && wavBytes[2] == 0x46 && wavBytes[3] == 0x46) {
+      // Find "data" chunk
+      for (int i = 12; i < wavBytes.length - 8; i++) {
+        if (wavBytes[i] == 0x64 && wavBytes[i + 1] == 0x61 && wavBytes[i + 2] == 0x74 && wavBytes[i + 3] == 0x61) {
+          final ByteData bd = ByteData.sublistView(wavBytes);
+          final int dataLength = bd.getUint32(i + 4, Endian.little);
+          final int start = i + 8;
+          final int end = math.min(wavBytes.length, start + dataLength);
+          return wavBytes.sublist(start, end);
+        }
+      }
+      // Standard 44-byte fallback if data marker parsing fails
+      return wavBytes.sublist(44);
+    }
+    return wavBytes;
+  }
+
   /// Removes DC Offset from audio signal
   Float32List removeDcOffset(Float32List samples) {
     if (samples.isEmpty) return samples;
@@ -62,6 +83,17 @@ class AudioPreprocessor {
       output[i] = (samples[i] * gain).clamp(-1.0, 1.0);
     }
     return output;
+  }
+
+  /// Calculates true Peak Amplitude (0.0 to 1.0)
+  double calculatePeak(Float32List samples) {
+    if (samples.isEmpty) return 0.0;
+    double maxAbs = 0.0;
+    for (int i = 0; i < samples.length; i++) {
+      final double abs = samples[i].abs();
+      if (abs > maxAbs) maxAbs = abs;
+    }
+    return maxAbs;
   }
 
   /// Calculates Root Mean Square (RMS) energy

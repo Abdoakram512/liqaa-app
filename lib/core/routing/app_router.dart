@@ -14,6 +14,7 @@ import '../../features/ai_lab/views/phoneme_recognition_view.dart';
 import '../../features/ai_lab/views/speech_to_text_view.dart';
 import '../../features/ai_lab/views/clinical_benchmark_view.dart';
 import '../../features/ai_lab/views/blind_phoneme_recognition_view.dart';
+import '../../features/ai_lab/views/diagnostic_negative_testing_view.dart';
 import '../../features/animation_lab/presentation/views/animation_lab_view.dart';
 import '../../features/animation_lab/presentation/views/rive_diagnostic_view.dart';
 import '../../features/authentication/presentation/cubits/auth_cubit.dart';
@@ -223,6 +224,11 @@ abstract final class AppRouter {
               value: sl<AiLabCubit>(),
               child: const BlindPhonemeRecognitionView(),
             ),
+          ),
+          GoRoute(
+            path: 'negative',
+            name: 'aiLabNegative',
+            builder: (context, state) => const DiagnosticNegativeTestingView(),
           ),
         ],
       ),
