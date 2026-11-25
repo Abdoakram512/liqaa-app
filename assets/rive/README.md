@@ -43,10 +43,10 @@ Runtime inspection of the exported binary identified the following symbols and s
 
 | Identifier | Type / Context | Description |
 | --- | --- | --- |
-| `Yasser - Main Character` | Artboard | Main character artboard |
+| `Yasser_Phase1_Work` | Artboard | Main character artboard |
 | `State Machine 1` | State Machine | Primary interactive state machine |
 | `nameEntry` | Input / State | Triggered during name/username entry |
-| `passwordTyping` | Boolean Input | Privacy pose activation during password entry |
+| `passwordTyping` | ViewModel boolean | Privacy pose activation during password entry |
 | `Yasser_Privacy_Arm` | Layer / Group | Arm movement covering eyes |
 | `Yasser_TwoHand_Cover` | Layer / Group | Full two-handed eye cover variation |
 | `Yasser_Original_Clean` | Rig Base | Baseline default pose |

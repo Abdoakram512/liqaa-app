@@ -10,11 +10,11 @@ This document serves as the formal engineering contract for the Rive animation t
 
 ## 2. Required Phase 2 State Machine Inputs
 
-All inputs below must be authored within `State Machine 1` on artboard `Yasser - Main Character`.
+The app loads `State Machine 1` on artboard `Yasser_Phase1_Work`. Password privacy already uses a ViewModel boolean. The remaining rows describe planned authoring.
 
 | Input Name | Type | Allowed Values | Default | Target Rig / Bone Components | Expected Transition Behavior |
 | --- | --- | --- | --- | --- | --- |
-| `passwordTyping` | Boolean | `true`, `false` | `false` | `P1_UpperArm_ScreenL/R`, `P1_Forearm_ScreenL/R`, `P1_HandTarget_ScreenL/R` | 250ms easeInOut: arms lift smoothly from sides to cover eyes without clipping through head. |
+| `passwordTyping` | ViewModel boolean | `true`, `false` | `false` | `P1_UpperArm_ScreenL/R`, `P1_Forearm_ScreenL/R`, `P1_HandTarget_ScreenL/R` | 250ms easeInOut: arms lift smoothly from sides to cover eyes without clipping through head. |
 | `isPeeking` | Boolean | `true`, `false` | `false` | `P1_Hand_ScreenL/R_Fingers` | While `passwordTyping = true`, spreads index and middle fingers slightly to playfully peek. |
 | `isNameFocused` | Boolean | `true`, `false` | `false` | `P1_Neck_Head`, `Eyes` | Subtle head turn (5 degrees) towards input with cheerful attentive eyebrow elevation. |
 | `lookX` | Number | `-1.0` to `+1.0` | `0.0` | `P1_Neck_Head_Face_EyeL`, `P1_Neck_Head_Face_EyeR` | Normalized horizontal gaze tracking. Smooth cubic hermite interpolation. |
@@ -52,15 +52,8 @@ To prevent interactions from interrupting ambient breathing or blinking:
 
 ## 4. Acceptance Criteria for Phase 2 Asset Delivery
 
-1. Delivered file must replace `assets/rive/yasser.riv` and retain exact artboard name `Yasser - Main Character` and state machine name `State Machine 1`.
+1. Delivered file must replace `assets/rive/yasser.riv` and retain exact artboard name `Yasser_Phase1_Work` and state machine name `State Machine 1`.
 2. Binary size must remain under 2.5 MB.
-3. All listed inputs must be accessible via standard Flutter Rive controller:
-   ```dart
-   controller.findInput<bool>('passwordTyping');
-   controller.findInput<bool>('isPeeking');
-   controller.findInput<double>('lookX');
-   controller.findInput<double>('lookY');
-   controller.findInput<bool>('celebrateTrigger');
-   ```
+3. Flutter can bind the exported ViewModel and drive its properties, including `passwordTyping`, through the named state machine.
 4. No external texture dependencies; all vector and raster assets must be embedded in the `.riv` file.
 5. Zero visual clipping or tearing at 60 FPS on mid-range Android devices.

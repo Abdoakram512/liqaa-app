@@ -5,6 +5,7 @@ import 'yasser_animation_config.dart';
 import 'yasser_animation_mapper.dart';
 import 'yasser_animation_state.dart';
 import 'yasser_interaction_engine.dart';
+import 'yasser_rive_controller.dart';
 
 /// Central controller for the Yasser character.
 ///
@@ -14,11 +15,7 @@ class YasserController extends ChangeNotifier {
   final YasserInteractionEngine engine;
   final YasserAnimationConfig config;
 
-  // Modern Rive 0.14+ runtime bindings
-  rive.RiveWidgetController? _widgetController;
-  rive.StateMachine? _stateMachine;
-  rive.BooleanInput? _passwordTypingInput;
-  bool _isRiveInitialized = false;
+  YasserRiveController? _widgetController;
 
   YasserController({
     YasserInteractionEngine? engine,
@@ -27,48 +24,28 @@ class YasserController extends ChangeNotifier {
     this.engine.stateNotifier.addListener(_onEngineStateChanged);
   }
 
-  bool get isRiveInitialized => _isRiveInitialized;
+  bool get isRiveInitialized => _widgetController != null;
   rive.RiveWidgetController? get widgetController => _widgetController;
-  rive.StateMachine? get stateMachine => _stateMachine;
+  rive.StateMachine? get stateMachine => _widgetController?.stateMachine;
   YasserAnimationState get currentState => engine.currentState;
   YasserStateMapping get currentMapping => engine.currentMapping;
   ValueNotifier<YasserStateMapping> get stateNotifier => engine.stateNotifier;
   List<CharacterEventLog> get eventHistory => engine.eventHistory;
 
-  /// Attach the RiveWidgetController and locate state machine inputs.
-  void attachWidgetController(rive.RiveWidgetController controller) {
-    try {
-      _widgetController = controller;
-      _stateMachine = controller.stateMachine;
-      _passwordTypingInput = _stateMachine?.boolean(config.passwordInputName);
-
-      _isRiveInitialized = true;
-      _syncRiveInputs(engine.currentMapping);
-      notifyListeners();
-    } catch (e) {
-      // Graceful fallback: If Rive initialization fails, mark false and use 2.5D poses
-      _isRiveInitialized = false;
-      notifyListeners();
-    }
-  }
-
-  /// Detach and reset the Rive controller reference.
-  void detachWidgetController() {
-    _widgetController = null;
-    _stateMachine = null;
-    _passwordTypingInput = null;
-    _isRiveInitialized = false;
-  }
-
-  void _onEngineStateChanged() {
-    _syncRiveInputs(engine.currentMapping);
+  /// The widget owns the live Rive controller.
+  void attachWidgetController(YasserRiveController controller) {
+    _widgetController = controller;
+    controller.applyMapping(engine.currentMapping);
     notifyListeners();
   }
 
-  void _syncRiveInputs(YasserStateMapping mapping) {
-    if (_passwordTypingInput != null) {
-      _passwordTypingInput!.value = mapping.rivePasswordTyping;
-    }
+  void detachWidgetController() {
+    _widgetController = null;
+  }
+
+  void _onEngineStateChanged() {
+    _widgetController?.applyMapping(engine.currentMapping);
+    notifyListeners();
   }
 
   // --- High-Level Semantic Actions ---
@@ -160,7 +137,7 @@ class YasserController extends ChangeNotifier {
   @override
   void dispose() {
     engine.stateNotifier.removeListener(_onEngineStateChanged);
-    _widgetController?.dispose();
+    detachWidgetController();
     engine.dispose();
     super.dispose();
   }

@@ -39,7 +39,7 @@ class CharacterCapability {
 abstract final class YasserAnimationCapabilities {
   static const String assetPath = 'assets/rive/yasser.riv';
   static const int assetByteSize = 958177;
-  static const String artboardName = 'Yasser - Main Character';
+  static const String artboardName = 'Yasser_Phase1_Work';
   static const String stateMachineName = 'State Machine 1';
 
   static const List<CharacterCapability> matrix = [

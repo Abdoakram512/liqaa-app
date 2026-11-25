@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/animation/yasser/yasser_animation_state.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -68,6 +69,7 @@ class AuthGatewayView extends StatelessWidget {
 
                 // Yasser Welcoming Avatar with Tap Reaction
                 YasserCharacter(
+                  state: YasserAnimationState.greeting,
                   width: 250.w,
                   height: 310.h,
                   heroTag: 'yasser_auth_gateway',

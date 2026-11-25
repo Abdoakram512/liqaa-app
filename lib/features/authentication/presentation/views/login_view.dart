@@ -73,8 +73,11 @@ class _LoginViewState extends State<LoginView> {
   void _handlePasswordFocus() {
     if (_passwordFocusNode.hasFocus) {
       _yasserController.coverEyes();
-    } else if (!_identityFocusNode.hasFocus) {
+    } else {
       _yasserController.uncoverEyes();
+      if (_identityFocusNode.hasFocus) {
+        _yasserController.lookAtInput(normalizedX: 0.0, normalizedY: 0.35);
+      }
     }
   }
 

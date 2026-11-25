@@ -5,33 +5,29 @@ import '../animation/yasser/yasser_animation_capabilities.dart';
 import '../animation/yasser/yasser_animation_mapper.dart';
 import '../animation/yasser/yasser_animation_state.dart';
 import '../animation/yasser/yasser_controller.dart';
+import '../animation/yasser/yasser_rive_controller.dart';
 
 /// Flagship unified character widget for Yasser (ياسر).
 ///
-/// Features modern Rive 0.14+ runtime architecture with Factory.rive renderer,
-/// FileLoader asset deduplication, RiveWidget, and RiveWidgetController.
-/// Seamlessly falls back to high-resolution 2.5D character poses with native
-/// Flutter breathing and micro-physics if runtime support is unavailable.
+/// Renders the live rig on Flutter's canvas with an illustrated fallback.
 class YasserCharacter extends StatefulWidget {
   /// Global toggle allowing test environments or platforms lacking native
   /// dynamic libraries to enforce the 2.5D illustration fallback.
   static bool enableRiveRuntime = true;
 
-  /// Shared static FileLoader ensuring `assets/rive/yasser.riv` is loaded and
-  /// decoded once using the native Rive Renderer (`Factory.rive`).
-  static rive.FileLoader? _sharedFileLoader;
+  static Future<rive.File>? _sharedFile;
 
-  static rive.FileLoader get sharedFileLoader {
-    return _sharedFileLoader ??= rive.FileLoader.fromAsset(
-      YasserAnimationCapabilities.assetPath,
-      riveFactory: rive.Factory.rive,
-    );
-  }
-
-  /// Reset the shared file loader (useful for testing or reloading).
-  static void resetSharedLoader() {
-    _sharedFileLoader?.dispose();
-    _sharedFileLoader = null;
+  static Future<rive.File> _loadFile() async {
+    try {
+      return await rive.File.asset(
+            YasserAnimationCapabilities.assetPath,
+            riveFactory: rive.Factory.flutter,
+          ) ??
+          (throw StateError('Failed to decode the Yasser Rive asset'));
+    } catch (_) {
+      _sharedFile = null;
+      rethrow;
+    }
   }
 
   final YasserController? controller;
@@ -68,7 +64,7 @@ class _YasserCharacterState extends State<YasserCharacter>
   late AnimationController _breathingController;
   late Animation<double> _breathingAnimation;
 
-  rive.RiveWidgetController? _riveWidgetController;
+  YasserRiveController? _riveWidgetController;
   bool _isLoadingRive = false;
   bool _hasRiveError = false;
 
@@ -113,22 +109,14 @@ class _YasserCharacterState extends State<YasserCharacter>
     }
 
     try {
-      if (!rive.RiveNative.isInitialized) {
-        await rive.RiveNative.init();
-      }
-
-      final file = await YasserCharacter.sharedFileLoader.file();
+      final file = await (YasserCharacter._sharedFile ??=
+          YasserCharacter._loadFile());
       if (!mounted) return;
 
-      final controller = rive.RiveWidgetController(
-        file,
-        artboardSelector: rive.ArtboardNamed(_controller.config.artboardName),
-        stateMachineSelector:
-            rive.StateMachineNamed(_controller.config.stateMachineName),
-      );
-
+      final controller = YasserRiveController(file, _controller.config);
       _riveWidgetController = controller;
       _controller.attachWidgetController(controller);
+      _breathingController.stop();
 
       if (mounted) {
         setState(() {
@@ -137,7 +125,9 @@ class _YasserCharacterState extends State<YasserCharacter>
       }
     } catch (e) {
       if (!mounted) return;
-      debugPrint('[YasserCharacter] Rive loading note (using 2.5D fallback): $e');
+      debugPrint(
+        '[YasserCharacter] Rive loading note (using 2.5D fallback): $e',
+      );
       setState(() {
         _isLoadingRive = false;
         _hasRiveError = true;
@@ -208,7 +198,9 @@ class _YasserCharacterState extends State<YasserCharacter>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF1E293B).withOpacity(0.18),
+                            color: const Color(
+                              0xFF1E293B,
+                            ).withValues(alpha: 0.18),
                             blurRadius: 18,
                             spreadRadius: 2,
                             offset: const Offset(0, 4),
@@ -241,7 +233,6 @@ class _YasserCharacterState extends State<YasserCharacter>
       return _build2DFallback(mapping);
     }
 
-    // Render native Rive 0.14+ widget using Factory.rive
     return rive.RiveWidget(
       controller: _riveWidgetController!,
       fit: rive.Fit.contain,
@@ -253,10 +244,7 @@ class _YasserCharacterState extends State<YasserCharacter>
     return AnimatedBuilder(
       animation: _breathingAnimation,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _breathingAnimation.value,
-          child: child,
-        );
+        return Transform.scale(scale: _breathingAnimation.value, child: child);
       },
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),

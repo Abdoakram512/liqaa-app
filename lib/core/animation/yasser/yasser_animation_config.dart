@@ -1,4 +1,5 @@
 import 'package:flutter/animation.dart';
+import 'yasser_animation_capabilities.dart';
 import 'yasser_animation_state.dart';
 
 /// Configuration for Yasser's dynamic character behaviors.
@@ -37,8 +38,8 @@ class YasserAnimationConfig {
     this.transientHoldDuration = const Duration(milliseconds: 2000),
     this.tapCooldown = const Duration(milliseconds: 600),
     this.gazeSmoothingCurve = Curves.easeInOutCubic,
-    this.artboardName = 'Yasser - Main Character',
-    this.stateMachineName = 'State Machine 1',
+    this.artboardName = YasserAnimationCapabilities.artboardName,
+    this.stateMachineName = YasserAnimationCapabilities.stateMachineName,
     this.passwordInputName = 'passwordTyping',
   });
 

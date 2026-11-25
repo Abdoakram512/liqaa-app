@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:liqaa_app/core/animation/yasser/yasser_animation_state.dart';
 import 'package:liqaa_app/core/animation/yasser/yasser_interaction_engine.dart';
 import 'package:liqaa_app/core/widgets/yasser_character.dart';
+import 'package:liqaa_app/core/widgets/yasser_text_field.dart';
 import 'package:liqaa_app/features/authentication/data/models/user_model.dart';
 import 'package:liqaa_app/features/authentication/data/repos/auth_repo.dart';
 import 'package:liqaa_app/features/authentication/presentation/cubits/auth_cubit.dart';
@@ -52,9 +54,10 @@ void main() {
     YasserInteractionEngine.enableBlinkTimer = true;
   });
 
-  testWidgets('LoginView renders character and form elements cleanly', (tester) async {
+  testWidgets('LoginView releases privacy pose when focus returns to identity', (tester) async {
     final mockRepo = MockTestAuthRepo();
     final cubit = AuthCubit(mockRepo);
+    addTearDown(cubit.close);
 
     await tester.pumpWidget(
       ScreenUtilInit(
@@ -74,6 +77,15 @@ void main() {
     expect(find.text('تسجيل الدخول'), findsOneWidget);
     expect(find.text('انطلق الآن 🚀'), findsOneWidget);
     expect(find.byType(TextFormField), findsNWidgets(2));
-    expect(find.byType(YasserCharacter), findsOneWidget);
+    final character = tester.widget<YasserCharacter>(find.byType(YasserCharacter));
+    final fields = tester.widgetList<YasserTextField>(find.byType(YasserTextField));
+
+    fields.last.focusNode!.requestFocus();
+    await tester.pump();
+    expect(character.controller!.currentState, YasserAnimationState.coveringEyes);
+
+    fields.first.focusNode!.requestFocus();
+    await tester.pump();
+    expect(character.controller!.currentState, YasserAnimationState.followingInput);
   });
 }

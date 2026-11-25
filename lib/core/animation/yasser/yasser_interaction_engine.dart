@@ -111,15 +111,8 @@ class YasserInteractionEngine {
     }
     _lastTapTime = now;
 
-    // Cycle friendly reactions
-    final tapReactions = [
-      YasserAnimationState.waving,
-      YasserAnimationState.happy,
-      YasserAnimationState.excited,
-    ];
-    final selected = tapReactions[_random.nextInt(tapReactions.length)];
     return triggerState(
-      selected,
+      YasserAnimationState.waving,
       customHoldDuration: const Duration(milliseconds: 1600),
       reason: 'User tapped Yasser',
     );

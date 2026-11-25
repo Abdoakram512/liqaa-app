@@ -51,10 +51,10 @@ class _RegisterViewState extends State<RegisterView> {
     _yasserController = YasserController();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
 
-    _nameFocusNode.addListener(_handleNameFocus);
-    _emailFocusNode.addListener(_handleEmailFocus);
-    _passwordFocusNode.addListener(_handlePasswordFocus);
-    _confirmPasswordFocusNode.addListener(_handlePasswordFocus);
+    _nameFocusNode.addListener(_handleCharacterFocus);
+    _emailFocusNode.addListener(_handleCharacterFocus);
+    _passwordFocusNode.addListener(_handleCharacterFocus);
+    _confirmPasswordFocusNode.addListener(_handleCharacterFocus);
   }
 
   @override
@@ -72,27 +72,17 @@ class _RegisterViewState extends State<RegisterView> {
     super.dispose();
   }
 
-  void _handleNameFocus() {
-    if (_nameFocusNode.hasFocus) {
-      _yasserController.wave();
-    } else if (!_isAnyPasswordFocused()) {
-      _yasserController.returnToIdle();
-    }
-  }
-
-  void _handleEmailFocus() {
-    if (_emailFocusNode.hasFocus) {
-      _yasserController.lookAtInput(normalizedX: 0.0, normalizedY: 0.35);
-    } else if (!_isAnyPasswordFocused()) {
-      _yasserController.returnToIdle();
-    }
-  }
-
-  void _handlePasswordFocus() {
+  void _handleCharacterFocus() {
     if (_isAnyPasswordFocused()) {
       _yasserController.coverEyes();
-    } else {
-      _yasserController.uncoverEyes();
+      return;
+    }
+
+    _yasserController.returnToIdle();
+    if (_nameFocusNode.hasFocus) {
+      _yasserController.wave();
+    } else if (_emailFocusNode.hasFocus) {
+      _yasserController.lookAtInput(normalizedY: 0.35);
     }
   }
 
