@@ -121,7 +121,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                 SizedBox(height: 20.h),
 
                 Text(
-                  'شاشات الاختبار والتشخيص (7 Developer Screens)',
+                  'شاشات ومختبرات الذكاء الاصطناعي (9 Developer Labs)',
                   style: AppTextStyles.titleSmall.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -130,7 +130,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
 
                 SizedBox(height: 12.h),
 
-                // 7 Feature Test Cards
+                // 9 Feature Test Cards
                 _buildTestCard(
                   title: '1. إدارة النماذج (Model Manager)',
                   subtitle: 'حالة النماذج، التحميل للذاكرة، التحقق من التجزئة (SHA256)',
@@ -154,7 +154,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                 ),
                 _buildTestCard(
                   title: '4. التعرف على الفونيمات (Phoneme Recognition)',
-                  subtitle: 'Zipformer CTC، تسلسل الأصوات، نسب الثقة، ومحاذاة الأخطاء',
+                  subtitle: 'تسلسل الأصوات، نسب الثقة، ومحاذاة الأخطاء الفونيمية',
                   icon: Icons.record_voice_over_rounded,
                   color: Colors.orangeAccent,
                   onTap: () => context.push(AppRoutes.aiLabPhonemes),
@@ -168,7 +168,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                 ),
                 _buildTestCard(
                   title: '6. مقارنة النماذج (Model Comparison)',
-                  subtitle: 'مقارنة Zipformer V2 مقابل V3 و Nabra عبر معايير اللهجة والدقة',
+                  subtitle: 'مقارنة نماذج الاستدلال Whisper و Zipformer عبر معايير اللهجة والدقة',
                   icon: Icons.compare_arrows_rounded,
                   color: Colors.pinkAccent,
                   onTap: () => context.push(AppRoutes.aiLabCompare),
@@ -179,6 +179,20 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                   icon: Icons.account_tree_rounded,
                   color: Colors.green,
                   onTap: () => context.push(AppRoutes.aiLabPipeline),
+                ),
+                _buildTestCard(
+                  title: '8. معيار التقييم الإكلينيكي (Clinical Speech Benchmark)',
+                  subtitle: 'حزمة اختبارات ASMDD للإبدال الأمامي، اللدغات، الحذف، والصمت',
+                  icon: Icons.medical_services_rounded,
+                  color: Colors.purpleAccent,
+                  onTap: () => context.push(AppRoutes.aiLabBenchmark),
+                ),
+                _buildTestCard(
+                  title: '9. التعرف الحر والفونيمات غير المقيدة (Blind Phonemes)',
+                  subtitle: 'برهان عدم تسريب الإجابة - استدلال أعمى لأي كلام أو فونيمات',
+                  icon: Icons.visibility_off_rounded,
+                  color: Colors.deepOrange,
+                  onTap: () => context.push(AppRoutes.aiLabBlind),
                 ),
               ],
             ),

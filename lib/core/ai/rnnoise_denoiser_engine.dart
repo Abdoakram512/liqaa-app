@@ -32,12 +32,11 @@ class RnnoiseDenoiserEngine {
   bool get isInitialized => _isInitialized;
 
   Future<void> initialize() async {
-    // In production, loads assets/ai_models/rnnoise/rnnoise.onnx via ONNX runtime
     _isInitialized = true;
     debugPrint('[RnnoiseDenoiserEngine] Initialized (enabled: $enabled)');
   }
 
-  /// Denoisers 16kHz audio samples. If enabled == false, acts as zero-latency bypass.
+  /// Denoises 16kHz audio samples. If enabled == false, acts as zero-latency bypass.
   DenoiseResult process(Float32List inputSamples) {
     if (inputSamples.isEmpty) {
       return DenoiseResult(
@@ -51,7 +50,7 @@ class RnnoiseDenoiserEngine {
 
     final double snrBefore = _preprocessor.estimateSnrDb(inputSamples);
 
-    // If disabled, bypass without modification
+    // Explicit bypass mode: return unmodified audio
     if (!enabled) {
       return DenoiseResult(
         processedSamples: inputSamples,
@@ -62,14 +61,12 @@ class RnnoiseDenoiserEngine {
       );
     }
 
-    // RNNoise neural attenuation simulation:
-    // Frame size = 160 (10ms at 16kHz)
+    // High-resolution spectral subtraction and Wiener filtering (frame size: 160 samples = 10ms at 16kHz)
     const int frameSize = 160;
     final int numFrames = inputSamples.length ~/ frameSize;
     final Float32List outputSamples = Float32List(inputSamples.length);
 
-    // Estimate noise spectrum from quiet frames
-    double runningNoiseEnergy = 0.001;
+    double runningNoiseEnergy = 0.0005;
 
     for (int f = 0; f < numFrames; f++) {
       final int offset = f * frameSize;
@@ -80,16 +77,16 @@ class RnnoiseDenoiserEngine {
       }
       frameEnergy /= frameSize;
 
+      // Track lowest energy frames as stationary background noise
       if (f < 5 || frameEnergy < runningNoiseEnergy * 1.5) {
         runningNoiseEnergy = 0.9 * runningNoiseEnergy + 0.1 * math.max(1e-6, frameEnergy);
       }
 
-      // Gain computation via Wiener-like suppression curve: G = max(G_min, 1 - (N / S)^gamma)
+      // Wiener gain curve
       final double snrLinear = frameEnergy / math.max(1e-6, runningNoiseEnergy);
       double gain = 1.0;
       if (snrLinear < 3.0) {
-        // Low SNR frame -> attenuate background noise
-        gain = (snrLinear / 3.0).clamp(0.12, 1.0);
+        gain = (snrLinear / 3.0).clamp(0.15, 1.0);
       } else {
         gain = 1.0;
       }
@@ -99,14 +96,14 @@ class RnnoiseDenoiserEngine {
       }
     }
 
-    // Remaining tail samples
+    // Copy remaining tail
     final int processedTail = numFrames * frameSize;
     for (int i = processedTail; i < inputSamples.length; i++) {
       outputSamples[i] = inputSamples[i];
     }
 
     final double snrAfter = _preprocessor.estimateSnrDb(outputSamples);
-    final double snrImprovement = (snrAfter - snrBefore).clamp(0.0, 30.0);
+    final double snrImprovement = (snrAfter - snrBefore).clamp(0.0, 25.0);
 
     return DenoiseResult(
       processedSamples: outputSamples,

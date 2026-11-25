@@ -82,7 +82,7 @@ class AiLabCubit extends Cubit<AiLabState> {
     try {
       final Uint8List rawBytes = await _repository.recorder.stopRecording();
 
-      // Lab analysis
+      // Lab audio analysis
       final AudioProcessingResult audioResult =
           _repository.analyzeAudioForLab(rawBytes);
 
@@ -99,11 +99,26 @@ class AiLabCubit extends Cubit<AiLabState> {
         phonemes = assessment.recognizedPhonemes;
       }
 
+      // Also run blind transcription for Lab 9 telemetry
+      String? blindText;
+      List<PhonemeToken> blindPhonemes = const [];
+      if (rawBytes.isNotEmpty) {
+        final samples = _repository.preprocessor.pcm16ToFloat32(rawBytes);
+        final vad = _repository.vadEngine.analyze(samples);
+        if (vad.speechDetected && vad.trimmedSamples != null) {
+          final stt = await _repository.sttEngine.transcribe(vad.trimmedSamples!);
+          blindText = stt.text;
+          blindPhonemes = await _repository.phonemeEngine.recognizePhonemes(vad.trimmedSamples!);
+        }
+      }
+
       emit(state.copyWith(
         status: AiLabStatus.ready,
         lastAudioResult: audioResult,
         lastAssessment: assessment,
         lastRecognizedPhonemes: phonemes,
+        lastBlindTranscript: blindText,
+        lastBlindPhonemes: blindPhonemes,
       ));
       return audioResult;
     } catch (e) {
@@ -112,6 +127,54 @@ class AiLabCubit extends Cubit<AiLabState> {
         errorMessage: 'Analysis error: $e',
       ));
       return null;
+    }
+  }
+
+  /// Runs blind phoneme recognition on arbitrary audio without any expected word target (Lab 9)
+  Future<void> runBlindPhonemeTest({Uint8List? audioBytes, String? simulatedText}) async {
+    emit(state.copyWith(status: AiLabStatus.processing));
+    try {
+      final Uint8List bytes = audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
+      if (bytes.isEmpty && simulatedText == null) {
+        emit(state.copyWith(
+          status: AiLabStatus.ready,
+          lastBlindTranscript: '',
+          lastBlindPhonemes: const [],
+        ));
+        return;
+      }
+
+      String recognizedText = '';
+      List<PhonemeToken> tokens = const [];
+
+      if (simulatedText != null) {
+        recognizedText = simulatedText;
+        tokens = _repository.phonemeEngine.textToPhonemes(simulatedText);
+      } else {
+        final samples = _repository.preprocessor.pcm16ToFloat32(bytes);
+        final vad = _repository.vadEngine.analyze(samples);
+
+        if (!vad.speechDetected || vad.trimmedSamples == null) {
+          emit(state.copyWith(
+            status: AiLabStatus.ready,
+            lastBlindTranscript: '',
+            lastBlindPhonemes: const [],
+          ));
+          return;
+        }
+
+        final stt = await _repository.sttEngine.transcribe(vad.trimmedSamples!);
+        recognizedText = stt.text;
+        tokens = await _repository.phonemeEngine.recognizePhonemes(vad.trimmedSamples!);
+      }
+
+      emit(state.copyWith(
+        status: AiLabStatus.ready,
+        lastBlindTranscript: recognizedText,
+        lastBlindPhonemes: tokens,
+      ));
+    } catch (e) {
+      emit(state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()));
     }
   }
 
@@ -137,7 +200,7 @@ class AiLabCubit extends Cubit<AiLabState> {
     }
   }
 
-  /// Runs word-level Speech-to-Text transcription
+  /// Runs word-level Speech-to-Text transcription (ZERO TARGET HINT)
   Future<void> runSttTest() async {
     final bytes = state.lastAudioResult?.rawAudioBytes;
     if (bytes == null || bytes.isEmpty) return;
@@ -145,10 +208,7 @@ class AiLabCubit extends Cubit<AiLabState> {
     emit(state.copyWith(status: AiLabStatus.processing));
     try {
       final samples = _repository.preprocessor.pcm16ToFloat32(bytes);
-      final stt = await _repository.sttEngine.transcribe(
-        samples,
-        targetHint: state.selectedWord?.wordArabic,
-      );
+      final stt = await _repository.sttEngine.transcribe(samples);
 
       emit(state.copyWith(status: AiLabStatus.ready, lastSttResult: stt));
     } catch (e) {
@@ -190,6 +250,8 @@ class AiLabCubit extends Cubit<AiLabState> {
               'rtf': state.lastSttResult!.realTimeFactor,
             }
           : null,
+      'last_blind_transcript': state.lastBlindTranscript,
+      'last_blind_phonemes': state.lastBlindPhonemes.map((t) => t.toJson()).toList(),
       'noise_reduction_enabled': state.noiseReductionEnabled,
     };
 

@@ -12,6 +12,8 @@ import '../../features/ai_lab/views/model_manager_view.dart';
 import '../../features/ai_lab/views/noise_reduction_view.dart';
 import '../../features/ai_lab/views/phoneme_recognition_view.dart';
 import '../../features/ai_lab/views/speech_to_text_view.dart';
+import '../../features/ai_lab/views/clinical_benchmark_view.dart';
+import '../../features/ai_lab/views/blind_phoneme_recognition_view.dart';
 import '../../features/animation_lab/presentation/views/animation_lab_view.dart';
 import '../../features/animation_lab/presentation/views/rive_diagnostic_view.dart';
 import '../../features/authentication/presentation/cubits/auth_cubit.dart';
@@ -207,6 +209,19 @@ abstract final class AppRouter {
             builder: (context, state) => BlocProvider.value(
               value: sl<AiLabCubit>(),
               child: const FullPipelineView(),
+            ),
+          ),
+          GoRoute(
+            path: 'benchmark',
+            name: 'aiLabBenchmark',
+            builder: (context, state) => const ClinicalBenchmarkView(),
+          ),
+          GoRoute(
+            path: 'blind',
+            name: 'aiLabBlind',
+            builder: (context, state) => BlocProvider.value(
+              value: sl<AiLabCubit>(),
+              child: const BlindPhonemeRecognitionView(),
             ),
           ),
         ],

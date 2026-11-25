@@ -102,6 +102,7 @@ flutter:
     - assets/translations/
     - assets/ai_models/silero/
     - assets/ai_models/rnnoise/
+    - assets/ai_models/whisper_tiny/
     - assets/ai_models/zipformer_v3/
     - assets/ai_models/zipformer_v2/
     - assets/pronunciation/

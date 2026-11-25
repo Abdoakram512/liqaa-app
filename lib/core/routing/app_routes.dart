@@ -24,4 +24,6 @@ abstract final class AppRoutes {
   static const String aiLabStt = '/ai-lab/stt';
   static const String aiLabCompare = '/ai-lab/compare';
   static const String aiLabPipeline = '/ai-lab/pipeline';
+  static const String aiLabBenchmark = '/ai-lab/benchmark';
+  static const String aiLabBlind = '/ai-lab/blind';
 }

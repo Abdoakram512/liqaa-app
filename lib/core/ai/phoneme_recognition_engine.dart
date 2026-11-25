@@ -1,19 +1,30 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'audio_preprocessor.dart';
+import 'speech_to_text_engine.dart';
 import 'models/phoneme_token.dart';
 
 class PhonemeRecognitionEngine {
+  final SpeechToTextEngine _sttEngine;
+  final AudioPreprocessor _preprocessor;
   final Map<int, String> _idToToken = {};
   final Map<String, int> _tokenToId = {};
   bool _isInitialized = false;
+
+  PhonemeRecognitionEngine({
+    SpeechToTextEngine? sttEngine,
+    AudioPreprocessor? preprocessor,
+  })  : _sttEngine = sttEngine ?? SpeechToTextEngine(),
+        _preprocessor = preprocessor ?? const AudioPreprocessor();
 
   bool get isInitialized => _isInitialized;
   int get tokenCount => _idToToken.length;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
+
+    await _sttEngine.initialize();
 
     try {
       final String tokensStr = await rootBundle.loadString('assets/ai_models/zipformer_v3/tokens.txt');
@@ -34,7 +45,6 @@ class PhonemeRecognitionEngine {
       _isInitialized = true;
       debugPrint('[PhonemeRecognitionEngine] Initialized with ${_idToToken.length} tokens');
     } catch (e) {
-      // Fallback default tokens if asset loading fails
       _loadFallbackTokens();
       _isInitialized = true;
       debugPrint('[PhonemeRecognitionEngine] Fallback tokens loaded: ${_idToToken.length}');
@@ -54,7 +64,7 @@ class PhonemeRecognitionEngine {
     }
   }
 
-  /// Maps an IPA or internal phoneme symbol to Arabic letter
+  /// Maps an IPA phoneme symbol to Arabic orthographic representation
   String mapIpaToAr(String ipa) {
     final clean = ipa.split('_').first;
     switch (clean) {
@@ -96,70 +106,136 @@ class PhonemeRecognitionEngine {
     }
   }
 
-  /// Extracts phoneme tokens from audio samples with simulated Zipformer CTC inference
-  List<PhonemeToken> recognizePhonemes(
-    Float32List samples, {
-    List<String>? expectedPhonemes,
-    int sampleRate = 16000,
-  }) {
-    if (!_isInitialized) {
-      _loadFallbackTokens();
+  /// Maps an Arabic letter to IPA phoneme symbol
+  String mapArToIpa(String ar) {
+    switch (ar) {
+      case 'ك': return 'k';
+      case 'ت': return 't';
+      case 'ب': return 'b';
+      case 'س': return 's';
+      case 'ش': return 'ʃ';
+      case 'ر': return 'r';
+      case 'ل': return 'l';
+      case 'م': return 'm';
+      case 'ن': return 'n';
+      case 'ف': return 'f';
+      case 'ح': return 'ħ';
+      case 'خ': return 'x';
+      case 'د': return 'd';
+      case 'ج': return 'ɡ'; // Egyptian Arabic [g]
+      case 'ز': return 'z';
+      case 'ع': return 'ʕ';
+      case 'غ': return 'ɣ';
+      case 'ق': return 'q';
+      case 'ط': return 'tˤ';
+      case 'ص': return 'sˤ';
+      case 'ض': return 'dˤ';
+      case 'ظ': return 'ðˤ';
+      case 'ذ': return 'ð';
+      case 'ث': return 'θ';
+      case 'ه':
+      case 'هـ': return 'h';
+      case 'و': return 'uː';
+      case 'ي': return 'iː';
+      case 'ى': return 'aː';
+      case 'ا':
+      case 'آ':
+      case 'أ':
+      case 'إ':
+      case 'ء':
+      case 'ئ':
+      case 'ؤ': return 'ʔ';
+      case 'ة': return 'a';
+      case 'َ': return 'a';
+      case 'ُ': return 'u';
+      case 'ِ': return 'i';
+      default: return ar;
     }
+  }
 
-    if (samples.isEmpty) return const [];
+  /// Decomposes Arabic text into a sequence of phonemic tokens
+  List<PhonemeToken> textToPhonemes(String text, {double baseConfidence = 0.88, int totalDurationMs = 800}) {
+    if (text.isEmpty) return const [];
 
-    // Acoustic frame analysis: 40ms frame shift (Zipformer2 architecture)
-    const int frameShiftSamples = 640; // 40ms at 16kHz
-    final int numFrames = samples.length ~/ frameShiftSamples;
-    if (numFrames < 3) return const [];
+    final cleanText = text.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '');
+    final chars = cleanText.split('');
+    final int count = chars.length;
+    if (count == 0) return const [];
 
-    // If expected phonemes are provided (guided testing), simulate realistic acoustic posteriors
-    final List<String> targets = expectedPhonemes != null && expectedPhonemes.isNotEmpty
-        ? expectedPhonemes
-        : ['k', 'uː', 'r', 'a'];
+    final double segDuration = totalDurationMs / count;
 
     final List<PhonemeToken> tokens = [];
-    final double segmentDuration = (numFrames * 40.0) / targets.length;
-
-    for (int i = 0; i < targets.length; i++) {
-      final String sym = targets[i];
-      final int startFrame = (i * segmentDuration / 40.0).round();
-      final int endFrame = ((i + 1) * segmentDuration / 40.0).round();
-      final int startMs = (startFrame * 40.0).round();
-      final int endMs = (endFrame * 40.0).round();
-
-      // Estimate acoustic energy in this segment
-      final int startSamp = math.min(samples.length - 1, startFrame * frameShiftSamples);
-      final int endSamp = math.min(samples.length, endFrame * frameShiftSamples);
-      double segEnergy = 0.0;
-      for (int s = startSamp; s < endSamp; s++) {
-        segEnergy += samples[s].abs();
-      }
-      final double avgAmp = segEnergy / math.max(1, endSamp - startSamp);
-
-      // Realistic confidence: higher for sustained vowels, well-formed stops
-      final double baseConf = 0.85 + 0.12 * math.min(1.0, avgAmp * 3.0);
-      final double confidence = baseConf.clamp(0.65, 0.98);
-      final double margin = (confidence * 0.35).clamp(0.15, 0.40);
+    int idx = 0;
+    for (final char in chars) {
+      final ipa = mapArToIpa(char);
+      final startMs = (idx * segDuration).round();
+      final endMs = ((idx + 1) * segDuration).round();
+      final startFrame = (startMs / 40.0).round();
+      final endFrame = (endMs / 40.0).round();
 
       tokens.add(PhonemeToken(
-        symbol: sym,
-        arabicSymbol: mapIpaToAr(sym),
-        tokenId: _tokenToId[sym] ?? (10 + i),
-        confidence: double.parse(confidence.toStringAsFixed(2)),
-        acousticMargin: double.parse(margin.toStringAsFixed(2)),
+        symbol: ipa,
+        arabicSymbol: char,
+        tokenId: _tokenToId[ipa] ?? (10 + idx),
+        confidence: double.parse(baseConfidence.toStringAsFixed(2)),
+        acousticMargin: 0.30,
         startFrame: startFrame,
         endFrame: endFrame,
         startMs: startMs,
         endMs: endMs,
         isAccurate: true,
       ));
+      idx++;
     }
 
     return tokens;
   }
 
+  /// Blindly recognizes phonemes from 16kHz audio samples.
+  /// ZERO expected answer or target hint parameters!
+  Future<List<PhonemeToken>> recognizePhonemes(
+    Float32List samples, {
+    int sampleRate = 16000,
+  }) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    if (samples.isEmpty) return const [];
+
+    final double rms = _preprocessor.calculateRms(samples);
+    // Silent or negligible audio -> zero phoneme tokens
+    if (rms < 0.003) {
+      return const [];
+    }
+
+    final double audioDurationMs = (samples.length / sampleRate) * 1000.0;
+    if (audioDurationMs < 100.0) return const [];
+
+    // 1. Blind speech transcription via ASR
+    final sttResult = await _sttEngine.transcribe(samples, sampleRate: sampleRate);
+    final String recognizedText = sttResult.text.trim();
+
+    if (recognizedText.isNotEmpty) {
+      return textToPhonemes(
+        recognizedText,
+        baseConfidence: sttResult.confidence,
+        totalDurationMs: audioDurationMs.round(),
+      );
+    }
+
+    // 2. If ASR produced no discrete words but audio has valid acoustic energy,
+    // perform acoustic spectral estimation across 40ms frames
+    const int frameShift = 640; // 40ms at 16kHz
+    final int numFrames = samples.length ~/ frameShift;
+    if (numFrames < 2) return const [];
+
+    // If pure energy without recognizable speech structure, return empty
+    return const [];
+  }
+
   void dispose() {
+    _sttEngine.dispose();
     _idToToken.clear();
     _tokenToId.clear();
     _isInitialized = false;

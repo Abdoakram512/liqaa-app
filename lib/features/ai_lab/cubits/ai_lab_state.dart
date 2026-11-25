@@ -23,6 +23,8 @@ class AiLabState extends Equatable {
   final bool noiseReductionEnabled;
   final String? errorMessage;
   final String? comparisonJson;
+  final String? lastBlindTranscript;
+  final List<PhonemeToken> lastBlindPhonemes;
 
   const AiLabState({
     this.status = AiLabStatus.initial,
@@ -39,6 +41,8 @@ class AiLabState extends Equatable {
     this.noiseReductionEnabled = true,
     this.errorMessage,
     this.comparisonJson,
+    this.lastBlindTranscript,
+    this.lastBlindPhonemes = const [],
   });
 
   AiLabState copyWith({
@@ -56,6 +60,8 @@ class AiLabState extends Equatable {
     bool? noiseReductionEnabled,
     String? errorMessage,
     String? comparisonJson,
+    String? lastBlindTranscript,
+    List<PhonemeToken>? lastBlindPhonemes,
   }) {
     return AiLabState(
       status: status ?? this.status,
@@ -72,6 +78,8 @@ class AiLabState extends Equatable {
       noiseReductionEnabled: noiseReductionEnabled ?? this.noiseReductionEnabled,
       errorMessage: errorMessage ?? this.errorMessage,
       comparisonJson: comparisonJson ?? this.comparisonJson,
+      lastBlindTranscript: lastBlindTranscript ?? this.lastBlindTranscript,
+      lastBlindPhonemes: lastBlindPhonemes ?? this.lastBlindPhonemes,
     );
   }
 
@@ -90,5 +98,7 @@ class AiLabState extends Equatable {
     lastSttResult,
     noiseReductionEnabled,
     errorMessage,
+    lastBlindTranscript,
+    lastBlindPhonemes,
   ];
 }

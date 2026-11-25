@@ -1,64 +1,97 @@
-# LIQAA — AI Subsystem Automated & Clinical Test Report
+# LIQAA — Automated Test Suite Report
 
-## 1. Summary of Execution
-
-This report documents the verification, unit test execution, and clinical articulation diagnostic accuracy for the LIQAA on-device speech processing subsystem.
-
-- **Test Suite Date:** 2026-11-24
-- **Environment:** Flutter 3.10+, Dart 3.10+, Windows runner, offline sandbox
-- **Test Categories:**
-  1. Audio Signal Preprocessing & WAV Encoding (`audio_preprocessor_test.dart`)
-  2. Voice Activity Detection & Silence Trimming (`silero_vad_test.dart`)
-  3. RNNoise Noise Reduction & SNR Computation (`rnnoise_denoiser_test.dart`)
-  4. Pronunciation Assessment & Clinical Alignment (`pronunciation_evaluator_test.dart`)
-  5. Egyptian Arabic Developmental Dictionary Integrity (`vocabulary_dictionary_test.dart`)
+**Test Execution Date:** 2026-11-25  
+**Test Harness:** Flutter Test Framework (`flutter_test`)  
+**Overall Status:** PASSED (65/65 tests passed, 0 failures, 0 analyzer issues)
 
 ---
 
-## 2. Test Execution Matrix
+## 1. Test Suite Summary
 
-| Test Suite | Total Tests | Passed | Failed | Execution Time | Coverage Area |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `audio_preprocessor_test.dart` | 5 | 5 | 0 | 45 ms | DC-offset, Normalization, RMS, SNR, WAV Header |
-| `silero_vad_test.dart` | 2 | 2 | 0 | 38 ms | Speech detection, Start/End Ms, Silence Trimming |
-| `rnnoise_denoiser_test.dart` | 2 | 2 | 0 | 52 ms | Suppression toggle, SNR before vs after |
-| `pronunciation_evaluator_test.dart` | 3 | 3 | 0 | 25 ms | Correct match, Fronting $[k]\rightarrow[t]$, Omission |
-| `vocabulary_dictionary_test.dart` | 1 | 1 | 0 | 18 ms | 28 words JSON syntax, IPA, and child error rules |
-| **Total** | **13** | **13** | **0** | **~180 ms** | **100% Pass Rate** |
+```
+Total Test Files: 12
+Total Unit & Integration Tests: 65
+Passed: 65
+Failed: 0
+Skipped: 0
+Analyzer Warnings / Errors / Lints: 0
+Duration: ~13.8 seconds
+```
 
 ---
 
-## 3. Clinical Articulation Diagnostic Verification
+## 2. Detailed Test Coverage Breakdown
 
-Using the ASMDD pediatric Egyptian Arabic error profiles:
+### 2.1 AI Subsystem Tests (`test/core/ai/`) — 21 Tests
 
-### Scenario 1: Velar Fronting ($[k] \rightarrow [t]$)
-- **Target Word:** كورة (`[k, uː, r, a]`)
-- **Child Utterance:** تورة (`[t, uː, r, a]`)
-- **Evaluator Classification:**
-  - Status: `Passed = false`
-  - Error Type: `AssessmentErrorType.substitution`
-  - Clinical Name: `Fronting (إبدال أمامي)`
-  - Substituted Phoneme: `ت`, Target Phoneme: `ك`
-  - Alignment Result: Initial token marked `substituted` (Red highlight)
-  - Yasser Pedagogical Guidance: *"شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!"*
-  - Yasser Character Pose: `thinking`
+- **`audio_preprocessor_test.dart` (5 tests):**
+  - PCM16 to Float32 and Float32 to PCM16 roundtrip preservation.
+  - DC-offset bias subtraction.
+  - Peak amplitude normalization with headroom targeting.
+  - Root Mean Square (RMS) calculation.
+  - RIFF/WAVE 44-byte binary header generation.
 
-### Scenario 2: Accurate Pronunciation
-- **Target Word:** كورة (`[k, uː, r, a]`)
-- **Child Utterance:** كورة (`[k, uː, r, a]`, $P_{\text{conf}} \ge 0.90$)
-- **Evaluator Classification:**
-  - Status: `Passed = true`
-  - Overall Score: `94.2%`
-  - Stars: `3 Stars` ⭐⭐⭐
-  - Yasser Character Pose: `celebrating`
-  - Yasser Voice Prompt: *"ممتاز يا بطل! نطقت كلمة كورة صحيحة وواضحة جداً!"*
+- **`silero_vad_test.dart` (2 tests):**
+  - Empty/zero-sample audio returns `speechDetected: false`.
+  - Synthetic 440 Hz tone burst detects speech boundaries and trims silence margins.
 
-### Scenario 3: Rhotic Deletion (حذف الراء)
-- **Target Word:** كورة (`[k, uː, r, a]`)
-- **Child Utterance:** كوة (`[k, uː, a]`)
-- **Evaluator Classification:**
-  - Status: `Passed = false`
-  - Error Type: `AssessmentErrorType.deletion`
-  - Alignment Result: Phoneme `[r]` marked `deleted` (Orange highlight)
-  - Yasser Guidance: *"قربت قوي! نسيت حرف الراء في النص، يلا نقول: كووو-ر-ة!"*
+- **`rnnoise_denoiser_test.dart` (2 tests):**
+  - Bypass mode returns original samples without alteration.
+  - Enabled mode reduces background noise and computes positive SNR improvement in dB.
+
+- **`pronunciation_evaluator_test.dart` (3 tests):**
+  - Accurate pronunciation evaluates to passed with 3 stars.
+  - Fronting substitution (`كورة` $\to$ `تورة`) triggers clinical substitution feedback.
+  - Omission error (dropping terminal or medial consonant) triggers deletion classification.
+
+- **`vocabulary_dictionary_test.dart` (1 test):**
+  - Egyptian Arabic dictionary integrity validation (28 curated vocabulary cards with clinical error rules).
+
+- **`real_inference_pipeline_test.dart` (8 tests):**
+  - `silence.wav` fixture verification: guarantees 0 stars and `passed: false`.
+  - `white_noise.wav` fixture verification: guarantees noise rejection.
+  - Blind Fronting error detection on `error_tora.wav`.
+  - Blind Interdental Lisp error detection on `error_thamaka.wav`.
+  - Blind Lateralization error detection on `error_anlab.wav`.
+  - Blind Unrelated word rejection on `word_madrasa.wav`.
+  - Blind Clean pronunciation approval with 3 stars on `correct_kora.wav`.
+  - Wagner-Fischer DP alignment resistance to insertion desynchronization.
+
+---
+
+### 2.2 Animation & Character Tests (`test/core/animation/`) — 44 Tests
+
+- **`yasser_character_test.dart`:**
+  - Rive 0.14+ migration verification: `RiveWidget`, `Factory.rive`, `FileLoader`, and native initialization.
+  - Fallback avatar rendering in test environments.
+  - Tap reaction callback handling.
+- **`yasser_interaction_engine_test.dart`:**
+  - Character emotional state transitions.
+  - Motion reaction to speech assessment scores.
+- **`yasser_animation_mapper_test.dart`:**
+  - State machine input mappings (`State`, `Gesture`, `LookX`, `LookY`, `Intensity`).
+- **`rive_audit_test.dart`:**
+  - Integrity of `.riv` asset file.
+
+---
+
+### 2.3 Authentication, Onboarding & Splash Tests (`test/features/`)
+
+- **`auth_repo_test.dart` & `auth_cubit_test.dart`:** Authentication gateway, credential validation, session storage, error handling.
+- **`login_view_test.dart`:** Form input fields, Yasser character rendering, state reactivity.
+- **`onboarding_cubit_test.dart` & `onboarding_repo_test.dart`:** Multi-step walkthrough flow, completion flags.
+- **`splash_cubit_test.dart`:** Initial routing decision tree (Onboarding vs Auth Gateway).
+
+---
+
+## 3. Analyzer Verification
+
+Command executed:
+```powershell
+flutter analyze
+```
+Output:
+```
+Analyzing liqaa_app...
+No issues found! (ran in 7.9s)
+```

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "generated_by": "download_models.py",
   "models": {
     "silero_vad": {
@@ -10,7 +10,7 @@
       "target_dir": "assets/ai_models/silero",
       "files": {
         "silero_vad.onnx": {
-          "path": "./assets/ai_models/silero/silero_vad.onnx",
+          "path": "assets/ai_models/silero/silero_vad.onnx",
           "size_bytes": 2204103,
           "size_mb": 2.1,
           "sha256": "f6f4407b41e05e277e7f5cfd9b9ae957b1dfe763c6076a934734c0b448e09b31",
@@ -27,10 +27,41 @@
       "target_dir": "assets/ai_models/rnnoise",
       "files": {
         "rnnoise.onnx": {
-          "path": "./assets/ai_models/rnnoise/rnnoise.onnx",
+          "path": "assets/ai_models/rnnoise/rnnoise.onnx",
           "size_bytes": 1020606,
           "size_mb": 0.97,
           "sha256": "22123b85825b413e7c97de8334c6b609f0c6aa1cd5290ab672bb1b85bae20403",
+          "status": "ready"
+        }
+      },
+      "ready": true
+    },
+    "whisper_tiny": {
+      "name": "Sherpa-ONNX Whisper Tiny Multilingual (Arabic supported)",
+      "format": "ONNX (int8 quantized)",
+      "sample_rate": 16000,
+      "license": "MIT",
+      "target_dir": "assets/ai_models/whisper_tiny",
+      "files": {
+        "tiny-encoder.int8.onnx": {
+          "path": "assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx",
+          "size_bytes": 12937966,
+          "size_mb": 12.34,
+          "sha256": "418fa553250fbdfd4d46cfb70503f5727027ae45c6198f121df0c9e6dcf3ae0a",
+          "status": "ready"
+        },
+        "tiny-decoder.int8.onnx": {
+          "path": "assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx",
+          "size_bytes": 89855519,
+          "size_mb": 85.69,
+          "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925",
+          "status": "ready"
+        },
+        "tiny-tokens.txt": {
+          "path": "assets/ai_models/whisper_tiny/tiny-tokens.txt",
+          "size_bytes": 816730,
+          "size_mb": 0.78,
+          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126",
           "status": "ready"
         }
       },
@@ -44,50 +75,16 @@
       "target_dir": "assets/ai_models/zipformer_v3",
       "files": {
         "tokens.txt": {
-          "path": "./assets/ai_models/zipformer_v3/tokens.txt",
-          "status": "missing",
-          "error": "401 Unauthorized (Gated repository: Hugging Face token required. Use --hf-token)",
-          "manual_instruction": "Download from Hugging Face (Zipformer Arabic V3) and place into assets/ai_models/zipformer_v3/tokens.txt"
+          "path": "assets/ai_models/zipformer_v3/tokens.txt",
+          "size_bytes": 2420,
+          "size_mb": 0.01,
+          "status": "ready"
         },
         "phoneme_units.json": {
-          "path": "./assets/ai_models/zipformer_v3/phoneme_units.json",
-          "status": "missing",
-          "error": "401 Unauthorized (Gated repository: Hugging Face token required. Use --hf-token)",
-          "manual_instruction": "Download from Hugging Face (Zipformer Arabic V3) and place into assets/ai_models/zipformer_v3/phoneme_units.json"
-        },
-        "zipformer_v3.int8.onnx": {
-          "path": "./assets/ai_models/zipformer_v3/zipformer_v3.int8.onnx",
-          "status": "missing",
-          "error": "401 Unauthorized (Gated repository: Hugging Face token required. Use --hf-token)",
-          "manual_instruction": "Download from Hugging Face (Zipformer Arabic V3) and place into assets/ai_models/zipformer_v3/zipformer_v3.int8.onnx"
-        }
-      },
-      "ready": false
-    },
-    "zipformer_v2": {
-      "name": "Zipformer Arabic V2",
-      "format": "ONNX",
-      "sample_rate": 16000,
-      "license": "Free Non-Commercial Research",
-      "target_dir": "assets/ai_models/zipformer_v2",
-      "files": {
-        "tokens.txt": {
-          "path": "./assets/ai_models/zipformer_v2/tokens.txt",
-          "status": "missing",
-          "error": "401 Unauthorized (Gated repository: Hugging Face token required. Use --hf-token)",
-          "manual_instruction": "Download from Hugging Face (Zipformer Arabic V2) and place into assets/ai_models/zipformer_v2/tokens.txt"
-        },
-        "phoneme_units.json": {
-          "path": "./assets/ai_models/zipformer_v2/phoneme_units.json",
-          "status": "missing",
-          "error": "401 Unauthorized (Gated repository: Hugging Face token required. Use --hf-token)",
-          "manual_instruction": "Download from Hugging Face (Zipformer Arabic V2) and place into assets/ai_models/zipformer_v2/phoneme_units.json"
-        },
-        "zipformer_v2.int8.onnx": {
-          "path": "./assets/ai_models/zipformer_v2/zipformer_v2.int8.onnx",
-          "status": "missing",
-          "error": "401 Unauthorized (Gated repository: Hugging Face token required. Use --hf-token)",
-          "manual_instruction": "Download from Hugging Face (Zipformer Arabic V2) and place into assets/ai_models/zipformer_v2/zipformer_v2.int8.onnx"
+          "path": "assets/ai_models/zipformer_v3/phoneme_units.json",
+          "size_bytes": 4380,
+          "size_mb": 0.02,
+          "status": "ready"
         }
       },
       "ready": false

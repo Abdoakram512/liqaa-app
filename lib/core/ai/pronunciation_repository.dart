@@ -56,8 +56,8 @@ class PronunciationRepository {
     await modelManager.initialize();
     await vadEngine.initialize();
     await denoiserEngine.initialize();
-    await phonemeEngine.initialize();
     await sttEngine.initialize();
+    await phonemeEngine.initialize();
 
     try {
       final String jsonStr = await rootBundle.loadString(
@@ -77,7 +77,8 @@ class PronunciationRepository {
     debugPrint('[PronunciationRepository] Initialized with ${_vocabulary.length} words');
   }
 
-  /// Processes raw audio bytes through the end-to-end AI pipeline
+  /// Processes raw audio bytes through the end-to-end AI pipeline.
+  /// Strictly prevents target answer leakage to the recognition engines!
   Future<PronunciationAssessment> evaluateAudio({
     required Uint8List rawAudioBytes,
     required VocabularyWord targetWord,
@@ -86,10 +87,11 @@ class PronunciationRepository {
     final Stopwatch sw = Stopwatch()..start();
 
     if (rawAudioBytes.isEmpty) {
+      sw.stop();
       return evaluator.evaluate(
         word: targetWord,
         recognizedTokens: const [],
-        latencyMs: 1,
+        latencyMs: sw.elapsedMilliseconds,
       );
     }
 
@@ -100,9 +102,20 @@ class PronunciationRepository {
     samples = preprocessor.removeDcOffset(samples);
     samples = preprocessor.normalizePeak(samples);
 
-    // 3. Silero VAD analysis & silence trimming
+    // 3. Silero VAD analysis & silence detection
     final VadAnalysisResult vad = vadEngine.analyze(samples);
-    final Float32List speechSamples = vad.trimmedSamples ?? samples;
+
+    // If silence or no speech detected -> abort immediately with NoSpeech assessment!
+    if (!vad.speechDetected || vad.trimmedSamples == null || vad.trimmedSamples!.isEmpty) {
+      sw.stop();
+      return evaluator.evaluate(
+        word: targetWord,
+        recognizedTokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
+
+    final Float32List speechSamples = vad.trimmedSamples!;
 
     // 4. RNNoise Noise Reduction
     final bool enableDenoise = overrideDenoise ?? denoiserEngine.enabled;
@@ -110,16 +123,15 @@ class PronunciationRepository {
     final DenoiseResult denoise = denoiserEngine.process(speechSamples);
     final Float32List finalSamples = denoise.processedSamples;
 
-    // 5. Phoneme Recognition via Zipformer CTC Head
-    final List<PhonemeToken> recognizedTokens = phonemeEngine.recognizePhonemes(
+    // 5. Blind Phoneme Recognition (ZERO TARGET LEAKAGE)
+    final List<PhonemeToken> recognizedTokens = await phonemeEngine.recognizePhonemes(
       finalSamples,
-      expectedPhonemes: targetWord.expectedPhonemes,
     );
 
     sw.stop();
     final int latencyMs = sw.elapsedMilliseconds;
 
-    // 6. Clinical Alignment & Assessment
+    // 6. Clinical Alignment & Dynamic Programming Assessment
     return evaluator.evaluate(
       word: targetWord,
       recognizedTokens: recognizedTokens,
