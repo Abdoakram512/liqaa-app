@@ -88,7 +88,7 @@ void main() {
         ),
       );
 
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 1200));
 
       // Verify key fields exist
       expect(find.text('تسجيل الدخول'), findsOneWidget);
@@ -109,10 +109,14 @@ void main() {
       );
 
       final passwordField = find.byType(YasserTextField).last;
-      await tester.tap(
-        find.descendant(of: passwordField, matching: find.byType(IconButton)),
+      final toggleButton = find.descendant(
+        of: passwordField,
+        matching: find.byType(IconButton),
       );
-      await tester.pump();
+      await tester.ensureVisible(toggleButton);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(toggleButton);
+      await tester.pump(const Duration(milliseconds: 300));
       expect(character.controller!.currentState, YasserAnimationState.peeking);
 
       fields.first.focusNode!.requestFocus();
