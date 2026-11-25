@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -68,7 +69,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                           if (state.status == GameStatus.error &&
                               state.errorMessage != null &&
                               assessment == null)
-                            _buildSystemErrorBanner(state.errorMessage!)
+                            _buildSystemErrorBanner('تعذّر بدء التدريب الصوتي. جرّب تاني.')
                           else if (assessment != null)
                             _buildAssessmentBanner(
                               assessment,
@@ -189,7 +190,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
               ),
             ],
           ),
-          IconButton(
+          if (kDebugMode) IconButton(
             icon: const Icon(
               Icons.psychology_alt_rounded,
               color: AppColors.primary,
@@ -405,7 +406,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                     children: [
                       Text(
                         isSystemError
-                            ? (assessment.clinicalErrorName ?? 'خطأ في التشغيل')
+                            ? 'تعذّر تحليل الصوت'
                             : (passed
                                 ? 'نطق ممتاز يا بطل!'
                                 : 'محاولة حلوة.. يلا نركز!'),
@@ -425,9 +426,9 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                             color: AppColors.textSecondary,
                           ),
                         )
-                      else if (isSystemError && assessment.diagnosticError != null)
+                      else if (isSystemError)
                         Text(
-                          '${assessment.pipelineStageFailed ?? 'Pipeline'}: ${assessment.diagnosticError}',
+                          'جرّب تاني. المحاولة دي مش محسوبة عليك.',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: Colors.red.shade800,
                           ),
@@ -461,7 +462,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
     return Column(
       children: [
         GestureDetector(
-          onTap: () {
+          onTap: state.status == GameStatus.evaluating || state.isPlayingAudioPrompt ? null : () {
             if (isListening) {
               context.read<PronunciationGameCubit>().stopListeningAndEvaluate();
             } else {
@@ -496,9 +497,13 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
         ),
         SizedBox(height: 10.h),
         Text(
-          isListening
-              ? 'دوس هنا لما تخلص كلام'
-              : 'اضغط على المايك وانطق الكلمة',
+          state.status == GameStatus.evaluating
+              ? 'ياسر بيحلل صوتك...'
+              : isListening
+                  ? 'دوس هنا لما تخلص كلام'
+                  : state.status == GameStatus.error
+                      ? 'اضغط هنا وجرب تاني'
+                      : 'اضغط على المايك وانطق الكلمة',
           style: AppTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.bold,
             color: isListening ? Colors.red.shade800 : AppColors.textPrimary,
