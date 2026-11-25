@@ -62,7 +62,7 @@ void main() {
   ) async {
     const moods = {
       OnboardingEnvironment.welcomeSound: YasserAnimationState.greeting,
-      OnboardingEnvironment.soundPuzzle: YasserAnimationState.thinking,
+      OnboardingEnvironment.soundPuzzle: YasserAnimationState.listening,
       OnboardingEnvironment.celebrationLaunch: YasserAnimationState.celebrating,
     };
     for (final mood in moods.entries) {
@@ -141,9 +141,9 @@ void main() {
       expect(pose(asset), findsOneWidget);
     }
 
-    await goTo(1, YasserAnimationMapper.thinkingPose);
+    await goTo(1, YasserAnimationMapper.presentingPose);
     await goTo(2, YasserAnimationMapper.celebratingPose);
-    await goTo(1, YasserAnimationMapper.thinkingPose);
+    await goTo(1, YasserAnimationMapper.presentingPose);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });

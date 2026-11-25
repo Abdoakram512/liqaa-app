@@ -58,8 +58,10 @@ final class YasserRiveController extends rive.RiveWidgetController {
     _mapping = mapping;
     _arms.request(
       state: mapping.semanticState,
-      cover: mapping.rivePasswordTyping,
-      peek: mapping.semanticState == YasserAnimationState.peeking,
+      // Privacy is authored by the state machine. Do not move its IK targets
+      // a second time from Flutter while that transition is running.
+      cover: false,
+      peek: false,
     );
     scheduleRepaint();
   }
@@ -78,8 +80,8 @@ final class YasserRiveController extends rive.RiveWidgetController {
       elapsedSeconds,
       reducedMotion: reducedMotion,
     );
-    if (_passwordTyping.value != _arms.eyesCovered) {
-      _passwordTyping.value = _arms.eyesCovered;
+    if (_passwordTyping.value != _mapping.rivePasswordTyping) {
+      _passwordTyping.value = _mapping.rivePasswordTyping;
     }
     final machineChanged = super.advance(elapsedSeconds);
     final moving = _motion.apply(
@@ -87,11 +89,11 @@ final class YasserRiveController extends rive.RiveWidgetController {
       elapsedSeconds,
       reducedMotion: reducedMotion,
       breathingPeriod: _breathingPeriod,
-      armsCovering: _arms.eyesCovered,
+      armsCovering: _mapping.rivePasswordTyping,
       celebration: _arms.celebration,
       viseme: _viseme,
     );
-    if (_arms.hasArmPose) _arms.apply();
+    if (!_mapping.rivePasswordTyping && _arms.hasArmPose) _arms.apply();
     // Flush bone edits without applying the state machine again.
     // ignore: invalid_use_of_internal_member
     artboard.updatePass();

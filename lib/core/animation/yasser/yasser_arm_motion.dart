@@ -79,7 +79,7 @@ final class YasserArmMotion {
     return _gestureSeconds < duration ||
         _privacy != privacyTarget ||
         _peek != peekTarget ||
-        _waveTime < waveDuration && _waveWeight > 0;
+        _waveWeight > 0;
   }
 
   bool get eyesCovered => _privacy > (_coverRequested ? .72 : .9);

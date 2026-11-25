@@ -38,7 +38,7 @@ class CharacterCapability {
 /// Comprehensive Capability Matrix discovered from `assets/rive/yasser.riv`.
 abstract final class YasserAnimationCapabilities {
   static const String assetPath = 'assets/rive/yasser.riv';
-  static const int assetByteSize = 958177;
+  static const int assetByteSize = 1616813;
   static const String artboardName = 'Yasser_Phase1_Work';
   static const String stateMachineName = 'State Machine 1';
 
