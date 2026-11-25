@@ -174,9 +174,22 @@ class _YasserCharacterState extends State<YasserCharacter>
   @override
   void didUpdateWidget(covariant YasserCharacter oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final controllerChanged = widget.controller != oldWidget.controller;
+    if (controllerChanged) {
+      _poseTimer?.cancel();
+      _controller.detachWidgetController();
+      _riveWidgetController?.dispose();
+      _riveWidgetController = null;
+      if (_ownsController) _controller.dispose();
+      _ownsController = widget.controller == null;
+      _controller = widget.controller ?? YasserController();
+      _hasRiveError = false;
+    }
     _riveWidgetController?.viseme = widget.viseme;
-    if (widget.state != oldWidget.state) {
-      _controller.returnToIdle();
+    if (controllerChanged || widget.state != oldWidget.state) {
+      if (!controllerChanged || widget.state != null) {
+        _controller.returnToIdle();
+      }
       _schedulePose();
     }
     if (YasserCharacter.enableRiveRuntime &&
