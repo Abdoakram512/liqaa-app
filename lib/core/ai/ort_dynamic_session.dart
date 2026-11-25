@@ -256,7 +256,14 @@ class OrtDynamicSession {
   }
 
   /// Opens an ONNX model from [modelPath] with [numThreads] intra-op threads.
-  static OrtDynamicSession fromFile(String modelPath, {int numThreads = 2}) {
+  static OrtDynamicSession fromFile(
+    String modelPath, {
+    int numThreads = 2,
+    int graphOptimizationLevel = 99,
+  }) {
+    if (!const [0, 1, 2, 99].contains(graphOptimizationLevel)) {
+      throw ArgumentError.value(graphOptimizationLevel, 'graphOptimizationLevel');
+    }
     if (!File(modelPath).existsSync()) {
       throw FileSystemException('ONNX model file does not exist', modelPath);
     }
@@ -318,7 +325,7 @@ class OrtDynamicSession {
       _check(createOpts(pOpts), getErr, relStatus);
       optsPtr = pOpts.value;
       _check(setIntra(optsPtr, numThreads), getErr, relStatus);
-      _check(setGraphOpt(optsPtr, 99 /* ORT_ENABLE_ALL */), getErr, relStatus);
+      _check(setGraphOpt(optsPtr, graphOptimizationLevel), getErr, relStatus);
 
       final Pointer<Void> pathPtr = Platform.isWindows
           ? modelPath.toNativeUtf16().cast<Void>()
@@ -402,6 +409,11 @@ class OrtDynamicSession {
   OrtFloatTensorResult runFloat32(Float32List inputData, List<int> inputShape) {
     if (_disposed) {
       throw StateError('OrtDynamicSession has already been disposed.');
+    }
+
+    if (inputShape.isEmpty || inputShape.any((d) => d <= 0) ||
+        inputShape.fold<int>(1, (a, b) => a * b) != inputData.length) {
+      throw ArgumentError('Input tensor shape does not match input data.');
     }
 
     final shapePtr = calloc<Int64>(inputShape.length);

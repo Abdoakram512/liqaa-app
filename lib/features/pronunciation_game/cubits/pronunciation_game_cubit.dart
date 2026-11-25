@@ -19,13 +19,19 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   Future<void>? _startingPrompt;
   bool _startingRecording = false;
   bool _closing = false;
+  final Set<String> _masteredWordIds = {};
+
+  bool get _speechModelsReady =>
+      _repository.vadEngine.isNativeAvailable &&
+      _repository.phonemeEngine.isNativeAvailable;
 
   bool get _canInteract =>
       !_closing &&
       !_startingRecording &&
       _prompt == null &&
       !state.isListening &&
-      state.status != GameStatus.evaluating;
+      state.status != GameStatus.evaluating &&
+      state.status != GameStatus.loading;
 
   PronunciationGameCubit(this._repository, {AudioPlayer? audioPlayer})
     : _audioPlayer = audioPlayer ?? AudioPlayer(),
@@ -63,11 +69,14 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
 
       emit(
         state.copyWith(
-          status: GameStatus.readyToSpeak,
+          status: _speechModelsReady ? GameStatus.readyToSpeak : GameStatus.error,
+          errorMessage: _speechModelsReady ? null : 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
           words: words,
           currentWordIndex: 0,
           currentWord: currentWord,
-          yasserMessage: 'أهلاً بيك يا بطل! يلا ندوس على المايك وننطق سوا!',
+          yasserMessage: _speechModelsReady
+              ? 'أهلاً بيك يا بطل! يلا ندوس على المايك وننطق سوا!'
+              : 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
           yasserPose: 'waving',
         ),
       );
@@ -118,6 +127,25 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     if (!_canInteract || state.currentWord == null) return;
     _startingRecording = true;
     try {
+      if (!_speechModelsReady) {
+        emit(state.copyWith(status: GameStatus.loading, clearAssessment: true));
+        if (!_repository.vadEngine.isNativeAvailable) {
+          await _repository.vadEngine.initialize();
+        }
+        if (!_repository.phonemeEngine.isNativeAvailable) {
+          await _repository.phonemeEngine.initialize();
+        }
+        if (_closing) return;
+        if (!_speechModelsReady) {
+          emit(state.copyWith(
+            status: GameStatus.error,
+            errorMessage: 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
+            yasserMessage: 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
+            yasserPose: 'thinking',
+          ));
+          return;
+        }
+      }
       await _repository.recorder.startRecording();
       if (_closing) {
         await _repository.recorder.stopRecording();
@@ -188,20 +216,22 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
       );
 
       if (_closing) return;
-      if (assessment.errorType.isSystemFailure) {
+      if (assessment.errorType.isSystemFailure ||
+          (assessment.passed && assessment.recognizedPhonemes.isEmpty)) {
         emit(
           state.copyWith(
             status: GameStatus.error,
-            lastAssessment: assessment,
-            errorMessage: assessment.diagnosticError ?? assessment.clinicalErrorName,
-            yasserMessage: assessment.yasserFeedbackMessage,
+            clearAssessment: true,
+            errorMessage: 'تعذّر تحليل الصوت. جرّب تاني.',
+            yasserMessage: 'تعذّر تحليل الصوت. جرّب تاني.',
             yasserPose: 'thinking',
           ),
         );
       } else if (assessment.passed &&
           assessment.errorType == AssessmentErrorType.correct) {
-        final newStars = state.totalStarsEarned + assessment.stars;
-        final newMastered = state.wordsMasteredCount + 1;
+        final firstMastery = _masteredWordIds.add(word.id);
+        final newStars = state.totalStarsEarned + (firstMastery ? assessment.stars : 0);
+        final newMastered = _masteredWordIds.length;
 
         emit(
           state.copyWith(
@@ -232,7 +262,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           status: GameStatus.error,
           clearAssessment: true,
           errorMessage: e.toString(),
-          yasserMessage: 'تعذّر تسجيل أو تحليل الصوت: $e',
+          yasserMessage: 'تعذّر تسجيل أو تحليل الصوت. جرّب تاني.',
           yasserPose: 'thinking',
         ),
       );

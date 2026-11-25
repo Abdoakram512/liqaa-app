@@ -219,8 +219,12 @@ class PronunciationRepository {
     final bool prevDenoiseEnabled = denoiserEngine.enabled;
     final bool enableDenoise = overrideDenoise ?? (prevDenoiseEnabled && rawSnr < 14.0);
     denoiserEngine.enabled = enableDenoise;
-    final DenoiseResult denoise = denoiserEngine.process(speechSamples);
-    denoiserEngine.enabled = prevDenoiseEnabled;
+    late final DenoiseResult denoise;
+    try {
+      denoise = denoiserEngine.process(speechSamples);
+    } finally {
+      denoiserEngine.enabled = prevDenoiseEnabled;
+    }
     if (!denoise.hasValidAudio) {
       sw.stop();
       return _systemFailure(
@@ -325,8 +329,9 @@ class PronunciationRepository {
     final double snr = preprocessor.estimateSnrDb(samples);
     final List<double> waveform = preprocessor.downsampleForWaveform(samples, 64);
 
-    // Avoid passing ultra-quiet dead silence as speech after VAD if RMS < 0.002
-    final VadAnalysisResult vad = rms < 0.002
+    // Match the game: only reject dead digital silence before Silero VAD.
+    // Quiet recordings with short consonant peaks must reach the VAD.
+    final VadAnalysisResult vad = peak < 0.002
         ? VadAnalysisResult(
             speechDetected: false,
             speechStartMs: 0,

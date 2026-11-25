@@ -288,6 +288,9 @@ void main() {
       final paddedWav = preprocessor.float32ToWav(padded, sampleRate: 16000);
       final paddedRes = await repo.evaluateAudio(rawAudioBytes: paddedWav, targetWord: koraWord);
       expect(paddedRes.errorType, isNot(equals(AssessmentErrorType.noSpeech)));
+      final labResult = repo.analyzeAudioForLab(paddedWav);
+      expect(labResult.speechDetected, isTrue,
+          reason: 'Lab must not reject quiet padded speech that reaches game VAD.');
     });
   });
 }

@@ -222,10 +222,10 @@ class OnboardingCharacterScene extends StatelessWidget {
                     .slideX(begin: 0.3, end: 0, curve: Curves.easeOutBack),
           ),
 
-          // Yasser thinks with his hand near his chest
+          // Listening expression matches the sound discovery scene without the chest gesture
           Positioned(
             bottom: 0,
-            child: _character(YasserAnimationState.thinking),
+            child: _character(YasserAnimationState.listening),
           ),
         ],
       ),
@@ -284,10 +284,9 @@ class OnboardingCharacterScene extends StatelessWidget {
                     ),
           ),
 
-          // Hero Badge
+          // Keep the hero badge above the character, away from the feet.
           Positioned(
-            bottom: 40.h,
-            left: 24.w,
+            top: 0,
             child:
                 Container(
                       padding: EdgeInsets.symmetric(

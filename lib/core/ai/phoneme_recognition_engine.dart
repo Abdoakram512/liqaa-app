@@ -99,7 +99,34 @@ class PhonemeRecognitionEngine {
 
       _loadVocab(_vocabPath!);
       _session?.dispose();
-      _session = OrtDynamicSession.fromFile(_modelPath!, numThreads: 2);
+      _session = null;
+      // Android CPU may lack the Float16 fused GELU kernel selected by
+      // extended graph optimizations. Basic/disabled optimization avoids
+      // introducing that fusion when the original graph is supported.
+      final levels = Platform.isAndroid ? const [1, 0] : const [99];
+      final failures = <String>[];
+      for (final level in levels) {
+        OrtDynamicSession? candidate;
+        try {
+          candidate = OrtDynamicSession.fromFile(
+            _modelPath!, numThreads: 2, graphOptimizationLevel: level,
+          );
+          // This is a runtime compatibility probe, not a pronunciation test.
+          final probe = candidate.runFloat32(Float32List(16000), [1, 16000]);
+          _validateOutput(probe);
+          _session = candidate;
+          candidate = null;
+          debugPrint('[PhonemeRecognitionEngine] ORT optimization=$level passed inference probe');
+          break;
+        } catch (e) {
+          failures.add('optimization=$level: $e');
+        } finally {
+          candidate?.dispose();
+        }
+      }
+      if (_session == null) {
+        throw StateError('No compatible Wav2Vec2 session: ${failures.join("; ")}');
+      }
       _isNativeAvailable = true;
       _lastError = null;
       debugPrint(
@@ -196,7 +223,7 @@ class PhonemeRecognitionEngine {
         [1, normalized.length],
       );
 
-      if (out.shape.length != 3 || out.shape[1] <= 0 || out.shape[2] <= 0) {
+      if (out.shape.length != 3 || out.shape[0] != 1 || out.shape[1] <= 0 || out.shape[2] != _idToToken.length || out.data.length != out.shape[1] * out.shape[2] || out.data.any((v) => !v.isFinite)) {
         sw.stop();
         return PhonemeRecognitionResult(
           tokens: const [],
@@ -262,6 +289,15 @@ class PhonemeRecognitionEngine {
   }) async {
     final res = await recognizePhonemesDetailed(samples, sampleRate: sampleRate);
     return res.tokens;
+  }
+
+  void _validateOutput(OrtFloatTensorResult out) {
+    if (out.shape.length != 3 || out.shape[0] != 1 ||
+        out.shape[1] <= 0 || out.shape[2] != _idToToken.length ||
+        out.data.length != out.shape[1] * out.shape[2] ||
+        out.data.any((value) => !value.isFinite)) {
+      throw StateError('Invalid Wav2Vec2 logits: ${out.shape}');
+    }
   }
 
   Float32List _zeroMeanUnitVar(Float32List samples) {
