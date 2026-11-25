@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:liqaa_app/core/ai/audio_preprocessor.dart';
+import 'package:liqaa_app/core/ai/models/phoneme_token.dart';
 import 'package:liqaa_app/core/ai/models/pronunciation_assessment.dart';
 import 'package:liqaa_app/core/ai/models/vocabulary_word.dart';
 import 'package:liqaa_app/core/ai/phoneme_recognition_engine.dart';
@@ -262,6 +263,31 @@ void main() {
       expect(res.pipelineStageFailed, equals('PhonemeRecognition'));
       expect(res.diagnosticError, isNotNull);
       brokenPhone.dispose();
+    });
+
+    test('Regression: eSpeak central vowel [ʉ] matches uː in kora and quiet padded audio reaches VAD', () async {
+      // 1. Direct regression for child pronunciation [k, ʉ, r, aː]
+      final koraRounded = evaluator.evaluate(
+        word: koraWord,
+        recognizedTokens: const [
+          PhonemeToken(symbol: 'k', arabicSymbol: 'ك', confidence: 0.72),
+          PhonemeToken(symbol: 'ʉ', arabicSymbol: 'و', confidence: 0.65),
+          PhonemeToken(symbol: 'r', arabicSymbol: 'ر', confidence: 0.70),
+          PhonemeToken(symbol: 'aː', arabicSymbol: 'ا', confidence: 0.75),
+        ],
+      );
+      expect(koraRounded.passed, isTrue);
+      expect(koraRounded.errorType, equals(AssessmentErrorType.correct));
+
+      // 2. Quiet padded audio (1.5s silence + soft kora burst -> overall RMS < 0.002, peak > 0.03)
+      final orig = preprocessor.preprocessWav(File('assets/audio_samples/correct_kora.wav').readAsBytesSync());
+      final padded = Float32List(24000 + orig.samples.length);
+      for (int i = 0; i < orig.samples.length; i++) {
+        padded[24000 + i] = orig.samples[i] * 0.06;
+      }
+      final paddedWav = preprocessor.float32ToWav(padded, sampleRate: 16000);
+      final paddedRes = await repo.evaluateAudio(rawAudioBytes: paddedWav, targetWord: koraWord);
+      expect(paddedRes.errorType, isNot(equals(AssessmentErrorType.noSpeech)));
     });
   });
 }

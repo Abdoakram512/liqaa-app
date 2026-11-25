@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Independent benchmark raw audio & generated sample clips (reproducible via fetch_benchmark_dataset.py)
+/benchmarks/audio/clips/
+/benchmarks/audio/controlled/
+/benchmarks/results/samples/
+/benchmarks/audio/_raw_downloads/

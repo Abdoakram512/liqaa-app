@@ -1,0 +1,828 @@
+{
+  "manifest_counts": {
+    "correct_pediatric": 20,
+    "genuine_pediatric_errors": 20,
+    "unrelated_word_pediatric": 10,
+    "quiet_weak_pediatric": 10,
+    "noisy_pediatric": 10,
+    "adult_arabic_speech": 10,
+    "silence_near_silence": 5,
+    "environmental_noise": 5,
+    "isolated_consonants_syllables": 5,
+    "difficult_edge_cases": 5
+  },
+  "preprocessing_stress": {
+    "total_cases": 20,
+    "passed": 20
+  },
+  "silero_vad": {
+    "tp": 87,
+    "fp": 0,
+    "fn": 3,
+    "tn": 10,
+    "accuracy": 0.97,
+    "precision": 1.0,
+    "recall": 0.9667,
+    "f1": 0.9831,
+    "fpr": 0.0,
+    "fnr": 0.0333,
+    "latency_p50_ms": 12.0,
+    "latency_p95_ms": 61.0,
+    "by_category": {
+      "adult_arabic_speech": {
+        "count": 10,
+        "detected": 10,
+        "rate": 1.0,
+        "mean_retained_ms": 8057.0
+      },
+      "correct_pediatric": {
+        "count": 20,
+        "detected": 19,
+        "rate": 0.95,
+        "mean_retained_ms": 857.1
+      },
+      "difficult_edge_cases": {
+        "count": 5,
+        "detected": 5,
+        "rate": 1.0,
+        "mean_retained_ms": 1221.2
+      },
+      "environmental_noise": {
+        "count": 5,
+        "detected": 0,
+        "rate": 0.0,
+        "mean_retained_ms": 0.0
+      },
+      "genuine_pediatric_errors": {
+        "count": 20,
+        "detected": 20,
+        "rate": 1.0,
+        "mean_retained_ms": 679.7
+      },
+      "isolated_consonants_syllables": {
+        "count": 5,
+        "detected": 5,
+        "rate": 1.0,
+        "mean_retained_ms": 884.4
+      },
+      "noisy_pediatric": {
+        "count": 10,
+        "detected": 9,
+        "rate": 0.9,
+        "mean_retained_ms": 626.0
+      },
+      "quiet_weak_pediatric": {
+        "count": 10,
+        "detected": 9,
+        "rate": 0.9,
+        "mean_retained_ms": 1031.8
+      },
+      "silence_near_silence": {
+        "count": 5,
+        "detected": 0,
+        "rate": 0.0,
+        "mean_retained_ms": 0.0
+      },
+      "unrelated_word_pediatric": {
+        "count": 10,
+        "detected": 10,
+        "rate": 1.0,
+        "mean_retained_ms": 1137.6
+      }
+    }
+  },
+  "gtcrn_denoiser": {
+    "unpaired_valid_wav_count": 100,
+    "unpaired_total": 100,
+    "latency_p50_ms": 132.0,
+    "latency_p95_ms": 696.0,
+    "paired_snr_metrics": {
+      "-5": {
+        "count": 3,
+        "mean_snr_in": -5.0,
+        "mean_snr_out": 3.63,
+        "mean_delta_sisdr": 8.55,
+        "mean_env_corr_in": 0.661,
+        "mean_env_corr_out": 0.843,
+        "mean_per_noisy_raw": 0.889,
+        "mean_per_denoised": 0.672
+      },
+      "0": {
+        "count": 3,
+        "mean_snr_in": 0.0,
+        "mean_snr_out": 8.29,
+        "mean_delta_sisdr": 9.37,
+        "mean_env_corr_in": 0.847,
+        "mean_env_corr_out": 0.954,
+        "mean_per_noisy_raw": 0.589,
+        "mean_per_denoised": 0.478
+      },
+      "5": {
+        "count": 3,
+        "mean_snr_in": 5.0,
+        "mean_snr_out": 12.59,
+        "mean_delta_sisdr": 8.41,
+        "mean_env_corr_in": 0.945,
+        "mean_env_corr_out": 0.983,
+        "mean_per_noisy_raw": 0.572,
+        "mean_per_denoised": 0.522
+      },
+      "10": {
+        "count": 3,
+        "mean_snr_in": 10.0,
+        "mean_snr_out": 16.49,
+        "mean_delta_sisdr": 7.01,
+        "mean_env_corr_in": 0.983,
+        "mean_env_corr_out": 0.993,
+        "mean_per_noisy_raw": 0.489,
+        "mean_per_denoised": 0.328
+      },
+      "15": {
+        "count": 3,
+        "mean_snr_in": 15.01,
+        "mean_snr_out": 20.29,
+        "mean_delta_sisdr": 5.64,
+        "mean_env_corr_in": 0.995,
+        "mean_env_corr_out": 0.991,
+        "mean_per_noisy_raw": 0.533,
+        "mean_per_denoised": 0.439
+      },
+      "20": {
+        "count": 3,
+        "mean_snr_in": 20.02,
+        "mean_snr_out": 21.61,
+        "mean_delta_sisdr": 1.94,
+        "mean_env_corr_in": 0.998,
+        "mean_env_corr_out": 0.989,
+        "mean_per_noisy_raw": 0.422,
+        "mean_per_denoised": 0.328
+      }
+    }
+  },
+  "wav2vec2_phoneme": {
+    "strict_per": 0.4684,
+    "normalized_per": 0.3971,
+    "strict_sub_rate": 0.235,
+    "strict_del_rate": 0.1329,
+    "strict_ins_rate": 0.1005,
+    "evaluated_samples": 63,
+    "ablation_norm_per": {
+      "A_B_raw": 0.3971,
+      "C_vad": 0.3857,
+      "D_gtcrn": 0.4149,
+      "E_vad_gtcrn": 0.4052
+    },
+    "subgroup_norm_per": {
+      "pediatric_clean": {
+        "n": 40,
+        "per": 0.7188
+      },
+      "dialect_Egyptian Arabic": {
+        "n": 21,
+        "per": 0.8
+      },
+      "dialect_Multi-Dialect Arabic": {
+        "n": 39,
+        "per": 0.7279
+      },
+      "pediatric_quiet": {
+        "n": 10,
+        "per": 0.7632
+      },
+      "pediatric_noisy": {
+        "n": 10,
+        "per": 0.8704
+      },
+      "adult": {
+        "n": 3,
+        "per": 0.1479
+      },
+      "dialect_Modern Standard Arabic": {
+        "n": 3,
+        "per": 0.1479
+      }
+    },
+    "per_phoneme_metrics": {
+      "a": {
+        "support": 134,
+        "tp": 109,
+        "fn": 25,
+        "fp": 51,
+        "precision": 0.681,
+        "recall": 0.813,
+        "f1": 0.741
+      },
+      "b": {
+        "support": 31,
+        "tp": 20,
+        "fn": 11,
+        "fp": 1,
+        "precision": 0.952,
+        "recall": 0.645,
+        "f1": 0.769
+      },
+      "d": {
+        "support": 18,
+        "tp": 14,
+        "fn": 4,
+        "fp": 6,
+        "precision": 0.7,
+        "recall": 0.778,
+        "f1": 0.737
+      },
+      "dˤ": {
+        "support": 4,
+        "tp": 0,
+        "fn": 4,
+        "fp": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "f": {
+        "support": 16,
+        "tp": 12,
+        "fn": 4,
+        "fp": 2,
+        "precision": 0.857,
+        "recall": 0.75,
+        "f1": 0.8
+      },
+      "h": {
+        "support": 7,
+        "tp": 6,
+        "fn": 1,
+        "fp": 4,
+        "precision": 0.6,
+        "recall": 0.857,
+        "f1": 0.706
+      },
+      "i": {
+        "support": 68,
+        "tp": 51,
+        "fn": 17,
+        "fp": 14,
+        "precision": 0.785,
+        "recall": 0.75,
+        "f1": 0.767
+      },
+      "j": {
+        "support": 11,
+        "tp": 8,
+        "fn": 3,
+        "fp": 3,
+        "precision": 0.727,
+        "recall": 0.727,
+        "f1": 0.727
+      },
+      "k": {
+        "support": 6,
+        "tp": 5,
+        "fn": 1,
+        "fp": 3,
+        "precision": 0.625,
+        "recall": 0.833,
+        "f1": 0.714
+      },
+      "l": {
+        "support": 66,
+        "tp": 44,
+        "fn": 22,
+        "fp": 12,
+        "precision": 0.786,
+        "recall": 0.667,
+        "f1": 0.721
+      },
+      "m": {
+        "support": 31,
+        "tp": 21,
+        "fn": 10,
+        "fp": 2,
+        "precision": 0.913,
+        "recall": 0.677,
+        "f1": 0.778
+      },
+      "n": {
+        "support": 25,
+        "tp": 22,
+        "fn": 3,
+        "fp": 9,
+        "precision": 0.71,
+        "recall": 0.88,
+        "f1": 0.786
+      },
+      "q": {
+        "support": 10,
+        "tp": 7,
+        "fn": 3,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.7,
+        "f1": 0.824
+      },
+      "r": {
+        "support": 25,
+        "tp": 15,
+        "fn": 10,
+        "fp": 7,
+        "precision": 0.682,
+        "recall": 0.6,
+        "f1": 0.638
+      },
+      "s": {
+        "support": 17,
+        "tp": 11,
+        "fn": 6,
+        "fp": 5,
+        "precision": 0.688,
+        "recall": 0.647,
+        "f1": 0.667
+      },
+      "t": {
+        "support": 25,
+        "tp": 18,
+        "fn": 7,
+        "fp": 4,
+        "precision": 0.818,
+        "recall": 0.72,
+        "f1": 0.766
+      },
+      "tˤ": {
+        "support": 6,
+        "tp": 0,
+        "fn": 6,
+        "fp": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "u": {
+        "support": 21,
+        "tp": 20,
+        "fn": 1,
+        "fp": 3,
+        "precision": 0.87,
+        "recall": 0.952,
+        "f1": 0.909
+      },
+      "w": {
+        "support": 9,
+        "tp": 8,
+        "fn": 1,
+        "fp": 2,
+        "precision": 0.8,
+        "recall": 0.889,
+        "f1": 0.842
+      },
+      "x": {
+        "support": 8,
+        "tp": 7,
+        "fn": 1,
+        "fp": 3,
+        "precision": 0.7,
+        "recall": 0.875,
+        "f1": 0.778
+      },
+      "z": {
+        "support": 6,
+        "tp": 4,
+        "fn": 2,
+        "fp": 3,
+        "precision": 0.571,
+        "recall": 0.667,
+        "f1": 0.615
+      },
+      "ð": {
+        "support": 3,
+        "tp": 2,
+        "fn": 1,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.667,
+        "f1": 0.8
+      },
+      "ħ": {
+        "support": 9,
+        "tp": 3,
+        "fn": 6,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.333,
+        "f1": 0.5
+      },
+      "ɡ": {
+        "support": 12,
+        "tp": 6,
+        "fn": 6,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.667
+      },
+      "ɣ": {
+        "support": 3,
+        "tp": 0,
+        "fn": 3,
+        "fp": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ʃ": {
+        "support": 4,
+        "tp": 2,
+        "fn": 2,
+        "fp": 1,
+        "precision": 0.667,
+        "recall": 0.5,
+        "f1": 0.571
+      },
+      "ʔ": {
+        "support": 30,
+        "tp": 17,
+        "fn": 13,
+        "fp": 1,
+        "precision": 0.944,
+        "recall": 0.567,
+        "f1": 0.708
+      },
+      "ʕ": {
+        "support": 10,
+        "tp": 2,
+        "fn": 8,
+        "fp": 1,
+        "precision": 0.667,
+        "recall": 0.2,
+        "f1": 0.308
+      }
+    },
+    "mean_conf_matched": 0.714,
+    "mean_conf_mismatched": 0.48,
+    "latency_p50_ms": 771.0,
+    "latency_p95_ms": 3148.0
+  },
+  "whisper_asr": {
+    "wer": 0.8708,
+    "cer": 0.414,
+    "evaluated_utterances": 70,
+    "non_speech_hallucinations": 5,
+    "non_speech_total": 10,
+    "latency_p50_ms": 251.0,
+    "latency_p95_ms": 1383.0
+  },
+  "full_pipeline": {
+    "correct_pediatric_acceptance": {
+      "k": 0,
+      "n": 20,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.1611
+      ]
+    },
+    "genuine_error_rejection": {
+      "k": 20,
+      "n": 20,
+      "rate": 1.0,
+      "ci95": [
+        0.8389,
+        1.0
+      ]
+    },
+    "unrelated_word_rejection": {
+      "k": 10,
+      "n": 10,
+      "rate": 1.0,
+      "ci95": [
+        0.7225,
+        1.0
+      ]
+    },
+    "silence_rejection": {
+      "k": 5,
+      "n": 5,
+      "rate": 1.0
+    },
+    "environmental_noise_rejection": {
+      "k": 5,
+      "n": 5,
+      "rate": 1.0
+    },
+    "category_outcomes": {
+      "correct_pediatric": {
+        "total": 20,
+        "passed_default": 0,
+        "rejected_default": 20,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 30.2,
+        "error_breakdown": {
+          "substitution": 8,
+          "unrelatedWord": 9,
+          "uncertain": 1,
+          "noSpeech": 2
+        }
+      },
+      "genuine_pediatric_errors": {
+        "total": 20,
+        "passed_default": 0,
+        "rejected_default": 20,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 24.7,
+        "error_breakdown": {
+          "unrelatedWord": 14,
+          "uncertain": 1,
+          "substitution": 5
+        }
+      },
+      "unrelated_word_pediatric": {
+        "total": 10,
+        "passed_default": 0,
+        "rejected_default": 10,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 20.3,
+        "error_breakdown": {
+          "unrelatedWord": 9,
+          "deletion": 1
+        }
+      },
+      "quiet_weak_pediatric": {
+        "total": 10,
+        "passed_default": 0,
+        "rejected_default": 10,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 28.0,
+        "error_breakdown": {
+          "unrelatedWord": 6,
+          "substitution": 3,
+          "noSpeech": 1
+        }
+      },
+      "noisy_pediatric": {
+        "total": 10,
+        "passed_default": 0,
+        "rejected_default": 10,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 29.7,
+        "error_breakdown": {
+          "unrelatedWord": 3,
+          "substitution": 3,
+          "noSpeech": 1,
+          "uncertain": 1,
+          "deletion": 2
+        }
+      },
+      "adult_arabic_speech": {
+        "total": 10,
+        "passed_default": 0,
+        "rejected_default": 10,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 23.8,
+        "error_breakdown": {
+          "unrelatedWord": 7,
+          "substitution": 3
+        }
+      },
+      "silence_near_silence": {
+        "total": 5,
+        "passed_default": 0,
+        "rejected_default": 5,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 0.0,
+        "error_breakdown": {
+          "noSpeech": 5
+        }
+      },
+      "environmental_noise": {
+        "total": 5,
+        "passed_default": 0,
+        "rejected_default": 5,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 0.0,
+        "error_breakdown": {
+          "noSpeech": 5
+        }
+      },
+      "isolated_consonants_syllables": {
+        "total": 5,
+        "passed_default": 1,
+        "rejected_default": 4,
+        "passed_no_denoise": 1,
+        "passed_force_denoise": 0,
+        "mean_score": 43.8,
+        "error_breakdown": {
+          "correct": 1,
+          "noSpeech": 1,
+          "deletion": 2,
+          "uncertain": 1
+        }
+      },
+      "difficult_edge_cases": {
+        "total": 5,
+        "passed_default": 0,
+        "rejected_default": 5,
+        "passed_no_denoise": 0,
+        "passed_force_denoise": 0,
+        "mean_score": 57.9,
+        "error_breakdown": {
+          "substitution": 4,
+          "deletion": 1
+        }
+      }
+    }
+  },
+  "controlled_synthetic_tts": [
+    {
+      "id": "SYNTH_correct_kora",
+      "type": "controlled_synthetic_tts",
+      "target_word": "كورة",
+      "expected_error": "none",
+      "path": "assets/audio_samples/correct_kora.wav",
+      "ipa": [
+        "k",
+        "oː",
+        "r",
+        "ə"
+      ],
+      "passed": true,
+      "score": 91.8,
+      "error_type": "correct"
+    },
+    {
+      "id": "SYNTH_error_tora",
+      "type": "controlled_synthetic_tts",
+      "target_word": "كورة",
+      "expected_error": "fronting_tts_controlled",
+      "path": "assets/audio_samples/error_tora.wav",
+      "ipa": [
+        "t",
+        "uː",
+        "r",
+        "a"
+      ],
+      "passed": false,
+      "score": 65.0,
+      "error_type": "substitution"
+    },
+    {
+      "id": "SYNTH_correct_arnab",
+      "type": "controlled_synthetic_tts",
+      "target_word": "أرنب",
+      "expected_error": "none",
+      "path": "assets/audio_samples/correct_arnab.wav",
+      "ipa": [
+        "a",
+        "r",
+        "n",
+        "a",
+        "b",
+        "m",
+        "i"
+      ],
+      "passed": true,
+      "score": 80.6,
+      "error_type": "correct"
+    },
+    {
+      "id": "SYNTH_error_anlab",
+      "type": "controlled_synthetic_tts",
+      "target_word": "أرنب",
+      "expected_error": "lateralization_tts_controlled",
+      "path": "assets/audio_samples/error_anlab.wav",
+      "ipa": [
+        "ʔ",
+        "a",
+        "l",
+        "l",
+        "a",
+        "b"
+      ],
+      "passed": false,
+      "score": 59.8,
+      "error_type": "substitution"
+    },
+    {
+      "id": "SYNTH_word_madrasa",
+      "type": "controlled_synthetic_tts",
+      "target_word": "كورة",
+      "expected_error": "unrelated_tts_controlled",
+      "path": "assets/audio_samples/word_madrasa.wav",
+      "ipa": [
+        "m",
+        "ɛ",
+        "d",
+        "r",
+        "a",
+        "s"
+      ],
+      "passed": false,
+      "score": 39.3,
+      "error_type": "substitution"
+    }
+  ],
+  "anti_cheating": {
+    "same_audio_different_targets": [
+      {
+        "target_word": "كورة",
+        "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+        "passed": true,
+        "score": 91.8,
+        "error_type": "correct"
+      },
+      {
+        "target_word": "سمكة",
+        "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+        "passed": false,
+        "score": 25.9,
+        "error_type": "unrelatedWord"
+      },
+      {
+        "target_word": "أرنب",
+        "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+        "passed": false,
+        "score": 24.2,
+        "error_type": "unrelatedWord"
+      },
+      {
+        "target_word": "باب",
+        "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+        "passed": false,
+        "score": 6.8,
+        "error_type": "unrelatedWord"
+      },
+      {
+        "target_word": "مدرسة",
+        "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+        "passed": false,
+        "score": 39.4,
+        "error_type": "substitution"
+      }
+    ],
+    "ipa_invariant_across_all_targets": true,
+    "missing_model_error_type": "modelInitFailed",
+    "missing_model_stage_failed": "PhonemeRecognition"
+  },
+  "runtime_stability": {
+    "cold_start_ms": {
+      "silero_vad": 187,
+      "gtcrn_denoiser": 103,
+      "wav2vec2_espeak": 1653,
+      "whisper_tiny": 1017
+    },
+    "rss_mb": {
+      "baseline": 125.61,
+      "after_vad": 150.95,
+      "after_gtcrn": 155.12,
+      "after_wav2vec2": 416.55,
+      "after_whisper": 530.21
+    },
+    "fifty_runs": {
+      "audio_duration_ms": 1872,
+      "mean_latency_ms": 526.1,
+      "median_p50_ms": 523,
+      "p95_ms": 585,
+      "min_ms": 471,
+      "max_ms": 648,
+      "rtf_mean": 0.281,
+      "rss_timeline": [
+        {
+          "iteration": 1,
+          "rss_mb": 1724.52,
+          "latency_ms": 494
+        },
+        {
+          "iteration": 10,
+          "rss_mb": 1724.53,
+          "latency_ms": 507
+        },
+        {
+          "iteration": 20,
+          "rss_mb": 1723.56,
+          "latency_ms": 515
+        },
+        {
+          "iteration": 30,
+          "rss_mb": 1723.54,
+          "latency_ms": 518
+        },
+        {
+          "iteration": 40,
+          "rss_mb": 1723.55,
+          "latency_ms": 574
+        },
+        {
+          "iteration": 50,
+          "rss_mb": 1723.7,
+          "latency_ms": 511
+        }
+      ]
+    }
+  }
+}

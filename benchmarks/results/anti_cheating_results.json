@@ -1,0 +1,42 @@
+{
+  "same_audio_different_targets": [
+    {
+      "target_word": "كورة",
+      "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+      "passed": true,
+      "score": 91.8,
+      "error_type": "correct"
+    },
+    {
+      "target_word": "سمكة",
+      "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+      "passed": false,
+      "score": 25.9,
+      "error_type": "unrelatedWord"
+    },
+    {
+      "target_word": "أرنب",
+      "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+      "passed": false,
+      "score": 24.2,
+      "error_type": "unrelatedWord"
+    },
+    {
+      "target_word": "باب",
+      "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+      "passed": false,
+      "score": 6.8,
+      "error_type": "unrelatedWord"
+    },
+    {
+      "target_word": "مدرسة",
+      "recognized_ipa_sig": "k@143-163|uː@225-245|ɹ@368-388|ə@408-429",
+      "passed": false,
+      "score": 39.4,
+      "error_type": "substitution"
+    }
+  ],
+  "ipa_invariant_across_all_targets": true,
+  "missing_model_error_type": "modelInitFailed",
+  "missing_model_stage_failed": "PhonemeRecognition"
+}

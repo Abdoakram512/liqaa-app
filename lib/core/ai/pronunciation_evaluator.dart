@@ -7,13 +7,13 @@ class PronunciationEvaluator {
   const PronunciationEvaluator();
 
   static const Set<String> _vowelSymbols = {
-    'a', 'aː', 'ɑ', 'æ', 'ə', 'ʌ', 'ɐ',
-    'u', 'uː', 'o', 'oː', 'ɔ', 'ʊ',
-    'i', 'iː', 'e', 'eː', 'ɪ', 'ɛ',
+    'a', 'aː', 'ɑ', 'æ', 'ə', 'ʌ', 'ɐ', 'aɪ', 'ɑu', 'ɑu5', 'a5',
+    'u', 'uː', 'o', 'oː', 'ɔ', 'ʊ', 'ʉ',
+    'i', 'iː', 'e', 'eː', 'ɪ', 'ɛ', 'y', 'iɜ', 'yɜ',
   };
 
   bool _isVowelSymbol(String s) {
-    final clean = s.replaceAll('ː', '').split('_').first;
+    final clean = s.replaceAll('ː', '').replaceAll(RegExp(r'[0-9.]'), '').split('_').first;
     return _vowelSymbols.contains(s) || _vowelSymbols.contains(clean);
   }
 
@@ -407,8 +407,8 @@ class PronunciationEvaluator {
   }) {
     if (expIpa == recIpa || expAr == recAr) return true;
 
-    final baseExp = expIpa.replaceAll('ː', '').split('_').first;
-    final baseRec = recIpa.replaceAll('ː', '').split('_').first;
+    final baseExp = expIpa.replaceAll('ː', '').replaceAll(RegExp(r'[0-9.]'), '').split('_').first;
+    final baseRec = recIpa.replaceAll('ː', '').replaceAll(RegExp(r'[0-9.]'), '').split('_').first;
     if (baseExp == baseRec) return true;
 
     final normExpAr = _normalizeArabicChar(expAr);
@@ -449,15 +449,15 @@ class PronunciationEvaluator {
     }
     // 3. Vowel allophones across Arabic MSA / Egyptian / eSpeak IPA inventory
     if ((baseExp == 'u' || baseExp == 'o' || expAr == 'و') &&
-        (baseRec == 'u' || baseRec == 'o' || baseRec == 'ɔ' || baseRec == 'ʊ' || baseRec == 'w')) {
+        (baseRec == 'u' || baseRec == 'o' || baseRec == 'ɔ' || baseRec == 'ʊ' || baseRec == 'ʉ' || baseRec == 'w')) {
       return true;
     }
     if ((baseExp == 'a' || expAr == 'ا' || expAr == 'ة') &&
-        (baseRec == 'a' || baseRec == 'ɑ' || baseRec == 'æ' || baseRec == 'ə' || baseRec == 'ʌ' || baseRec == 'ɐ')) {
+        (baseRec == 'a' || baseRec == 'ɑ' || baseRec == 'æ' || baseRec == 'ə' || baseRec == 'ʌ' || baseRec == 'ɐ' || baseRec == 'aɪ' || baseRec == 'ɑu')) {
       return true;
     }
     if ((baseExp == 'i' || baseExp == 'e' || expAr == 'ي') &&
-        (baseRec == 'i' || baseRec == 'e' || baseRec == 'ɪ' || baseRec == 'ɛ' || baseRec == 'j')) {
+        (baseRec == 'i' || baseRec == 'e' || baseRec == 'ɪ' || baseRec == 'ɛ' || baseRec == 'y' || baseRec == 'j')) {
       return true;
     }
 

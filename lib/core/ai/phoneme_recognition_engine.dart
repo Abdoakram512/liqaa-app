@@ -160,7 +160,8 @@ class PhonemeRecognitionEngine {
     }
 
     final double rms = _preprocessor.calculateRms(prepared);
-    if (rms < 0.002) {
+    final double peak = _preprocessor.calculatePeak(prepared);
+    if (rms < 0.0005 && peak < 0.003) {
       sw.stop();
       return PhonemeRecognitionResult(
         tokens: const [],
@@ -458,12 +459,14 @@ class PhonemeRecognitionEngine {
       case 'o':
       case 'ɔ':
       case 'ʊ':
+      case 'ʉ':
         return 'و';
       case 'j':
       case 'i':
       case 'e':
       case 'ɪ':
       case 'ɛ':
+      case 'y':
         return 'ي';
       case 'ʔ':
         return 'أ';
@@ -473,6 +476,7 @@ class PhonemeRecognitionEngine {
       case 'ə':
       case 'ʌ':
       case 'ɐ':
+      case 'aɪ':
         return 'ا';
       default:
         return ipa;

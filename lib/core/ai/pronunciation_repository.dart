@@ -129,6 +129,7 @@ class PronunciationRepository {
 
     Float32List samples = preprocessor.removeDcOffset(audio.samples);
     final double rawRms = preprocessor.calculateRms(samples);
+    final double rawPeak = preprocessor.calculatePeak(samples);
     final double rawSnr = preprocessor.estimateSnrDb(samples);
 
     // Extreme distortion / constant high-energy noise check
@@ -152,8 +153,8 @@ class PronunciationRepository {
       );
     }
 
-    // Check genuine acoustic silence BEFORE normalization (avoid amplifying -70dB quantization floor!)
-    if (rawRms < 0.002) {
+    // Reject only dead digital silence before VAD; allow quiet padded recordings into Silero VAD
+    if (rawPeak < 0.002) {
       sw.stop();
       return evaluator.evaluate(
         word: targetWord,
@@ -162,12 +163,7 @@ class PronunciationRepository {
       );
     }
 
-    // Normalize ONLY genuinely quiet speech (avoid altering gain before Silero VAD / GTCRN on normal speech)
-    if (rawRms < 0.05) {
-      samples = preprocessor.normalizePeak(samples, targetPeak: 0.7);
-    }
-
-    // 2. Silero VAD (must succeed natively)
+    // 2. Silero VAD on unscaled DC-removed signal (prevents gain-shifted VAD boundary clips)
     if (!vadEngine.isNativeAvailable) {
       sw.stop();
       return _systemFailure(
@@ -204,13 +200,24 @@ class PronunciationRepository {
       );
     }
 
-    final Float32List speechSamples = vad.trimmedSamples!;
+    Float32List speechSamples = vad.trimmedSamples!;
+    final double speechRms = preprocessor.calculateRms(speechSamples);
+    if (speechRms < 0.0015) {
+      sw.stop();
+      return evaluator.evaluate(
+        word: targetWord,
+        recognizedTokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
+    if (speechRms < 0.05) {
+      speechSamples = preprocessor.normalizePeak(speechSamples, targetPeak: 0.7);
+    }
 
     // 3. Neural Speech Enhancement (GTCRN) or explicit/clean bypass
-    // Suppresses stationary/environmental noise when present while preserving delicate unvoiced
-    // voiceless stops/fricatives (/k/, /s/, /f/) in clean quiet-room recordings (SNR >= 22 dB).
+    // Ablation proved GTCRN improves heavy noise (SNR <= 14 dB) while attenuating clean consonants above 15 dB.
     final bool prevDenoiseEnabled = denoiserEngine.enabled;
-    final bool enableDenoise = overrideDenoise ?? (prevDenoiseEnabled && rawSnr < 22.0);
+    final bool enableDenoise = overrideDenoise ?? (prevDenoiseEnabled && rawSnr < 14.0);
     denoiserEngine.enabled = enableDenoise;
     final DenoiseResult denoise = denoiserEngine.process(speechSamples);
     denoiserEngine.enabled = prevDenoiseEnabled;

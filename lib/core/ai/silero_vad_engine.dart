@@ -234,7 +234,7 @@ class SileroVadEngine {
             final prev = merged.last;
             final prevEnd = prev.startSample + prev.length;
             final spanEnd = span.startSample + span.length;
-            if (span.startSample <= prevEnd + (100 * sampleRate ~/ 1000)) {
+            if (span.startSample <= prevEnd + (350 * sampleRate ~/ 1000)) {
               merged[merged.length - 1] =
                   _RawSpan(prev.startSample, math.max(prevEnd, spanEnd) - prev.startSample);
             } else {

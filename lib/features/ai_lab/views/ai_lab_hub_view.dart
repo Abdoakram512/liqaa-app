@@ -204,6 +204,13 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                   color: Colors.redAccent,
                   onTap: () => context.push(AppRoutes.aiLabNegative),
                 ),
+                _buildTestCard(
+                  title: '11. لوحة معايير الأداء الشاملة (Benchmark Dashboard)',
+                  subtitle: 'تشغيل حقيقي لـ 100 عينة / فحص منفصل لكل نموذج وتصدير CSV/JSON',
+                  icon: Icons.analytics_rounded,
+                  color: Colors.teal.shade700,
+                  onTap: () => context.push(AppRoutes.aiLabSuite),
+                ),
               ],
             ),
           );
