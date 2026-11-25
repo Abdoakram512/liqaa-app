@@ -28,7 +28,6 @@ final class YasserRigMotion {
           'P1_Neck_Head_Face_BrowL',
           'P1_Neck_Head_Face_BrowR',
           'P1_Neck_Head_Face_Mouth',
-          'P1_HandTarget_ScreenR',
           'P1_Hand_ScreenR_Index',
           'P1_Hand_ScreenR_Middle',
         ])
@@ -47,6 +46,8 @@ final class YasserRigMotion {
     double elapsed, {
     required bool reducedMotion,
     required double breathingPeriod,
+    required bool armsCovering,
+    required double celebration,
     YasserViseme? viseme,
   }) {
     final state = mapping.semanticState;
@@ -57,13 +58,12 @@ final class YasserRigMotion {
     _elapsedInState += elapsed;
     if (mapping.rivePasswordTyping) {
       _gaze = Offset.zero;
-      if (state == YasserAnimationState.peeking) {
+      if (state == YasserAnimationState.peeking && armsCovering) {
         final spread = reducedMotion
             ? 1.0
             : (_elapsedInState / .22).clamp(0.0, 1.0);
         _rotate('P1_Hand_ScreenR_Index', -.16 * spread);
         _rotate('P1_Hand_ScreenR_Middle', .13 * spread);
-        _slide('P1_HandTarget_ScreenR', dx: 14 * spread, dy: -2 * spread);
         final eye = _bones['P1_Neck_Head_Face_EyeR'];
         if (eye != null) {
           final base = eye.scaleY;
@@ -102,10 +102,6 @@ final class YasserRigMotion {
       case YasserAnimationState.thinking:
         tilt -= .07;
         brow -= 4;
-        final raise = reducedMotion
-            ? 1.0
-            : (_elapsedInState / .3).clamp(0.0, 1.0);
-        _slide('P1_HandTarget_ScreenR', dx: -40 * raise, dy: -144 * raise);
       case YasserAnimationState.confused:
         tilt += .055;
         brow -= 2;
@@ -127,12 +123,7 @@ final class YasserRigMotion {
       case YasserAnimationState.celebrating:
         brow += 5;
         mouth += .25;
-        final progress = (_elapsedInState / .72).clamp(0.0, 1.0);
-        if (!reducedMotion) {
-          final jump = math.sin(math.pi * progress);
-          lift = -24 * jump;
-          _slide('P1_HandTarget_ScreenR', dx: 13 * jump, dy: -92 * jump);
-        }
+        lift = -12 * celebration;
       default:
         break;
     }
@@ -151,13 +142,7 @@ final class YasserRigMotion {
         _gaze != gazeTarget ||
         (!reducedMotion &&
             state == YasserAnimationState.talking &&
-            viseme == null) ||
-        (!reducedMotion &&
-            state == YasserAnimationState.thinking &&
-            _elapsedInState < .3) ||
-        (!reducedMotion &&
-            state == YasserAnimationState.celebrating &&
-            _elapsedInState < .72);
+            viseme == null);
   }
 
   void _slide(String name, {double dx = 0, double dy = 0}) {

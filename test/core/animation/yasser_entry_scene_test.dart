@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:liqaa_app/app/dependency_injection/service_locator.dart';
+import 'package:liqaa_app/core/animation/yasser/yasser_animation_mapper.dart';
 import 'package:liqaa_app/core/animation/yasser/yasser_animation_state.dart';
 import 'package:liqaa_app/core/animation/yasser/yasser_interaction_engine.dart';
 import 'package:liqaa_app/core/widgets/yasser_avatar.dart';
 import 'package:liqaa_app/core/widgets/yasser_character.dart';
 import 'package:liqaa_app/features/onboarding/data/models/onboarding_item_model.dart';
+import 'package:liqaa_app/features/onboarding/data/repos/onboarding_repo.dart';
+import 'package:liqaa_app/features/onboarding/data/src/onboarding_local_data_source.dart';
+import 'package:liqaa_app/features/onboarding/presentation/cubits/onboarding_cubit.dart';
+import 'package:liqaa_app/features/onboarding/presentation/views/onboarding_view.dart';
 import 'package:liqaa_app/features/onboarding/presentation/widgets/onboarding_character_scene.dart';
 import 'package:liqaa_app/features/pronunciation_game/widgets/yasser_speech_feedback_card.dart';
 import 'package:liqaa_app/features/splash/presentation/widgets/splash_content.dart';
+
+class _OnboardingStorage implements OnboardingLocalDataSource {
+  @override
+  bool isOnboardingCompleted() => false;
+
+  @override
+  Future<bool> setOnboardingCompleted(bool completed) async => true;
+}
 
 void main() {
   Widget app(Widget child) => ScreenUtilInit(
@@ -75,6 +89,61 @@ void main() {
         mood.value,
       );
     }
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('onboarding waits for page settle and replays a returning pose', (
+    tester,
+  ) async {
+    sl.pushNewScope(
+      init: (scope) {
+        scope.registerFactory(
+          () => OnboardingCubit(OnboardingRepo(_OnboardingStorage())),
+        );
+      },
+    );
+    addTearDown(sl.popScope);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 844);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(app(const OnboardingView()));
+
+    Finder pose(String asset) => find.byWidgetPredicate(
+      (widget) =>
+          widget is Image &&
+          widget.image is AssetImage &&
+          (widget.image as AssetImage).assetName == asset,
+    );
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(pose(YasserAnimationMapper.wavingPose), findsNothing);
+    await tester.pump(const Duration(milliseconds: 70));
+    expect(pose(YasserAnimationMapper.wavingPose), findsOneWidget);
+
+    final controller = tester
+        .widget<PageView>(find.byType(PageView))
+        .controller!;
+    Future<void> goTo(int page, String asset) async {
+      controller.animateToPage(
+        page,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.linear,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(pose(asset), findsNothing);
+      await tester.pump(const Duration(milliseconds: 160));
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(pose(asset), findsNothing);
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(pose(asset), findsOneWidget);
+    }
+
+    await goTo(1, YasserAnimationMapper.thinkingPose);
+    await goTo(2, YasserAnimationMapper.celebratingPose);
+    await goTo(1, YasserAnimationMapper.thinkingPose);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });

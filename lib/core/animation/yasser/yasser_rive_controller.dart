@@ -3,17 +3,15 @@ import 'package:rive/rive.dart' as rive;
 import 'yasser_animation_config.dart';
 import 'yasser_animation_mapper.dart';
 import 'yasser_animation_state.dart';
+import 'yasser_arm_motion.dart';
 import 'yasser_rig_motion.dart';
 import 'yasser_viseme.dart';
 
-/// Drives the Phase 1 rig and its authored wave on the same artboard.
+/// Drives Yasser’s state machine and poses on the same artboard.
 final class YasserRiveController extends rive.RiveWidgetController {
-  static const _waveTimeline = 'P1_Wave_Validation';
-
   late final rive.ViewModelInstance _viewModel;
   late final rive.ViewModelInstanceBoolean _passwordTyping;
-  late final rive.Animation? _wave;
-  bool _waving = false;
+  late final YasserArmMotion _arms;
   bool reducedMotion = false;
   YasserViseme? _viseme;
 
@@ -46,7 +44,8 @@ final class YasserRiveController extends rive.RiveWidgetController {
             'Missing Rive property: ${config.passwordInputName}',
           ));
       _viewModel = viewModel;
-      _wave = artboard.animationNamed(_waveTimeline);
+      super.advance(0);
+      _arms = YasserArmMotion(artboard);
       _motion = YasserRigMotion(artboard);
     } catch (_) {
       super.dispose();
@@ -57,18 +56,12 @@ final class YasserRiveController extends rive.RiveWidgetController {
 
   void applyMapping(YasserStateMapping mapping) {
     _mapping = mapping;
-    _setPasswordTyping(mapping.rivePasswordTyping);
+    _arms.request(
+      state: mapping.semanticState,
+      cover: mapping.rivePasswordTyping,
+      peek: mapping.semanticState == YasserAnimationState.peeking,
+    );
     scheduleRepaint();
-    final wave = _wave;
-    if (wave != null &&
-        !reducedMotion &&
-        mapping.riveAnimationTrigger == _waveTimeline) {
-      wave.time = 0;
-      _waving = true;
-      scheduleRepaint();
-    } else {
-      _stopWave();
-    }
   }
 
   void setPasswordTyping(bool value) => applyMapping(
@@ -77,53 +70,38 @@ final class YasserRiveController extends rive.RiveWidgetController {
     ),
   );
 
-  void _setPasswordTyping(bool value) {
-    if (_passwordTyping.value == value) return;
-    if (value) _stopWave();
-    _passwordTyping.value = value;
-    scheduleRepaint();
-  }
-
-  void _stopWave() {
-    if (!_waving) return;
-    _waving = false;
-    _wave!
-      ..time = 0
-      ..advanceAndApply(0);
-    scheduleRepaint();
-  }
-
   @override
   bool advance(double elapsedSeconds) {
+    _arms.restore();
     _motion.restore();
+    final armsMoving = _arms.advance(
+      elapsedSeconds,
+      reducedMotion: reducedMotion,
+    );
+    if (_passwordTyping.value != _arms.eyesCovered) {
+      _passwordTyping.value = _arms.eyesCovered;
+    }
     final machineChanged = super.advance(elapsedSeconds);
-    if (!_waving) {
-      final moving = _motion.apply(
-        _mapping,
-        elapsedSeconds,
-        reducedMotion: reducedMotion,
-        breathingPeriod: _breathingPeriod,
-        viseme: _viseme,
-      );
-      // Flush bone edits without applying the state machine again.
-      // ignore: invalid_use_of_internal_member
-      artboard.updatePass();
-      return active && (machineChanged || moving);
-    }
-
-    final wave = _wave!;
-    if (wave.time + elapsedSeconds >= wave.duration) {
-      _stopWave();
-      return true;
-    }
-    wave.advanceAndApply(elapsedSeconds);
-    return active;
+    final moving = _motion.apply(
+      _mapping,
+      elapsedSeconds,
+      reducedMotion: reducedMotion,
+      breathingPeriod: _breathingPeriod,
+      armsCovering: _arms.eyesCovered,
+      celebration: _arms.celebration,
+      viseme: _viseme,
+    );
+    if (_arms.hasArmPose) _arms.apply();
+    // Flush bone edits without applying the state machine again.
+    // ignore: invalid_use_of_internal_member
+    artboard.updatePass();
+    return active && (machineChanged || moving || armsMoving);
   }
 
   @override
   void dispose() {
     _motion.dispose();
-    _wave?.dispose();
+    _arms.dispose();
     super.dispose();
     _viewModel.dispose();
   }

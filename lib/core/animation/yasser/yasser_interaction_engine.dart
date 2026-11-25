@@ -115,7 +115,7 @@ class YasserInteractionEngine {
 
     return triggerState(
       YasserAnimationState.waving,
-      customHoldDuration: const Duration(milliseconds: 1600),
+      customHoldDuration: const Duration(milliseconds: 2000),
       reason: 'User tapped Yasser',
     );
   }

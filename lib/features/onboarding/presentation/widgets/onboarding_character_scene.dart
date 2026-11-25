@@ -110,7 +110,7 @@ class OnboardingCharacterScene extends StatelessWidget {
                         ],
                       ),
                     )
-                    .animate()
+                    .animate(target: isActive ? 1 : 0)
                     .fadeIn(delay: 400.ms)
                     .scale(
                       begin: const Offset(0.5, 0.5),
@@ -122,18 +122,7 @@ class OnboardingCharacterScene extends StatelessWidget {
           // Yasser Avatar (Waving)
           Positioned(
             bottom: 0,
-            child:
-                YasserCharacter(
-                      state: isActive
-                          ? YasserAnimationState.greeting
-                          : YasserAnimationState.idle,
-                      height: 330.h,
-                      width: 232.w,
-                      showShadow: false,
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .slideY(begin: 0.25, end: 0, curve: Curves.easeOutBack),
+            child: _character(YasserAnimationState.greeting),
           ),
         ],
       ),
@@ -228,26 +217,15 @@ class OnboardingCharacterScene extends StatelessWidget {
                         ],
                       ),
                     )
-                    .animate()
+                    .animate(target: isActive ? 1 : 0)
                     .fadeIn(delay: 350.ms)
                     .slideX(begin: 0.3, end: 0, curve: Curves.easeOutBack),
           ),
 
-          // Yasser Avatar (Thinking with lightbulb)
+          // Yasser thinks with his hand near his chest
           Positioned(
             bottom: 0,
-            child:
-                YasserCharacter(
-                      state: isActive
-                          ? YasserAnimationState.thinking
-                          : YasserAnimationState.idle,
-                      height: 330.h,
-                      width: 232.w,
-                      showShadow: false,
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .slideX(begin: -0.2, end: 0, curve: Curves.easeOutBack),
+            child: _character(YasserAnimationState.thinking),
           ),
         ],
       ),
@@ -282,7 +260,7 @@ class OnboardingCharacterScene extends StatelessWidget {
             right: 40.w,
             child:
                 Image.asset(AssetPaths.phonemeStar, width: 36.r, height: 36.r)
-                    .animate()
+                    .animate(target: isActive ? 1 : 0)
                     .fadeIn(delay: 300.ms)
                     .scale(
                       begin: const Offset(0.2, 0.2),
@@ -297,7 +275,7 @@ class OnboardingCharacterScene extends StatelessWidget {
             left: 35.w,
             child:
                 Image.asset(AssetPaths.phonemeStar, width: 28.r, height: 28.r)
-                    .animate()
+                    .animate(target: isActive ? 1 : 0)
                     .fadeIn(delay: 450.ms)
                     .scale(
                       begin: const Offset(0.2, 0.2),
@@ -343,36 +321,29 @@ class OnboardingCharacterScene extends StatelessWidget {
                         ],
                       ),
                     )
-                    .animate()
+                    .animate(target: isActive ? 1 : 0)
                     .fadeIn(delay: 500.ms)
                     .slideY(begin: 0.3, end: 0, curve: Curves.easeOutBack),
           ),
 
-          // Yasser Avatar (Celebrating / Fist pump)
+          // Yasser raises both hands to celebrate
           Positioned(
             bottom: 0,
-            child:
-                YasserCharacter(
-                      state: isActive
-                          ? YasserAnimationState.celebrating
-                          : YasserAnimationState.idle,
-                      height: 330.h,
-                      width: 232.w,
-                      showShadow: false,
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .slideY(begin: 0.25, end: 0, curve: Curves.easeOutBack)
-                    .scale(
-                      begin: const Offset(0.85, 0.85),
-                      end: const Offset(1, 1),
-                      curve: Curves.easeOutBack,
-                    ),
+            child: _character(YasserAnimationState.celebrating),
           ),
         ],
       ),
     );
   }
+
+  Widget _character(YasserAnimationState pose) => YasserCharacter(
+    state: isActive ? pose : YasserAnimationState.idle,
+    poseStartDelay: const Duration(milliseconds: 160),
+    height: 330.h,
+    width: 232.w,
+    showShadow: false,
+    enableTapReaction: false,
+  );
 
   Widget _buildFloatingCard(String letter, Color color, int delayIndex) {
     return Container(
@@ -401,7 +372,7 @@ class OnboardingCharacterScene extends StatelessWidget {
             ),
           ),
         )
-        .animate()
+        .animate(target: isActive ? 1 : 0)
         .fadeIn(delay: (200 * delayIndex).ms)
         .slideY(begin: -0.3, end: 0, curve: Curves.easeOutBack);
   }
