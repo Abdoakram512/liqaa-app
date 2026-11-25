@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart' as rive;
 
@@ -32,6 +34,7 @@ class YasserCharacter extends StatefulWidget {
 
   final YasserController? controller;
   final YasserAnimationState? state;
+  final Duration poseStartDelay;
   final double? width;
   final double? height;
   final Alignment alignment;
@@ -44,6 +47,7 @@ class YasserCharacter extends StatefulWidget {
     super.key,
     this.controller,
     this.state,
+    this.poseStartDelay = Duration.zero,
     this.width,
     this.height,
     this.alignment = Alignment.center,
@@ -68,6 +72,7 @@ class _YasserCharacterState extends State<YasserCharacter>
   bool _isLoadingRive = false;
   bool _hasRiveError = false;
   bool _reducedMotion = false;
+  Timer? _poseTimer;
 
   @override
   void initState() {
@@ -77,10 +82,6 @@ class _YasserCharacterState extends State<YasserCharacter>
     } else {
       _controller = YasserController();
       _ownsController = true;
-    }
-
-    if (widget.state != null) {
-      _controller.engine.triggerState(widget.state!);
     }
 
     _breathingController = AnimationController(
@@ -96,6 +97,22 @@ class _YasserCharacterState extends State<YasserCharacter>
     );
 
     _initRiveController();
+    _schedulePose();
+  }
+
+  void _schedulePose() {
+    _poseTimer?.cancel();
+    final pose = widget.state;
+    if (pose == null) return;
+    if (pose == YasserAnimationState.idle ||
+        widget.poseStartDelay == Duration.zero) {
+      _controller.engine.triggerState(pose);
+      return;
+    }
+    if (_isLoadingRive) return;
+    _poseTimer = Timer(widget.poseStartDelay, () {
+      _controller.engine.triggerState(pose);
+    });
   }
 
   Future<void> _initRiveController() async {
@@ -124,6 +141,7 @@ class _YasserCharacterState extends State<YasserCharacter>
         setState(() {
           _isLoadingRive = false;
         });
+        if (widget.poseStartDelay != Duration.zero) _schedulePose();
       }
     } catch (e) {
       if (!mounted) return;
@@ -134,6 +152,7 @@ class _YasserCharacterState extends State<YasserCharacter>
         _isLoadingRive = false;
         _hasRiveError = true;
       });
+      if (widget.poseStartDelay != Duration.zero) _schedulePose();
     }
   }
 
@@ -153,9 +172,7 @@ class _YasserCharacterState extends State<YasserCharacter>
     super.didUpdateWidget(oldWidget);
     if (widget.state != oldWidget.state) {
       _controller.returnToIdle();
-      if (widget.state != null) {
-        _controller.engine.triggerState(widget.state!);
-      }
+      _schedulePose();
     }
     if (YasserCharacter.enableRiveRuntime &&
         _riveWidgetController == null &&
@@ -167,6 +184,7 @@ class _YasserCharacterState extends State<YasserCharacter>
 
   @override
   void dispose() {
+    _poseTimer?.cancel();
     _breathingController.dispose();
     _controller.detachWidgetController();
     _riveWidgetController?.dispose();

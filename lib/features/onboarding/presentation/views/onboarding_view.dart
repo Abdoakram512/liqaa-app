@@ -20,17 +20,33 @@ class OnboardingView extends StatefulWidget {
 
 class _OnboardingViewState extends State<OnboardingView> {
   late final PageController _pageController;
+  int? _settledPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _pageController = PageController(
+      onAttach: (position) =>
+          position.isScrollingNotifier.addListener(_updateSettledPage),
+      onDetach: (position) =>
+          position.isScrollingNotifier.removeListener(_updateSettledPage),
+    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _updateSettledPage() {
+    final position = _pageController.position;
+    final next = position.isScrollingNotifier.value
+        ? null
+        : _pageController.page?.round();
+    if (next != _settledPage && mounted) {
+      setState(() => _settledPage = next);
+    }
   }
 
   void _onNextPressed(BuildContext context, OnboardingState state) {
@@ -89,9 +105,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                         },
                         itemBuilder: (context, index) {
                           return OnboardingPageItem(
-                              item: state.items[index],
-                              isActive: index == state.currentIndex,
-                            );
+                            item: state.items[index],
+                            isActive: index == _settledPage,
+                          );
                         },
                       ),
                     ),

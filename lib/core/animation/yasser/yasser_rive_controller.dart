@@ -12,6 +12,7 @@ final class YasserRiveController extends rive.RiveWidgetController {
   late final rive.ViewModelInstanceBoolean _passwordTyping;
   late final YasserArmMotion _arms;
   bool reducedMotion = false;
+
   late final YasserRigMotion _motion;
   final double _breathingPeriod;
   YasserStateMapping _mapping = YasserAnimationMapper.map(
@@ -48,7 +49,7 @@ final class YasserRiveController extends rive.RiveWidgetController {
   void applyMapping(YasserStateMapping mapping) {
     _mapping = mapping;
     _arms.request(
-      wave: mapping.semanticState == YasserAnimationState.waving,
+      state: mapping.semanticState,
       cover: mapping.rivePasswordTyping,
       peek: mapping.semanticState == YasserAnimationState.peeking,
     );
@@ -79,6 +80,7 @@ final class YasserRiveController extends rive.RiveWidgetController {
       reducedMotion: reducedMotion,
       breathingPeriod: _breathingPeriod,
       armsCovering: _arms.eyesCovered,
+      celebration: _arms.celebration,
     );
     if (_arms.hasArmPose) _arms.apply();
     // Flush bone edits without applying the state machine again.
