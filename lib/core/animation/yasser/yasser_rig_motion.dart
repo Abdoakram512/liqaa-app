@@ -46,6 +46,7 @@ final class YasserRigMotion {
     double elapsed, {
     required bool reducedMotion,
     required double breathingPeriod,
+    required bool armsCovering,
   }) {
     final state = mapping.semanticState;
     if (_previousState != state) {
@@ -55,13 +56,12 @@ final class YasserRigMotion {
     _elapsedInState += elapsed;
     if (mapping.rivePasswordTyping) {
       _gaze = Offset.zero;
-      if (state == YasserAnimationState.peeking) {
+      if (state == YasserAnimationState.peeking && armsCovering) {
         final spread = reducedMotion
             ? 1.0
             : (_elapsedInState / .22).clamp(0.0, 1.0);
         _rotate('P1_Hand_ScreenR_Index', -.16 * spread);
         _rotate('P1_Hand_ScreenR_Middle', .13 * spread);
-        _slide('P1_HandTarget_ScreenR', dx: 14 * spread, dy: -2 * spread);
         final eye = _bones['P1_Neck_Head_Face_EyeR'];
         if (eye != null) {
           final base = eye.scaleY;
