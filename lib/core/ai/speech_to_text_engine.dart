@@ -4,15 +4,17 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import 'ai_asset_helper.dart';
 import 'audio_preprocessor.dart';
+import 'ort_dynamic_session.dart';
 
 class SttResult {
   final String text;
-  final double? confidence; // Posterior confidence if exposed by decoder; null if uncalibrated
+  final double? confidence; // Null unless decoder exposes a calibrated acoustic posterior
   final int latencyMs;
-  final double realTimeFactor; // RTF = latencyMs / audioDurationMs
+  final double realTimeFactor;
   final bool isModelInference;
   final List<String> tokens;
   final List<double> timestamps;
+  final String? errorMessage;
 
   const SttResult({
     required this.text,
@@ -22,167 +24,197 @@ class SttResult {
     this.isModelInference = false,
     this.tokens = const [],
     this.timestamps = const [],
+    this.errorMessage,
   });
+
+  bool get hasError => errorMessage != null && errorMessage!.isNotEmpty;
 }
 
 class SpeechToTextEngine {
   final AudioPreprocessor _preprocessor;
+  final String? encoderPathOverride;
+  final String? decoderPathOverride;
+  final String? tokensPathOverride;
+
   sherpa_onnx.OfflineRecognizer? _recognizer;
   bool _isInitialized = false;
   bool _isNativeAvailable = false;
   String? _encoderPath;
   String? _decoderPath;
   String? _tokensPath;
+  String? _lastError;
 
-  SpeechToTextEngine({AudioPreprocessor? preprocessor})
-      : _preprocessor = preprocessor ?? const AudioPreprocessor();
+  SpeechToTextEngine({
+    AudioPreprocessor? preprocessor,
+    this.encoderPathOverride,
+    this.decoderPathOverride,
+    this.tokensPathOverride,
+  }) : _preprocessor = preprocessor ?? const AudioPreprocessor();
 
   bool get isInitialized => _isInitialized;
   bool get isNativeAvailable => _isNativeAvailable;
+  String? get lastError => _lastError;
 
-  /// Initializes Sherpa-ONNX Whisper Tiny multilingual speech recognizer
+  /// Initializes Sherpa-ONNX Whisper Tiny multilingual speech recognizer (Arabic ASR).
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized && _isNativeAvailable) return;
+    _lastError = null;
 
     try {
+      OrtRuntimeLoader.ensureWindowsPreloaded();
       sherpa_onnx.initBindings();
     } catch (e) {
-      debugPrint('[SpeechToTextEngine] Native bindings note: $e');
+      _lastError = 'Sherpa-ONNX native binding failure: $e';
+      debugPrint('[SpeechToTextEngine] $_lastError');
     }
 
     try {
-      _encoderPath = await AiAssetHelper.getLocalAssetPath(
-        'assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx',
-      );
-      _decoderPath = await AiAssetHelper.getLocalAssetPath(
-        'assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx',
-      );
-      _tokensPath = await AiAssetHelper.getLocalAssetPath(
-        'assets/ai_models/whisper_tiny/tiny-tokens.txt',
-      );
+      _encoderPath = encoderPathOverride ??
+          await AiAssetHelper.getLocalAssetPath(
+            'assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx',
+          );
+      _decoderPath = decoderPathOverride ??
+          await AiAssetHelper.getLocalAssetPath(
+            'assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx',
+          );
+      _tokensPath = tokensPathOverride ??
+          await AiAssetHelper.getLocalAssetPath(
+            'assets/ai_models/whisper_tiny/tiny-tokens.txt',
+          );
 
       final hasEncoder = _encoderPath != null && File(_encoderPath!).existsSync();
       final hasDecoder = _decoderPath != null && File(_decoderPath!).existsSync();
       final hasTokens = _tokensPath != null && File(_tokensPath!).existsSync();
 
-      if (hasEncoder && hasDecoder && hasTokens) {
-        final whisperConfig = sherpa_onnx.OfflineWhisperModelConfig(
-          encoder: _encoderPath!,
-          decoder: _decoderPath!,
-          language: 'ar',
-          task: 'transcribe',
-        );
-
-        final modelConfig = sherpa_onnx.OfflineModelConfig(
-          whisper: whisperConfig,
-          tokens: _tokensPath!,
-          modelType: 'whisper',
-          numThreads: 2,
-          provider: 'cpu',
-          debug: false,
-        );
-
-        final recognizerConfig = sherpa_onnx.OfflineRecognizerConfig(
-          model: modelConfig,
-        );
-
-        _recognizer = sherpa_onnx.OfflineRecognizer(recognizerConfig);
-        _isNativeAvailable = true;
-        debugPrint('[SpeechToTextEngine] Initialized native Whisper Tiny ASR (Arabic)');
+      if (!hasEncoder || !hasDecoder || !hasTokens) {
+        _isNativeAvailable = false;
+        _lastError = 'Whisper Tiny model files incomplete '
+            '(enc=$hasEncoder, dec=$hasDecoder, tok=$hasTokens).';
+        _isInitialized = true;
+        return;
       }
+
+      final whisperConfig = sherpa_onnx.OfflineWhisperModelConfig(
+        encoder: _encoderPath!,
+        decoder: _decoderPath!,
+        language: 'ar',
+        task: 'transcribe',
+      );
+
+      final modelConfig = sherpa_onnx.OfflineModelConfig(
+        whisper: whisperConfig,
+        tokens: _tokensPath!,
+        modelType: 'whisper',
+        numThreads: 2,
+        provider: 'cpu',
+        debug: false,
+      );
+
+      final recognizerConfig = sherpa_onnx.OfflineRecognizerConfig(
+        model: modelConfig,
+      );
+
+      _recognizer?.free();
+      _recognizer = sherpa_onnx.OfflineRecognizer(recognizerConfig);
+      _isNativeAvailable = true;
+      _lastError = null;
+      debugPrint('[SpeechToTextEngine] Initialized native Whisper Tiny ASR (Arabic)');
     } catch (e) {
-      debugPrint('[SpeechToTextEngine] Native recognizer init note: $e');
+      _lastError = 'Whisper Tiny initialization error: $e';
       _isNativeAvailable = false;
+      debugPrint('[SpeechToTextEngine] $_lastError');
     }
 
     _isInitialized = true;
   }
 
-  /// Blindly transcribes audio samples to Arabic text. Zero target hint parameter!
+  /// Blindly transcribes 16kHz audio samples to Arabic text. Zero target hint parameter.
   Future<SttResult> transcribe(Float32List samples, {int sampleRate = 16000}) async {
     final Stopwatch sw = Stopwatch()..start();
 
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     if (samples.isEmpty) {
       sw.stop();
-      return const SttResult(
+      return SttResult(
         text: '',
-        confidence: 0.0,
-        latencyMs: 1,
+        confidence: null,
+        latencyMs: sw.elapsedMilliseconds,
         realTimeFactor: 0.0,
-        tokens: [],
-        timestamps: [],
       );
     }
 
     final double audioDurationMs = (samples.length / sampleRate) * 1000.0;
     final double rms = _preprocessor.calculateRms(samples);
 
-    // Audio is pure silence or near zero energy
-    if (rms < 0.003) {
+    if (rms < 0.002) {
       sw.stop();
       return SttResult(
         text: '',
-        confidence: 0.0,
+        confidence: null,
         latencyMs: sw.elapsedMilliseconds,
         realTimeFactor: 0.0,
-        tokens: const [],
-        timestamps: const [],
+        isModelInference: _isNativeAvailable,
       );
     }
 
-    // 1. Run native Whisper Tiny ONNX recognizer if available
-    if (_recognizer != null && _isNativeAvailable) {
-      try {
-        final stream = _recognizer!.createStream();
-        stream.acceptWaveform(samples: samples, sampleRate: sampleRate);
-        _recognizer!.decode(stream);
-        final result = _recognizer!.getResult(stream);
-        stream.free();
-
-        sw.stop();
-        final int latency = sw.elapsedMilliseconds;
-        final double rtf = audioDurationMs > 0 ? (latency / audioDurationMs) : 0.1;
-
-        // Clean up recognized Arabic text
-        final rawText = result.text.trim();
-        final cleanedText = rawText.replaceAll(RegExp(r'[.,!?؟]'), '').trim();
-
-        // Note: Sherpa-ONNX Whisper decoder does not expose a normalized acoustic posterior scalar.
-        // We do NOT fabricate confidence from RMS. Instead, confidence is documented as nominal 1.0 on success
-        // or null (uncalibrated posterior).
-        return SttResult(
-          text: cleanedText,
-          confidence: cleanedText.isNotEmpty ? 1.0 : 0.0,
-          latencyMs: latency,
-          realTimeFactor: double.parse(rtf.toStringAsFixed(3)),
-          isModelInference: true,
-          tokens: result.tokens,
-          timestamps: result.timestamps,
-        );
-      } catch (e) {
-        debugPrint('[SpeechToTextEngine] Native decode error: $e');
-      }
+    if (_recognizer == null || !_isNativeAvailable) {
+      sw.stop();
+      return SttResult(
+        text: '',
+        confidence: null,
+        latencyMs: sw.elapsedMilliseconds,
+        realTimeFactor: 0.0,
+        isModelInference: false,
+        errorMessage: _lastError ?? 'Whisper Tiny model is not available.',
+      );
     }
 
-    // 2. Fallback when native FFI runtime is missing (e.g. host test harness)
-    sw.stop();
-    final int latency = sw.elapsedMilliseconds;
-    final double rtf = audioDurationMs > 0 ? (latency / audioDurationMs) : 0.05;
+    try {
+      final stream = _recognizer!.createStream();
+      stream.acceptWaveform(samples: samples, sampleRate: sampleRate);
+      _recognizer!.decode(stream);
+      final result = _recognizer!.getResult(stream);
+      stream.free();
 
-    return SttResult(
-      text: '',
-      confidence: 0.0,
-      latencyMs: latency,
-      realTimeFactor: double.parse(rtf.toStringAsFixed(3)),
-      isModelInference: false,
-      tokens: const [],
-      timestamps: const [],
-    );
+      sw.stop();
+      final int latency = sw.elapsedMilliseconds;
+      final double rtf = audioDurationMs > 0 ? (latency / audioDurationMs) : 0.0;
+
+      final rawText = result.text.trim();
+      final cleanedText = rawText.replaceAll(RegExp(r'[.,!?؟]'), '').trim();
+
+      return SttResult(
+        text: cleanedText,
+        // Sherpa-ONNX Whisper OfflineRecognizerResult does not provide token posteriors; keep null honestly.
+        confidence: null,
+        latencyMs: latency,
+        realTimeFactor: double.parse(rtf.toStringAsFixed(3)),
+        isModelInference: true,
+        tokens: result.tokens,
+        timestamps: result.timestamps,
+      );
+    } catch (e) {
+      sw.stop();
+      _lastError = 'Whisper Tiny inference failed: $e';
+      debugPrint('[SpeechToTextEngine] $_lastError');
+      return SttResult(
+        text: '',
+        confidence: null,
+        latencyMs: sw.elapsedMilliseconds,
+        realTimeFactor: 0.0,
+        isModelInference: false,
+        errorMessage: _lastError,
+      );
+    }
   }
 
   void dispose() {
     _recognizer?.free();
     _recognizer = null;
     _isInitialized = false;
+    _isNativeAvailable = false;
   }
 }

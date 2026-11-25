@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/dependency_injection/service_locator.dart';
 import '../../../../core/ai/audio_preprocessor.dart';
 import '../../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../../core/ai/models/vocabulary_word.dart';
@@ -21,7 +22,7 @@ class DiagnosticNegativeTestingView extends StatefulWidget {
 }
 
 class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestingView> {
-  final PronunciationRepository _repository = PronunciationRepository();
+  final PronunciationRepository _repository = sl<PronunciationRepository>();
   final AudioPreprocessor _preprocessor = const AudioPreprocessor();
   bool _isInitialized = false;
   bool _isRunningAll = false;
@@ -150,14 +151,14 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
           test['resultDetails'] = 'قمة السعة المحسوبة: ${peak.toStringAsFixed(3)} (رصد التشبع بنجاح)';
         });
       } else if (testId == 'test_missing_model_resilience') {
-        // Verify smoke tests on active models
         final vadSmoke = await _repository.modelManager.runSmokeTest('silero_vad');
-        final denoiseSmoke = await _repository.modelManager.runSmokeTest('rnnoise');
-        final isPass = vadSmoke && denoiseSmoke;
+        final denoiseSmoke = await _repository.modelManager.runSmokeTest('gtcrn_denoiser');
+        final w2vSmoke = await _repository.modelManager.runSmokeTest('wav2vec2_espeak');
+        final isPass = vadSmoke && denoiseSmoke && w2vSmoke;
 
         setState(() {
           test['status'] = isPass ? 'passed' : 'failed';
-          test['resultDetails'] = 'VAD Smoke: $vadSmoke | Denoiser Smoke: $denoiseSmoke | الاستقرار: سليم';
+          test['resultDetails'] = 'VAD: $vadSmoke | GTCRN: $denoiseSmoke | Wav2Vec2: $w2vSmoke';
         });
       }
     } catch (e) {

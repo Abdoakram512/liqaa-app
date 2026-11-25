@@ -1,121 +1,486 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
-import 'audio_preprocessor.dart';
-import 'speech_to_text_engine.dart';
-import 'models/phoneme_token.dart';
 
-/// On-device phonemic recognition engine for Egyptian Arabic.
+import 'ai_asset_helper.dart';
+import 'audio_preprocessor.dart';
+import 'models/phoneme_token.dart';
+import 'ort_dynamic_session.dart';
+
+/// Result returned by blind acoustic phoneme recognition (`Wav2Vec2-LV60-eSpeak-CV-FT`).
+class PhonemeRecognitionResult {
+  final List<PhonemeToken> tokens;
+  final int latencyMs;
+  final int frameCount;
+  final int audioDurationMs;
+  final double? averageConfidence;
+  final double? averageAcousticMargin;
+  final bool isNativeModel;
+  final String modelName;
+  final String? errorMessage;
+
+  const PhonemeRecognitionResult({
+    required this.tokens,
+    required this.latencyMs,
+    required this.frameCount,
+    required this.audioDurationMs,
+    this.averageConfidence,
+    this.averageAcousticMargin,
+    required this.isNativeModel,
+    this.modelName = 'Wav2Vec2-LV60-eSpeak-CV-FT (ONNX Q4F16)',
+    this.errorMessage,
+  });
+
+  bool get hasError => errorMessage != null && errorMessage!.isNotEmpty;
+}
+
+/// Real Blind On-Device Acoustic Phoneme Recognition Engine.
 ///
 /// Architecture:
-/// 1. Acoustic Speech Recognition via Whisper Tiny INT8 Multilingual ONNX.
-/// 2. Linguistic G2P (Grapheme-to-Phoneme) Transduction for Egyptian Arabic.
-/// 3. Phonetic sequence decomposition with tokenized alignment boundaries.
+/// - Model: `onnx-community/wav2vec2-lv-60-espeak-cv-ft-ONNX` (`model_q4f16.onnx`, Apache-2.0, 392 IPA tokens)
+/// - Runtime: `OrtDynamicSession` over `sherpa_onnx`'s bundled ONNX Runtime (v1.28.2, supports `MatMulNBits`)
+/// - Zero target-word hint, zero Whisper transcript leakage, zero G2P fabrication.
+/// - Emits true frame-level acoustic IPA tokens with real softmax posteriors, `top1 - top2` margins,
+///   and CTC frame alignment timestamps (`isTimestampEstimated: false`).
 class PhonemeRecognitionEngine {
-  final SpeechToTextEngine _sttEngine;
+  static const String defaultModelAsset = 'assets/ai_models/wav2vec2_espeak/model_q4f16.onnx';
+  static const String defaultVocabAsset = 'assets/ai_models/wav2vec2_espeak/vocab.json';
+  static const int _minWav2VecSamples = 1600; // 100ms minimum at 16kHz
+
   final AudioPreprocessor _preprocessor;
+  final String? modelPathOverride;
+  final String? vocabPathOverride;
+
+  OrtDynamicSession? _session;
   final Map<int, String> _idToToken = {};
   final Map<String, int> _tokenToId = {};
+  final Set<int> _skipTokenIds = {};
+
   bool _isInitialized = false;
+  bool _isNativeAvailable = false;
+  String? _modelPath;
+  String? _vocabPath;
+  String? _lastError;
 
   PhonemeRecognitionEngine({
-    SpeechToTextEngine? sttEngine,
     AudioPreprocessor? preprocessor,
-  })  : _sttEngine = sttEngine ?? SpeechToTextEngine(),
-        _preprocessor = preprocessor ?? const AudioPreprocessor();
+    this.modelPathOverride,
+    this.vocabPathOverride,
+  }) : _preprocessor = preprocessor ?? const AudioPreprocessor();
 
   bool get isInitialized => _isInitialized;
+  bool get isNativeAvailable => _isNativeAvailable;
   int get tokenCount => _idToToken.length;
+  String? get modelPath => _modelPath;
+  String? get lastError => _lastError;
 
+  /// Loads `vocab.json` and opens the quantized Wav2Vec2-eSpeak ONNX session.
   Future<void> initialize() async {
-    if (_isInitialized) return;
-
-    await _sttEngine.initialize();
+    if (_isInitialized && _isNativeAvailable) return;
+    _lastError = null;
 
     try {
-      final String tokensStr = await rootBundle.loadString('assets/ai_models/zipformer_v3/tokens.txt');
-      final LineSplitter splitter = const LineSplitter();
-      final List<String> lines = splitter.convert(tokensStr);
+      _modelPath = modelPathOverride ?? await AiAssetHelper.getLocalAssetPath(defaultModelAsset);
+      _vocabPath = vocabPathOverride ?? await AiAssetHelper.getLocalAssetPath(defaultVocabAsset);
 
-      for (final line in lines) {
-        final parts = line.trim().split(RegExp(r'\s+'));
-        if (parts.length >= 2) {
-          final String token = parts[0];
-          final int? id = int.tryParse(parts[1]);
-          if (id != null) {
-            _idToToken[id] = token;
-            _tokenToId[token] = id;
-          }
+      if (!File(_modelPath!).existsSync()) {
+        _isNativeAvailable = false;
+        _lastError = 'Wav2Vec2-eSpeak ONNX model missing at $_modelPath';
+        _isInitialized = true;
+        return;
+      }
+      if (!File(_vocabPath!).existsSync()) {
+        _isNativeAvailable = false;
+        _lastError = 'Wav2Vec2-eSpeak vocab.json missing at $_vocabPath';
+        _isInitialized = true;
+        return;
+      }
+
+      _loadVocab(_vocabPath!);
+      _session?.dispose();
+      _session = OrtDynamicSession.fromFile(_modelPath!, numThreads: 2);
+      _isNativeAvailable = true;
+      _lastError = null;
+      debugPrint(
+        '[PhonemeRecognitionEngine] Initialized real Wav2Vec2-eSpeak ONNX '
+        '(ORT ${_session!.runtimeVersion}, ${_idToToken.length} IPA tokens)',
+      );
+    } catch (e) {
+      _isNativeAvailable = false;
+      _lastError = 'Wav2Vec2-eSpeak initialization failed: $e';
+      debugPrint('[PhonemeRecognitionEngine] $_lastError');
+    }
+
+    _isInitialized = true;
+  }
+
+  void _loadVocab(String vocabPath) {
+    _idToToken.clear();
+    _tokenToId.clear();
+    _skipTokenIds.clear();
+
+    final decoded = jsonDecode(File(vocabPath).readAsStringSync()) as Map<String, dynamic>;
+    decoded.forEach((token, rawId) {
+      final id = rawId as int;
+      _idToToken[id] = token;
+      _tokenToId[token] = id;
+      if (token == '<pad>' || token == '<s>' || token == '</s>' || token == '<unk>' || token == '|') {
+        _skipTokenIds.add(id);
+      }
+    });
+  }
+
+  /// Blindly recognizes IPA phonemes directly from 16kHz float32 audio samples.
+  /// Returns detailed result with calibrated posteriors, frame timestamps, latency, or explicit error.
+  Future<PhonemeRecognitionResult> recognizePhonemesDetailed(
+    Float32List samples, {
+    int sampleRate = 16000,
+  }) async {
+    final Stopwatch sw = Stopwatch()..start();
+
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    final Float32List prepared = sampleRate == 16000
+        ? samples
+        : _preprocessor.resampleLinear(samples, sampleRate, 16000);
+    final int durationMs = (prepared.length * 1000 / 16000).round();
+
+    if (prepared.isEmpty || durationMs < 60) {
+      sw.stop();
+      return PhonemeRecognitionResult(
+        tokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+        frameCount: 0,
+        audioDurationMs: durationMs,
+        isNativeModel: _isNativeAvailable,
+      );
+    }
+
+    final double rms = _preprocessor.calculateRms(prepared);
+    if (rms < 0.002) {
+      sw.stop();
+      return PhonemeRecognitionResult(
+        tokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+        frameCount: 0,
+        audioDurationMs: durationMs,
+        isNativeModel: _isNativeAvailable,
+      );
+    }
+
+    if (_session == null || !_isNativeAvailable) {
+      sw.stop();
+      return PhonemeRecognitionResult(
+        tokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+        frameCount: 0,
+        audioDurationMs: durationMs,
+        isNativeModel: false,
+        errorMessage: _lastError ?? 'Wav2Vec2-eSpeak acoustic model is not initialized.',
+      );
+    }
+
+    try {
+      // Pad ultra-short speech bursts (< 100ms) so Wav2Vec2 CNN stride kernels succeed cleanly
+      final Float32List padded = prepared.length >= _minWav2VecSamples
+          ? prepared
+          : (Float32List(_minWav2VecSamples)..setRange(0, prepared.length, prepared));
+
+      final Float32List normalized = _zeroMeanUnitVar(padded);
+      final OrtFloatTensorResult out = _session!.runFloat32(
+        normalized,
+        [1, normalized.length],
+      );
+
+      if (out.shape.length != 3 || out.shape[1] <= 0 || out.shape[2] <= 0) {
+        sw.stop();
+        return PhonemeRecognitionResult(
+          tokens: const [],
+          latencyMs: sw.elapsedMilliseconds,
+          frameCount: 0,
+          audioDurationMs: durationMs,
+          isNativeModel: true,
+          errorMessage: 'Unexpected Wav2Vec2 output shape: ${out.shape}',
+        );
+      }
+
+      final int tFrames = out.shape[1];
+      final int vocabSize = out.shape[2];
+      final double msPerFrame = (normalized.length * 1000.0 / 16000.0) / tFrames;
+
+      final List<PhonemeToken> decoded = _ctcGreedyDecode(
+        out.data,
+        tFrames: tFrames,
+        vocabSize: vocabSize,
+        msPerFrame: msPerFrame,
+        maxAudioMs: durationMs,
+      );
+
+      sw.stop();
+      double? avgConf;
+      double? avgMargin;
+      if (decoded.isNotEmpty) {
+        avgConf = decoded.map((t) => t.confidence).reduce((a, b) => a + b) / decoded.length;
+        final margins = decoded.map((t) => t.acousticMargin).whereType<double>().toList();
+        if (margins.isNotEmpty) {
+          avgMargin = margins.reduce((a, b) => a + b) / margins.length;
         }
       }
-      _isInitialized = true;
-      debugPrint('[PhonemeRecognitionEngine] Initialized with ${_idToToken.length} tokens');
+
+      return PhonemeRecognitionResult(
+        tokens: decoded,
+        latencyMs: sw.elapsedMilliseconds,
+        frameCount: tFrames,
+        audioDurationMs: durationMs,
+        averageConfidence: avgConf,
+        averageAcousticMargin: avgMargin,
+        isNativeModel: true,
+      );
     } catch (e) {
-      _loadFallbackTokens();
-      _isInitialized = true;
-      debugPrint('[PhonemeRecognitionEngine] Fallback tokens loaded: ${_idToToken.length}');
+      sw.stop();
+      _lastError = 'Wav2Vec2-eSpeak inference error: $e';
+      debugPrint('[PhonemeRecognitionEngine] $_lastError');
+      return PhonemeRecognitionResult(
+        tokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+        frameCount: 0,
+        audioDurationMs: durationMs,
+        isNativeModel: false,
+        errorMessage: _lastError,
+      );
     }
   }
 
-  void _loadFallbackTokens() {
-    final tokens = [
-      '<blk>', 'sil', '<unk>', '|',
-      'ʔ', 'b', 't', 'θ', 'ɡ', 'ħ', 'x', 'd', 'ð', 'r', 'z', 's', 'ʃ',
-      'sˤ', 'dˤ', 'tˤ', 'ðˤ', 'ʕ', 'ɣ', 'f', 'q', 'k', 'l', 'm', 'n', 'h', 'w', 'j',
-      'a', 'u', 'i', 'aː', 'uː', 'iː', 'oː', 'eː'
-    ];
-    for (int i = 0; i < tokens.length; i++) {
-      _idToToken[i] = tokens[i];
-      _tokenToId[tokens[i]] = i;
-    }
+  /// Standard `List<PhonemeToken>` convenience wrapper (blind, no expected answer).
+  Future<List<PhonemeToken>> recognizePhonemes(
+    Float32List samples, {
+    int sampleRate = 16000,
+  }) async {
+    final res = await recognizePhonemesDetailed(samples, sampleRate: sampleRate);
+    return res.tokens;
   }
 
-  /// Maps an IPA phoneme symbol to Arabic orthographic representation
+  Float32List _zeroMeanUnitVar(Float32List samples) {
+    double sum = 0.0;
+    for (int i = 0; i < samples.length; i++) {
+      sum += samples[i];
+    }
+    final double mean = sum / samples.length;
+
+    double varSum = 0.0;
+    for (int i = 0; i < samples.length; i++) {
+      final double d = samples[i] - mean;
+      varSum += d * d;
+    }
+    final double std = math.sqrt(varSum / samples.length + 1e-7);
+
+    final Float32List out = Float32List(samples.length);
+    for (int i = 0; i < samples.length; i++) {
+      out[i] = ((samples[i] - mean) / std).toDouble();
+    }
+    return out;
+  }
+
+  List<PhonemeToken> _ctcGreedyDecode(
+    Float32List logits, {
+    required int tFrames,
+    required int vocabSize,
+    required double msPerFrame,
+    required int maxAudioMs,
+  }) {
+    final List<PhonemeToken> tokens = [];
+
+    int prevId = -1;
+    int? activeId;
+    int activeStartFrame = 0;
+    final List<double> activeProbs = [];
+    final List<double> activeMargins = [];
+
+    void flushActive(int endFrameInclusive) {
+      if (activeId == null) return;
+      final String symbol = _idToToken[activeId!] ?? '';
+      if (symbol.isNotEmpty && !_skipTokenIds.contains(activeId)) {
+        final double meanProb =
+            activeProbs.reduce((a, b) => a + b) / math.max(1, activeProbs.length);
+        final double meanMargin =
+            activeMargins.reduce((a, b) => a + b) / math.max(1, activeMargins.length);
+        final int startMs = (activeStartFrame * msPerFrame).round().clamp(0, maxAudioMs);
+        final int endMs = ((endFrameInclusive + 1) * msPerFrame).round().clamp(startMs, maxAudioMs);
+
+        tokens.add(PhonemeToken(
+          symbol: symbol,
+          arabicSymbol: mapIpaToAr(symbol),
+          tokenId: activeId!,
+          confidence: double.parse(meanProb.clamp(0.0, 1.0).toStringAsFixed(3)),
+          acousticMargin: double.parse(meanMargin.clamp(0.0, 1.0).toStringAsFixed(3)),
+          startFrame: activeStartFrame,
+          endFrame: endFrameInclusive,
+          startMs: startMs,
+          endMs: endMs,
+          isAccurate: true,
+          isTimestampEstimated: false,
+        ));
+      }
+      activeId = null;
+      activeProbs.clear();
+      activeMargins.clear();
+    }
+
+    for (int t = 0; t < tFrames; t++) {
+      final int rowBase = t * vocabSize;
+      double maxLogit = -1e30;
+      double secondLogit = -1e30;
+      int maxId = 0;
+
+      for (int c = 0; c < vocabSize; c++) {
+        final double v = logits[rowBase + c];
+        if (v > maxLogit) {
+          secondLogit = maxLogit;
+          maxLogit = v;
+          maxId = c;
+        } else if (v > secondLogit) {
+          secondLogit = v;
+        }
+      }
+
+      double sumExp = 0.0;
+      for (int c = 0; c < vocabSize; c++) {
+        sumExp += math.exp(logits[rowBase + c] - maxLogit);
+      }
+      final double top1Prob = 1.0 / sumExp;
+      final double top2Prob = math.exp(secondLogit - maxLogit) / sumExp;
+      final double margin = top1Prob - top2Prob;
+
+      if (_skipTokenIds.contains(maxId)) {
+        if (activeId != null) {
+          flushActive(t - 1);
+        }
+        prevId = maxId;
+        continue;
+      }
+
+      if (maxId == prevId && activeId == maxId) {
+        activeProbs.add(top1Prob);
+        activeMargins.add(margin);
+      } else {
+        if (activeId != null) {
+          flushActive(t - 1);
+        }
+        activeId = maxId;
+        activeStartFrame = t;
+        activeProbs.add(top1Prob);
+        activeMargins.add(margin);
+      }
+      prevId = maxId;
+    }
+
+    if (activeId != null) {
+      flushActive(tFrames - 1);
+    }
+
+    return tokens;
+  }
+
+  /// Maps an IPA phoneme symbol (including eSpeak IPA vowels/allophones) to Arabic script.
   String mapIpaToAr(String ipa) {
-    final clean = ipa.split('_').first;
+    final clean = ipa.replaceAll('ː', '').split('_').first;
     switch (clean) {
-      case 'k': return 'ك';
-      case 't': return 'ت';
-      case 'b': return 'ب';
-      case 's': return 'س';
-      case 'ʃ': return 'ش';
-      case 'r': return 'ر';
-      case 'l': return 'ل';
-      case 'm': return 'م';
-      case 'n': return 'ن';
-      case 'f': return 'ف';
-      case 'ħ': return 'ح';
-      case 'x': return 'خ';
-      case 'd': return 'د';
-      case 'ɡ': return 'ج'; // Egyptian Arabic [g]
-      case 'z': return 'ز';
-      case 'ʕ': return 'ع';
-      case 'ɣ': return 'غ';
-      case 'q': return 'ق';
-      case 'tˤ': return 'ط';
-      case 'sˤ': return 'ص';
-      case 'dˤ': return 'ض';
-      case 'ðˤ': return 'ظ';
-      case 'ð': return 'ذ';
-      case 'θ': return 'ث';
-      case 'h': return 'هـ';
-      case 'w': return 'و';
-      case 'j': return 'ي';
-      case 'ʔ': return 'أ'; // Egyptian Arabic glottal stop
-      case 'uː':
-      case 'oː': return 'و';
-      case 'aː': return 'ا';
-      case 'iː':
-      case 'eː': return 'ي';
-      case 'a': return 'ة';
-      case 'َ': return 'َ';
-      case 'ُ': return 'ُ';
-      case 'ِ': return 'ِ';
-      default: return clean;
+      case 'k':
+      case 'kʰ':
+      case 'c':
+        return 'ك';
+      case 't':
+      case 'tʰ':
+        return 'ت';
+      case 'b':
+      case 'p':
+        return 'ب';
+      case 's':
+        return 'س';
+      case 'ʃ':
+      case 'ɕ':
+        return 'ش';
+      case 'r':
+      case 'ɾ':
+      case 'ɹ':
+        return 'ر';
+      case 'l':
+      case 'ɫ':
+        return 'ل';
+      case 'm':
+        return 'م';
+      case 'n':
+      case 'ŋ':
+        return 'ن';
+      case 'f':
+      case 'v':
+        return 'ف';
+      case 'ħ':
+        return 'ح';
+      case 'x':
+      case 'χ':
+        return 'خ';
+      case 'd':
+        return 'د';
+      case 'ɡ':
+      case 'g':
+      case 'dʒ':
+        return 'ج';
+      case 'z':
+        return 'ز';
+      case 'ʕ':
+        return 'ع';
+      case 'ɣ':
+      case 'ʁ':
+        return 'غ';
+      case 'q':
+        return 'ق';
+      case 'tˤ':
+        return 'ط';
+      case 'sˤ':
+        return 'ص';
+      case 'dˤ':
+        return 'ض';
+      case 'ðˤ':
+      case 'zˤ':
+        return 'ظ';
+      case 'ð':
+        return 'ذ';
+      case 'θ':
+        return 'ث';
+      case 'h':
+        return 'هـ';
+      case 'w':
+      case 'u':
+      case 'o':
+      case 'ɔ':
+      case 'ʊ':
+        return 'و';
+      case 'j':
+      case 'i':
+      case 'e':
+      case 'ɪ':
+      case 'ɛ':
+        return 'ي';
+      case 'ʔ':
+        return 'أ';
+      case 'a':
+      case 'ɑ':
+      case 'æ':
+      case 'ə':
+      case 'ʌ':
+      case 'ɐ':
+        return 'ا';
+      default:
+        return ipa;
     }
   }
 
-  /// Maps an Arabic letter to IPA phoneme symbol
+  /// Linguistic lexicon helper: maps Arabic letter to Egyptian Arabic IPA phoneme.
+  /// (Not used during acoustic inference.)
   String mapArToIpa(String ar) {
     switch (ar) {
       case 'ك': return 'k';
@@ -131,17 +496,17 @@ class PhonemeRecognitionEngine {
       case 'ح': return 'ħ';
       case 'خ': return 'x';
       case 'د': return 'd';
-      case 'ج': return 'ɡ'; // Egyptian Arabic [g]
+      case 'ج': return 'ɡ';
       case 'ز': return 'z';
       case 'ع': return 'ʕ';
       case 'غ': return 'ɣ';
-      case 'ق': return 'ʔ'; // In Egyptian Arabic colloquial, Qaf is predominantly glottal stop [ʔ]
+      case 'ق': return 'ʔ';
       case 'ط': return 'tˤ';
       case 'ص': return 'sˤ';
       case 'ض': return 'dˤ';
       case 'ظ': return 'ðˤ';
-      case 'ذ': return 'd'; // Egyptian Arabic: ذ is typically [d] or [z]
-      case 'ث': return 's'; // Egyptian Arabic: ث is typically [s] or [t]
+      case 'ذ': return 'd';
+      case 'ث': return 's';
       case 'ه':
       case 'هـ': return 'h';
       case 'و': return 'uː';
@@ -162,92 +527,48 @@ class PhonemeRecognitionEngine {
     }
   }
 
-  /// Egyptian Arabic Grapheme-to-Phoneme (G2P) Transducer.
-  ///
-  /// Maps orthographic transcription into phonemic IPA units.
-  /// Generates estimated segmented timestamps across audio duration.
+  /// Linguistic lexicon utility ONLY: converts reference dictionary text into expected phoneme symbols.
   List<PhonemeToken> textToPhonemes(
     String text, {
-    double baseConfidence = 0.88,
+    double baseConfidence = 1.0,
     int totalDurationMs = 800,
   }) {
     if (text.isEmpty) return const [];
-
     final cleanText = text.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '');
     final chars = cleanText.split('');
-    final int count = chars.length;
-    if (count == 0) return const [];
-
-    final double segDuration = totalDurationMs / count;
+    if (chars.isEmpty) return const [];
+    final double segDuration = totalDurationMs / chars.length;
 
     final List<PhonemeToken> tokens = [];
-    int idx = 0;
-    for (final char in chars) {
+    for (int idx = 0; idx < chars.length; idx++) {
+      final char = chars[idx];
       final ipa = mapArToIpa(char);
       final startMs = (idx * segDuration).round();
       final endMs = ((idx + 1) * segDuration).round();
-      final startFrame = (startMs / 40.0).round();
-      final endFrame = (endMs / 40.0).round();
-
       tokens.add(PhonemeToken(
         symbol: ipa,
         arabicSymbol: char,
-        tokenId: _tokenToId[ipa] ?? (10 + idx),
+        tokenId: _tokenToId[ipa] ?? 0,
         confidence: double.parse(baseConfidence.toStringAsFixed(2)),
-        acousticMargin: null, // Transparently set to null: G2P does not fabricate acoustic margins
-        startFrame: startFrame,
-        endFrame: endFrame,
+        acousticMargin: null,
+        startFrame: (startMs / 20.0).round(),
+        endFrame: (endMs / 20.0).round(),
         startMs: startMs,
         endMs: endMs,
         isAccurate: true,
-        isTimestampEstimated: true, // Transparently labeled as estimated segmentation
+        isTimestampEstimated: true,
       ));
-      idx++;
     }
-
     return tokens;
   }
 
-  /// Blindly recognizes phonemes from 16kHz audio samples.
-  /// ZERO expected answer or target hint parameters!
-  Future<List<PhonemeToken>> recognizePhonemes(
-    Float32List samples, {
-    int sampleRate = 16000,
-  }) async {
-    if (!_isInitialized) {
-      await initialize();
-    }
-
-    if (samples.isEmpty) return const [];
-
-    final double rms = _preprocessor.calculateRms(samples);
-    // Silent or negligible audio -> zero phoneme tokens
-    if (rms < 0.003) {
-      return const [];
-    }
-
-    final double audioDurationMs = (samples.length / sampleRate) * 1000.0;
-    if (audioDurationMs < 100.0) return const [];
-
-    // 1. Blind speech transcription via ASR
-    final sttResult = await _sttEngine.transcribe(samples, sampleRate: sampleRate);
-    final String recognizedText = sttResult.text.trim();
-
-    if (recognizedText.isNotEmpty) {
-      return textToPhonemes(
-        recognizedText,
-        baseConfidence: sttResult.confidence ?? 0.85,
-        totalDurationMs: audioDurationMs.round(),
-      );
-    }
-
-    return const [];
-  }
-
   void dispose() {
-    _sttEngine.dispose();
+    _session?.dispose();
+    _session = null;
     _idToToken.clear();
     _tokenToId.clear();
+    _skipTokenIds.clear();
     _isInitialized = false;
+    _isNativeAvailable = false;
   }
 }

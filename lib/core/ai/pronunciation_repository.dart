@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
@@ -13,7 +14,6 @@ import 'ai_model_manager.dart';
 import 'models/vocabulary_word.dart';
 import 'models/audio_processing_result.dart';
 import 'models/pronunciation_assessment.dart';
-import 'models/phoneme_token.dart';
 
 class PronunciationRepository {
   final AudioRecorderService recorder;
@@ -49,15 +49,22 @@ class PronunciationRepository {
   bool get isInitialized => _isInitialized;
   List<VocabularyWord> get vocabulary => _vocabulary;
 
-  /// Loads vocabulary dictionary from assets and initializes AI engines
+  /// Loads vocabulary dictionary and initializes real ONNX engines, syncing real model health.
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     await modelManager.initialize();
     await vadEngine.initialize();
     await denoiserEngine.initialize();
-    await sttEngine.initialize();
     await phonemeEngine.initialize();
+    await sttEngine.initialize();
+
+    modelManager.syncEngineStatus(
+      vad: vadEngine,
+      denoiser: denoiserEngine,
+      phoneme: phonemeEngine,
+      stt: sttEngine,
+    );
 
     try {
       final String jsonStr = await rootBundle.loadString(
@@ -77,8 +84,8 @@ class PronunciationRepository {
     debugPrint('[PronunciationRepository] Initialized with ${_vocabulary.length} words');
   }
 
-  /// Processes raw audio bytes through the end-to-end AI pipeline.
-  /// Strictly prevents target answer leakage to the recognition engines!
+  /// Processes recorded WAV bytes through the blind on-device AI pipeline.
+  /// Strictly distinguishes recording/format/model/inference failures from genuine silence.
   Future<PronunciationAssessment> evaluateAudio({
     required Uint8List rawAudioBytes,
     required VocabularyWord targetWord,
@@ -86,34 +93,45 @@ class PronunciationRepository {
   }) async {
     final Stopwatch sw = Stopwatch()..start();
 
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     if (rawAudioBytes.isEmpty) {
       sw.stop();
-      return evaluator.evaluate(
+      return _systemFailure(
         word: targetWord,
-        recognizedTokens: const [],
+        errorType: AssessmentErrorType.recordingFailed,
+        clinicalName: 'ملف الصوت فارغ (Empty Recording Buffer)',
+        stage: 'AudioCapture',
+        detail: 'Stop recording returned 0 bytes.',
+        userMessage: 'ملف التسجيل فارغ.. تأكد من إذن الميكروفون وجرب تاني.',
         latencyMs: sw.elapsedMilliseconds,
       );
     }
 
-    // 1. Convert to Float32 PCM (handling RIFF/WAVE header if present)
-    final Uint8List pcmBytes = preprocessor.parseWavPcm(rawAudioBytes);
-    Float32List samples = preprocessor.pcm16ToFloat32(pcmBytes);
-
-    if (samples.isEmpty) {
+    // 1. Unified WAV validation, chunk parsing, downmix, & resampling to 16kHz mono Float32
+    late final PreprocessedAudio audio;
+    try {
+      audio = preprocessor.preprocessWav(rawAudioBytes, targetSampleRate: 16000);
+    } on InvalidAudioFormatException catch (e) {
       sw.stop();
-      return evaluator.evaluate(
+      return _systemFailure(
         word: targetWord,
-        recognizedTokens: const [],
+        errorType: AssessmentErrorType.invalidAudioFormat,
+        clinicalName: 'صيغة الصوت غير صالحة (Invalid WAV Format)',
+        stage: 'AudioPreprocessor',
+        detail: e.message,
+        userMessage: 'تنسيق الصوت المسجّل غير سليم (${e.message}).',
         latencyMs: sw.elapsedMilliseconds,
       );
     }
 
-    // 2. Preprocessing: DC-offset removal & Peak Normalization
-    samples = preprocessor.removeDcOffset(samples);
+    Float32List samples = preprocessor.removeDcOffset(audio.samples);
     final double rawRms = preprocessor.calculateRms(samples);
     final double rawSnr = preprocessor.estimateSnrDb(samples);
 
-    // Severe noise / distortion check (high noise floor, SNR < 2.0 dB)
+    // Extreme distortion / constant high-energy noise check
     if (rawSnr < 2.0 && rawRms > 0.08) {
       sw.stop();
       return PronunciationAssessment(
@@ -125,20 +143,7 @@ class PronunciationRepository {
         errorType: AssessmentErrorType.poorAudioQuality,
         clinicalErrorName: 'جودة صوت منخفضة (Poor SNR / High Noise)',
         targetPhoneme: targetWord.targetPhoneme,
-        alignments: targetWord.expectedPhonemes.asMap().entries.map((e) {
-          final int idx = e.key;
-          final String exp = e.value;
-          final String expAr = idx < targetWord.expectedArabicPhonemes.length
-              ? targetWord.expectedArabicPhonemes[idx]
-              : exp;
-          return PhonemeAlignment(
-            expectedPhoneme: exp,
-            expectedArabic: expAr,
-            recognizedToken: null,
-            isMatch: false,
-            status: 'deleted',
-          );
-        }).toList(),
+        alignments: _deletedAlignments(targetWord),
         recognizedPhonemes: const [],
         yasserFeedbackMessage: 'في دوشة حواليك يا بطل! روح لمكان هادي وقول تاني.',
         yasserPose: 'thinking',
@@ -147,12 +152,49 @@ class PronunciationRepository {
       );
     }
 
-    samples = preprocessor.normalizePeak(samples);
+    // Check genuine acoustic silence BEFORE normalization (avoid amplifying -70dB quantization floor!)
+    if (rawRms < 0.002) {
+      sw.stop();
+      return evaluator.evaluate(
+        word: targetWord,
+        recognizedTokens: const [],
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
 
-    // 3. Silero VAD analysis & silence detection
+    // Normalize ONLY genuinely quiet speech (avoid altering gain before Silero VAD / GTCRN on normal speech)
+    if (rawRms < 0.05) {
+      samples = preprocessor.normalizePeak(samples, targetPeak: 0.7);
+    }
+
+    // 2. Silero VAD (must succeed natively)
+    if (!vadEngine.isNativeAvailable) {
+      sw.stop();
+      return _systemFailure(
+        word: targetWord,
+        errorType: AssessmentErrorType.modelInitFailed,
+        clinicalName: 'فشل تهيئة نموذج كشف الصوت (Silero VAD Unavailable)',
+        stage: 'SileroVAD',
+        detail: vadEngine.lastError ?? 'Native Silero VAD not loaded.',
+        userMessage: 'تعذّر تشغيل نموذج كشف الصوت (Silero VAD). راجع مختبر النماذج.',
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
+
     final VadAnalysisResult vad = vadEngine.analyze(samples);
+    if (vad.errorMessage != null) {
+      sw.stop();
+      return _systemFailure(
+        word: targetWord,
+        errorType: AssessmentErrorType.inferenceFailed,
+        clinicalName: 'فشل استدلال كشف الصوت (Silero VAD Error)',
+        stage: 'SileroVAD',
+        detail: vad.errorMessage!,
+        userMessage: 'حصل خطأ أثناء تحليل نشاط الصوت (${vad.errorMessage}).',
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
 
-    // If silence or no speech detected -> abort immediately with NoSpeech assessment!
     if (!vad.speechDetected || vad.trimmedSamples == null || vad.trimmedSamples!.isEmpty) {
       sw.stop();
       return evaluator.evaluate(
@@ -164,29 +206,72 @@ class PronunciationRepository {
 
     final Float32List speechSamples = vad.trimmedSamples!;
 
-    // 4. RNNoise Noise Reduction
-    final bool enableDenoise = overrideDenoise ?? denoiserEngine.enabled;
+    // 3. Neural Speech Enhancement (GTCRN) or explicit/clean bypass
+    // Suppresses stationary/environmental noise when present while preserving delicate unvoiced
+    // voiceless stops/fricatives (/k/, /s/, /f/) in clean quiet-room recordings (SNR >= 22 dB).
+    final bool prevDenoiseEnabled = denoiserEngine.enabled;
+    final bool enableDenoise = overrideDenoise ?? (prevDenoiseEnabled && rawSnr < 22.0);
     denoiserEngine.enabled = enableDenoise;
     final DenoiseResult denoise = denoiserEngine.process(speechSamples);
+    denoiserEngine.enabled = prevDenoiseEnabled;
+    if (!denoise.hasValidAudio) {
+      sw.stop();
+      return _systemFailure(
+        word: targetWord,
+        errorType: denoiserEngine.isNativeAvailable
+            ? AssessmentErrorType.inferenceFailed
+            : AssessmentErrorType.modelInitFailed,
+        clinicalName: 'فشل عزل الضوضاء العصبي (GTCRN Error)',
+        stage: 'GTCRNDenoiser',
+        detail: denoise.errorMessage ?? 'GTCRN failed without details.',
+        userMessage: 'تعذّر معالجة عزل الضوضاء: ${denoise.errorMessage}',
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
+
     final Float32List finalSamples = denoise.processedSamples;
 
-    // 5. Blind Phoneme Recognition (ZERO TARGET LEAKAGE)
-    final List<PhonemeToken> recognizedTokens = await phonemeEngine.recognizePhonemes(
-      finalSamples,
-    );
+    // 4. Genuine Blind Acoustic Phoneme Recognition (Wav2Vec2-eSpeak, ZERO TARGET LEAKAGE)
+    if (!phonemeEngine.isNativeAvailable) {
+      sw.stop();
+      return _systemFailure(
+        word: targetWord,
+        errorType: AssessmentErrorType.modelInitFailed,
+        clinicalName: 'نموذج الفونيمات غير مهيأ (Wav2Vec2-eSpeak Unavailable)',
+        stage: 'PhonemeRecognition',
+        detail: phonemeEngine.lastError ?? 'Wav2Vec2-eSpeak ONNX session not ready.',
+        userMessage: 'تعذّر تشغيل نموذج تحليل الفونيمات الصوتي على الجهاز.',
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
 
+    final PhonemeRecognitionResult phonemeResult =
+        await phonemeEngine.recognizePhonemesDetailed(finalSamples);
     sw.stop();
-    final int latencyMs = sw.elapsedMilliseconds;
 
-    // 6. Clinical Alignment & Dynamic Programming Assessment
+    if (phonemeResult.hasError) {
+      return _systemFailure(
+        word: targetWord,
+        errorType: AssessmentErrorType.inferenceFailed,
+        clinicalName: 'فشل استدلال الفونيمات الصوتي (Wav2Vec2 Inference Failed)',
+        stage: 'PhonemeRecognition',
+        detail: phonemeResult.errorMessage!,
+        userMessage: 'حصل خطأ أثناء استدلال الفونيمات: ${phonemeResult.errorMessage}',
+        latencyMs: sw.elapsedMilliseconds,
+      );
+    }
+
+    // 5. Clinical Alignment & Dynamic Programming Assessment
     return evaluator.evaluate(
       word: targetWord,
-      recognizedTokens: recognizedTokens,
-      latencyMs: latencyMs,
+      recognizedTokens: phonemeResult.tokens,
+      latencyMs: sw.elapsedMilliseconds,
     );
   }
 
-  /// Detailed audio analysis result for Yasser AI Lab
+  /// Detailed audio diagnostics for AI Lab views.
+  /// Always stores valid RIFF/WAVE bytes in [trimmedAudioBytes] & [denoisedAudioBytes] for playback,
+  /// and sets [denoisedAudioBytes] = null if denoising fails (NEVER substitutes original audio silently).
   AudioProcessingResult analyzeAudioForLab(Uint8List rawBytes) {
     if (rawBytes.isEmpty) {
       return AudioProcessingResult(
@@ -199,37 +284,155 @@ class PronunciationRepository {
         snrDb: 0.0,
         rawAudioBytes: rawBytes,
         waveformPoints: const [],
+        isValidAudio: false,
+        errorMessage: 'ملف الصوت فارغ (0 bytes).',
       );
     }
 
-    final Uint8List pcmBytes = preprocessor.parseWavPcm(rawBytes);
-    Float32List samples = preprocessor.pcm16ToFloat32(pcmBytes);
-    samples = preprocessor.removeDcOffset(samples);
+    late final PreprocessedAudio prep;
+    try {
+      prep = preprocessor.preprocessWav(
+        rawBytes,
+        targetSampleRate: 16000,
+        allowHeaderlessPcm16Fallback: false,
+      );
+    } on InvalidAudioFormatException catch (e) {
+      return AudioProcessingResult(
+        speechDetected: false,
+        speechStartMs: 0,
+        speechEndMs: 0,
+        durationMs: 0,
+        averageRms: 0.0,
+        peakAmplitude: 0.0,
+        snrDb: 0.0,
+        rawAudioBytes: rawBytes,
+        waveformPoints: const [],
+        isValidAudio: false,
+        errorMessage: e.message,
+      );
+    }
 
-    final VadAnalysisResult vad = vadEngine.analyze(samples);
-    final Float32List trimmed = vad.trimmedSamples ?? samples;
-
-    final DenoiseResult denoise = denoiserEngine.process(trimmed);
-
+    final Float32List samples = preprocessor.removeDcOffset(prep.samples);
     final double rms = preprocessor.calculateRms(samples);
     final double peak = preprocessor.calculatePeak(samples);
     final double snr = preprocessor.estimateSnrDb(samples);
     final List<double> waveform = preprocessor.downsampleForWaveform(samples, 64);
 
+    // Avoid passing ultra-quiet dead silence as speech after VAD if RMS < 0.002
+    final VadAnalysisResult vad = rms < 0.002
+        ? VadAnalysisResult(
+            speechDetected: false,
+            speechStartMs: 0,
+            speechEndMs: 0,
+            speechProbabilities: List<double>.filled(math.max(1, samples.length ~/ 512), 0.0),
+            isNativeModel: vadEngine.isNativeAvailable,
+          )
+        : vadEngine.analyze(samples);
+
+    final Float32List? trimmed = vad.speechDetected ? vad.trimmedSamples : null;
+    final Float32List denoiseInput = trimmed ?? samples;
+
+    final DenoiseResult denoise = denoiserEngine.process(denoiseInput);
+    final bool denoiseOk = denoise.hasValidAudio;
+
+    final Uint8List? trimmedWav = trimmed != null && trimmed.isNotEmpty
+        ? preprocessor.float32ToWav(trimmed, sampleRate: 16000)
+        : null;
+    final Uint8List? denoisedWav = denoiseOk
+        ? preprocessor.float32ToWav(denoise.processedSamples, sampleRate: 16000)
+        : null;
+
+    final List<double> denoisedWave = denoiseOk
+        ? preprocessor.downsampleForWaveform(denoise.processedSamples, 64)
+        : const [];
+
+    final String? stageErr = vad.errorMessage ?? denoise.errorMessage;
+
     return AudioProcessingResult(
       speechDetected: vad.speechDetected,
       speechStartMs: vad.speechStartMs,
       speechEndMs: vad.speechEndMs,
-      durationMs: vad.durationMs,
-      averageRms: double.parse(rms.toStringAsFixed(3)),
-      peakAmplitude: double.parse(peak.toStringAsFixed(2)),
+      durationMs: prep.durationMs,
+      averageRms: double.parse(rms.toStringAsFixed(4)),
+      peakAmplitude: double.parse(peak.toStringAsFixed(3)),
       snrDb: double.parse(snr.toStringAsFixed(1)),
-      snrImprovementDb: double.parse(denoise.snrImprovementDb.toStringAsFixed(1)),
-      rawAudioBytes: rawBytes,
-      trimmedAudioBytes: preprocessor.float32ToPcm16(trimmed),
-      denoisedAudioBytes: preprocessor.float32ToPcm16(denoise.processedSamples),
+      snrImprovementDb: denoiseOk
+          ? double.parse(denoise.snrImprovementDb.toStringAsFixed(1))
+          : 0.0,
+      rawAudioBytes: prep.wavBytes,
+      trimmedAudioBytes: trimmedWav,
+      denoisedAudioBytes: denoisedWav,
       waveformPoints: waveform,
+      denoisedWaveformPoints: denoisedWave,
+      sampleRate: prep.sourceMetadata.sampleRate,
+      channels: prep.sourceMetadata.channels,
+      bitsPerSample: prep.sourceMetadata.bitsPerSample,
+      sampleCount: prep.sampleCount,
+      clippingCount: prep.clippingCount,
+      denoisedRms: denoiseOk ? double.parse(denoise.rmsAfter.toStringAsFixed(4)) : 0.0,
+      denoisedPeakAmplitude: denoiseOk ? double.parse(denoise.peakAfter.toStringAsFixed(3)) : 0.0,
+      denoiserFilterType: denoise.filterType,
+      vadSegments: vad.segments
+          .asMap()
+          .entries
+          .map((e) => VadSegmentSummary(
+                index: e.key,
+                startMs: e.value.startMs,
+                endMs: e.value.endMs,
+                startSample: e.value.startSample,
+                sampleCount: e.value.sampleCount,
+                rms: double.parse(e.value.rms.toStringAsFixed(4)),
+              ))
+          .toList(),
+      isValidAudio: stageErr == null,
+      errorMessage: stageErr,
     );
+  }
+
+  PronunciationAssessment _systemFailure({
+    required VocabularyWord word,
+    required AssessmentErrorType errorType,
+    required String clinicalName,
+    required String stage,
+    required String detail,
+    required String userMessage,
+    required int latencyMs,
+  }) {
+    return PronunciationAssessment(
+      targetWord: word.id,
+      targetWordArabic: word.wordArabic,
+      recognizedTranscript: '',
+      overallScore: 0.0,
+      stars: 0,
+      errorType: errorType,
+      clinicalErrorName: clinicalName,
+      targetPhoneme: word.targetPhoneme,
+      alignments: const [],
+      recognizedPhonemes: const [],
+      yasserFeedbackMessage: userMessage,
+      yasserPose: 'thinking',
+      latencyMs: latencyMs,
+      passed: false,
+      pipelineStageFailed: stage,
+      diagnosticError: detail,
+    );
+  }
+
+  List<PhonemeAlignment> _deletedAlignments(VocabularyWord word) {
+    return word.expectedPhonemes.asMap().entries.map((e) {
+      final int idx = e.key;
+      final String exp = e.value;
+      final String expAr = idx < word.expectedArabicPhonemes.length
+          ? word.expectedArabicPhonemes[idx]
+          : exp;
+      return PhonemeAlignment(
+        expectedPhoneme: exp,
+        expectedArabic: expAr,
+        recognizedToken: null,
+        isMatch: false,
+        status: 'deleted',
+      );
+    }).toList();
   }
 
   List<VocabularyWord> _getFallbackVocabulary() {

@@ -6,13 +6,25 @@ import 'models/vocabulary_word.dart';
 class PronunciationEvaluator {
   const PronunciationEvaluator();
 
-  /// Evaluates recognized phonemes against target vocabulary word using Levenshtein DP sequence alignment
+  static const Set<String> _vowelSymbols = {
+    'a', 'aː', 'ɑ', 'æ', 'ə', 'ʌ', 'ɐ',
+    'u', 'uː', 'o', 'oː', 'ɔ', 'ʊ',
+    'i', 'iː', 'e', 'eː', 'ɪ', 'ɛ',
+  };
+
+  bool _isVowelSymbol(String s) {
+    final clean = s.replaceAll('ː', '').split('_').first;
+    return _vowelSymbols.contains(s) || _vowelSymbols.contains(clean);
+  }
+
+  /// Evaluates blindly recognized acoustic IPA phonemes against target vocabulary word
+  /// using Wagner-Fischer dynamic programming sequence alignment.
   PronunciationAssessment evaluate({
     required VocabularyWord word,
     required List<PhonemeToken> recognizedTokens,
-    int latencyMs = 85,
+    int latencyMs = 0,
   }) {
-    // 1. Handle empty / silent audio -> NoSpeech failure state
+    // 1. Genuine empty / silent audio -> NoSpeech failure state
     if (recognizedTokens.isEmpty) {
       return PronunciationAssessment(
         targetWord: word.id,
@@ -22,6 +34,7 @@ class PronunciationEvaluator {
         stars: 0,
         errorType: AssessmentErrorType.noSpeech,
         clinicalErrorName: 'صمت تام (No Speech Detected)',
+        targetPhoneme: word.targetPhoneme,
         alignments: word.expectedPhonemes.asMap().entries.map((e) {
           final int idx = e.key;
           final String exp = e.value;
@@ -45,55 +58,84 @@ class PronunciationEvaluator {
     }
 
     final String recognizedArabic = recognizedTokens.map((t) => t.arabicSymbol).join();
-    final String recognizedSymbols = recognizedTokens.map((t) => t.symbol).join();
+    final String recognizedSymbols = recognizedTokens.map((t) => t.symbol).join(' ');
 
-    // 2. Perform True Dynamic Programming (Wagner-Fischer) Alignment
+    // 2. Check genuine acoustic certainty (reject near-random low-posterior decodings)
+    final double meanTokenConf =
+        recognizedTokens.map((t) => t.confidence).reduce((a, b) => a + b) /
+            recognizedTokens.length;
+    final margins = recognizedTokens.map((t) => t.acousticMargin).whereType<double>().toList();
+    final double? meanMargin =
+        margins.isEmpty ? null : margins.reduce((a, b) => a + b) / margins.length;
+
+    if (meanTokenConf < 0.25 || (meanMargin != null && meanMargin < 0.08)) {
+      return PronunciationAssessment(
+        targetWord: word.id,
+        targetWordArabic: word.wordArabic,
+        recognizedTranscript: recognizedSymbols,
+        overallScore: 0.0,
+        stars: 0,
+        errorType: AssessmentErrorType.uncertain,
+        clinicalErrorName: 'عدم وضوح الاستدلال الصوتي (Uncertain Acoustic Posterior)',
+        targetPhoneme: word.targetPhoneme,
+        alignments: const [],
+        recognizedPhonemes: recognizedTokens,
+        yasserFeedbackMessage: 'الصوت مش واضح كفاية يا بطل.. قرّب من المايك وقول الكلمة بوضوح!',
+        yasserPose: 'thinking',
+        latencyMs: latencyMs,
+        passed: false,
+      );
+    }
+
+    // 3. True Wagner-Fischer DP Alignment
     final List<PhonemeAlignment> alignments = _alignPhonemesDP(
       expected: word.expectedPhonemes,
       expectedArabic: word.expectedArabicPhonemes,
       recognized: recognizedTokens,
+      targetPhonemeArabic: word.targetPhoneme,
+      targetPhonemeIpa: word.targetPhonemeIpa,
     );
 
-    // 3. Clinical Child Error Rule Matching
+    // 4. Match target phoneme + clinical error rules
     ChildErrorRule? matchedRule;
-    for (final rule in word.commonChildErrors) {
-      if (recognizedArabic == rule.pronouncedWord ||
-          recognizedArabic.contains(rule.pronouncedWord) ||
-          rule.pronouncedWord.contains(recognizedArabic)) {
-        matchedRule = rule;
-        break;
+    for (final a in alignments) {
+      if (a.expectedArabic == word.targetPhoneme && !a.isMatch && a.recognizedToken != null) {
+        for (final rule in word.commonChildErrors) {
+          if (rule.errorType == 'substitution' &&
+              (rule.substitutedPhoneme == a.recognizedToken!.arabicSymbol ||
+                  _matchesClinicalPhoneme(rule.substitutedPhoneme, a.recognizedToken!.symbol))) {
+            matchedRule = rule;
+            break;
+          }
+        }
+        if (matchedRule != null) break;
       }
     }
 
-    // Check if the target phoneme alignment specifically matches a clinical substitution
     if (matchedRule == null) {
-      for (final a in alignments) {
-        if (a.expectedArabic == word.targetPhoneme && !a.isMatch && a.recognizedToken != null) {
-          for (final rule in word.commonChildErrors) {
-            if (rule.errorType == 'substitution' &&
-                rule.substitutedPhoneme == a.recognizedToken!.arabicSymbol) {
-              matchedRule = rule;
-              break;
-            }
-          }
-          if (matchedRule != null) break;
+      for (final rule in word.commonChildErrors) {
+        if (recognizedArabic == rule.pronouncedWord) {
+          matchedRule = rule;
+          break;
         }
       }
     }
 
-    // 4. Score calculation based on alignment results (penalizing insertions, deletions, substitutions)
+    // 5. Score computation from aligned tokens
     int matches = 0;
     int substitutions = 0;
     int deletions = 0;
-    int insertions = 0;
+    double consonantInsertions = 0.0;
+    double vowelInsertions = 0.0;
     double confidenceSum = 0.0;
     bool targetPhonemeMatched = false;
 
     for (final a in alignments) {
       if (a.isMatch) {
         matches++;
-        confidenceSum += a.recognizedToken?.confidence ?? 0.8;
-        if (a.expectedArabic == word.targetPhoneme) {
+        confidenceSum += a.recognizedToken?.confidence ?? 0.0;
+        if (a.expectedArabic == word.targetPhoneme ||
+            a.expectedPhoneme == word.targetPhonemeIpa) {
           targetPhonemeMatched = true;
         }
       } else if (a.status == 'substituted') {
@@ -101,25 +143,31 @@ class PronunciationEvaluator {
       } else if (a.status == 'deleted') {
         deletions++;
       } else if (a.status == 'inserted') {
-        insertions++;
+        final tok = a.recognizedToken;
+        if (tok != null && _isVowelSymbol(tok.symbol)) {
+          // Arabic dictionaries often omit short medial diacritic vowels; penalize gently
+          vowelInsertions += 0.15;
+        } else {
+          consonantInsertions += 0.55;
+        }
       }
     }
 
     final int totalExpected = math.max(1, word.expectedPhonemes.length);
-    // Insertion penalty: deduct 0.5 per inserted phoneme
-    final double netMatches = math.max(0.0, matches - (insertions * 0.5));
+    final double netMatches =
+        math.max(0.0, matches - consonantInsertions - math.min(0.45, vowelInsertions));
     final double rawMatchRatio = netMatches / totalExpected;
-    final double avgConfidence = matches > 0 ? (confidenceSum / matches) : 0.5;
+    final double avgConfidence = matches > 0 ? (confidenceSum / matches) : meanTokenConf;
 
     double score = (rawMatchRatio * 85.0 + avgConfidence * 15.0).clamp(0.0, 100.0);
 
-    // Completely unrelated word spoken (e.g. match ratio < 30%)
+    // Reject completely unrelated words (< 30% alignment)
     if (rawMatchRatio < 0.30) {
       return PronunciationAssessment(
         targetWord: word.id,
         targetWordArabic: word.wordArabic,
         recognizedTranscript: recognizedArabic.isNotEmpty ? recognizedArabic : recognizedSymbols,
-        overallScore: math.min(score, 30.0),
+        overallScore: double.parse(math.min(score, 30.0).toStringAsFixed(1)),
         stars: 1,
         errorType: AssessmentErrorType.unrelatedWord,
         clinicalErrorName: 'كلمة غير مطابقة (Unrelated Word)',
@@ -133,7 +181,7 @@ class PronunciationEvaluator {
       );
     }
 
-    // Clinical substitution rule applied
+    // Apply clinical error feedback (fronting, lateralization, interdental lisp, stopping)
     if (matchedRule != null) {
       score = math.min(score, 65.0);
       return PronunciationAssessment(
@@ -157,13 +205,14 @@ class PronunciationEvaluator {
       );
     }
 
-    // Target phoneme MUST be correct to pass
-    if (!targetPhonemeMatched) {
+    // Target phoneme accuracy & zero deletions are required to pass
+    if (!targetPhonemeMatched || deletions > 0) {
       score = math.min(score, 68.0);
     }
 
-    final bool isPassed = score >= 80.0 && targetPhonemeMatched;
-    final int stars = score >= 90.0 ? 3 : (score >= 75.0 ? 2 : 1);
+    final bool isPassed =
+        score >= 80.0 && targetPhonemeMatched && deletions == 0;
+    final int stars = isPassed ? (score >= 88.0 ? 3 : 2) : 1;
 
     AssessmentErrorType errorType = AssessmentErrorType.correct;
     String feedback = '';
@@ -184,7 +233,7 @@ class PronunciationEvaluator {
       clinicalName = 'حذف صوت (Phonetic Deletion)';
       feedback = 'قربت قوي! نسيت صوت في النص.. يلا ننطق كل الحروف مع بعض: ${word.wordArabic}!';
       pose = 'pointing';
-    } else if (insertions > 0) {
+    } else if (consonantInsertions > 0) {
       errorType = AssessmentErrorType.insertion;
       clinicalName = 'إضافة أصوات زائدة (Phonetic Insertion)';
       feedback = 'شاطر! بس زودت أصوات زيادة.. يلا نقول: ${word.wordArabic} من غير زيادة!';
@@ -214,56 +263,99 @@ class PronunciationEvaluator {
     );
   }
 
-  /// True Wagner-Fischer Dynamic Programming alignment matrix
+  bool _matchesClinicalPhoneme(String? subAr, String recIpa) {
+    if (subAr == null) return false;
+    final normIpa = recIpa.replaceAll('ː', '').split('_').first;
+    switch (subAr) {
+      case 'ت':
+        return normIpa == 't' || normIpa == 'tʰ';
+      case 'ث':
+        return normIpa == 'θ' || normIpa == 's';
+      case 'ل':
+        return normIpa == 'l' || normIpa == 'ɫ';
+      case 'د':
+        return normIpa == 'd';
+      case 'ك':
+        return normIpa == 'k' || normIpa == 'kʰ';
+      case 'س':
+        return normIpa == 's';
+      default:
+        return false;
+    }
+  }
+
+  /// Wagner-Fischer DP sequence alignment accounting for acoustic IPA vowels & epenthesis.
   List<PhonemeAlignment> _alignPhonemesDP({
     required List<String> expected,
     required List<String> expectedArabic,
     required List<PhonemeToken> recognized,
+    required String targetPhonemeArabic,
+    required String targetPhonemeIpa,
   }) {
     final int m = expected.length;
     final int n = recognized.length;
 
-    // dp[i][j] stores the minimum edit distance
     final dp = List.generate(m + 1, (_) => List<double>.filled(n + 1, 0.0));
 
     for (int i = 0; i <= m; i++) {
       dp[i][0] = i * 1.0;
     }
     for (int j = 0; j <= n; j++) {
-      dp[0][j] = j * 1.0;
+      final tok = j > 0 ? recognized[j - 1] : null;
+      final stepIns = (tok != null && _isVowelSymbol(tok.symbol)) ? 0.35 : 1.0;
+      dp[0][j] = (j == 0) ? 0.0 : dp[0][j - 1] + stepIns;
     }
 
     for (int i = 1; i <= m; i++) {
       final exp = expected[i - 1];
       final expAr = (i - 1 < expectedArabic.length) ? expectedArabic[i - 1] : exp;
+      final bool isTargetConsonant =
+          expAr == targetPhonemeArabic || exp == targetPhonemeIpa;
 
       for (int j = 1; j <= n; j++) {
         final rec = recognized[j - 1];
-        final bool isEq = _isPhoneticallyEquivalent(exp, expAr, rec.symbol, rec.arabicSymbol);
+        final bool isEq = _isPhoneticallyEquivalent(
+          exp,
+          expAr,
+          rec.symbol,
+          rec.arabicSymbol,
+          isWordInitial: i == 1 && j == 1,
+          strictTarget: isTargetConsonant,
+        );
         final double matchCost = isEq ? 0.0 : 1.0;
+        final double insCost = _isVowelSymbol(rec.symbol) ? 0.35 : 1.0;
 
         final double costSub = dp[i - 1][j - 1] + matchCost;
         final double costDel = dp[i - 1][j] + 1.0;
-        final double costIns = dp[i][j - 1] + 1.0;
+        final double costIns = dp[i][j - 1] + insCost;
 
         dp[i][j] = math.min(costSub, math.min(costDel, costIns));
       }
     }
 
-    // Backtracking from (m, n) to (0, 0) to reconstruct optimal alignment
     final List<PhonemeAlignment> reversedAlignments = [];
     int i = m;
     int j = n;
+    const double eps = 1e-6;
 
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0) {
         final exp = expected[i - 1];
         final expAr = (i - 1 < expectedArabic.length) ? expectedArabic[i - 1] : exp;
         final rec = recognized[j - 1];
-        final bool isEq = _isPhoneticallyEquivalent(exp, expAr, rec.symbol, rec.arabicSymbol);
+        final bool isTargetConsonant =
+            expAr == targetPhonemeArabic || exp == targetPhonemeIpa;
+        final bool isEq = _isPhoneticallyEquivalent(
+          exp,
+          expAr,
+          rec.symbol,
+          rec.arabicSymbol,
+          isWordInitial: i == 1 && j == 1,
+          strictTarget: isTargetConsonant,
+        );
         final double matchCost = isEq ? 0.0 : 1.0;
 
-        if (dp[i][j] == dp[i - 1][j - 1] + matchCost) {
+        if ((dp[i][j] - (dp[i - 1][j - 1] + matchCost)).abs() < eps) {
           reversedAlignments.add(PhonemeAlignment(
             expectedPhoneme: exp,
             expectedArabic: expAr,
@@ -277,7 +369,7 @@ class PronunciationEvaluator {
         }
       }
 
-      if (i > 0 && dp[i][j] == dp[i - 1][j] + 1.0) {
+      if (i > 0 && (dp[i][j] - (dp[i - 1][j] + 1.0)).abs() < eps) {
         final exp = expected[i - 1];
         final expAr = (i - 1 < expectedArabic.length) ? expectedArabic[i - 1] : exp;
         reversedAlignments.add(PhonemeAlignment(
@@ -304,35 +396,68 @@ class PronunciationEvaluator {
     return reversedAlignments.reversed.toList();
   }
 
-  /// Checks phonetic equivalence between expected and recognized phonemes,
-  /// accounting for Egyptian Arabic dialectal variants and vowel length variations.
-  bool _isPhoneticallyEquivalent(String expIpa, String expAr, String recIpa, String recAr) {
+  /// Checks phonetic equivalence between expected dictionary phoneme and Wav2Vec2-eSpeak IPA output.
+  bool _isPhoneticallyEquivalent(
+    String expIpa,
+    String expAr,
+    String recIpa,
+    String recAr, {
+    bool isWordInitial = false,
+    bool strictTarget = false,
+  }) {
     if (expIpa == recIpa || expAr == recAr) return true;
 
-    // Normalization of Arabic characters
+    final baseExp = expIpa.replaceAll('ː', '').split('_').first;
+    final baseRec = recIpa.replaceAll('ː', '').split('_').first;
+    if (baseExp == baseRec) return true;
+
     final normExpAr = _normalizeArabicChar(expAr);
     final normRecAr = _normalizeArabicChar(recAr);
     if (normExpAr == normRecAr) return true;
 
-    // Egyptian Arabic variants
-    // 1. جيم [g] vs [ɡ]
-    if ((expAr == 'ج' || expIpa == 'ɡ') && (recAr == 'ج' || recIpa == 'ɡ')) return true;
-    // 2. همزة [ʔ] vs [ء] / [أ] / [إ] / [آ] / [ق] (Egyptian dialectal Qaf -> glottal stop)
-    if ((expIpa == 'ʔ' || expAr == 'ق' || expAr == 'ء') &&
-        (recIpa == 'ʔ' || recAr == 'ق' || recAr == 'ء' || recAr == 'أ' || recAr == 'إ')) {
+    // 1. Word-initial glottal stop [ʔ] in Arabic ('أ', 'إ') often acoustic-onset transitions into 'a'
+    if (isWordInitial && !strictTarget && (expIpa == 'ʔ' || normExpAr == 'ء')) {
+      if (baseRec == 'ʔ' || _isVowelSymbol(baseRec)) return true;
+    }
+
+    // 2. Egyptian Arabic dialectal variants & eSpeak acoustic realizations
+    if ((expAr == 'ج' || baseExp == 'ɡ' || baseExp == 'g') &&
+        (recAr == 'ج' || baseRec == 'ɡ' || baseRec == 'g' || baseRec == 'dʒ')) {
       return true;
     }
-    // 3. Long vs short vowels: [uː] vs [u], [aː] vs [a], [iː] vs [i]
-    if ((expIpa == 'uː' || expIpa == 'u' || expIpa == 'oː') &&
-        (recIpa == 'uː' || recIpa == 'u' || recIpa == 'oː' || recAr == 'و' || recAr == 'ُ')) {
+    if ((baseExp == 'k' || baseExp == 'kʰ') && (baseRec == 'k' || baseRec == 'kʰ')) {
       return true;
     }
-    if ((expIpa == 'aː' || expIpa == 'a') &&
-        (recIpa == 'aː' || recIpa == 'a' || recAr == 'ا' || recAr == 'ة' || recAr == 'َ')) {
+    if ((baseExp == 't' || baseExp == 'tʰ') && (baseRec == 't' || baseRec == 'tʰ')) {
       return true;
     }
-    if ((expIpa == 'iː' || expIpa == 'i' || expIpa == 'eː') &&
-        (recIpa == 'iː' || recIpa == 'i' || recIpa == 'eː' || recAr == 'ي' || recAr == 'ِ')) {
+    if ((baseExp == 'r' || expAr == 'ر') && (baseRec == 'r' || baseRec == 'ɾ' || baseRec == 'ɹ')) {
+      return true;
+    }
+    if ((baseExp == 'l' || expAr == 'ل') && (baseRec == 'l' || baseRec == 'ɫ')) {
+      return true;
+    }
+    if ((baseExp == 'x' || expAr == 'خ') && (baseRec == 'x' || baseRec == 'χ')) {
+      return true;
+    }
+    if ((baseExp == 'ɣ' || expAr == 'غ') && (baseRec == 'ɣ' || baseRec == 'ʁ')) {
+      return true;
+    }
+    if ((baseExp == 'ʔ' || expAr == 'ق' || expAr == 'ء') &&
+        (baseRec == 'ʔ' || baseRec == 'q' || recAr == 'ق' || recAr == 'ء' || recAr == 'أ')) {
+      return true;
+    }
+    // 3. Vowel allophones across Arabic MSA / Egyptian / eSpeak IPA inventory
+    if ((baseExp == 'u' || baseExp == 'o' || expAr == 'و') &&
+        (baseRec == 'u' || baseRec == 'o' || baseRec == 'ɔ' || baseRec == 'ʊ' || baseRec == 'w')) {
+      return true;
+    }
+    if ((baseExp == 'a' || expAr == 'ا' || expAr == 'ة') &&
+        (baseRec == 'a' || baseRec == 'ɑ' || baseRec == 'æ' || baseRec == 'ə' || baseRec == 'ʌ' || baseRec == 'ɐ')) {
+      return true;
+    }
+    if ((baseExp == 'i' || baseExp == 'e' || expAr == 'ي') &&
+        (baseRec == 'i' || baseRec == 'e' || baseRec == 'ɪ' || baseRec == 'ɛ' || baseRec == 'j')) {
       return true;
     }
 
@@ -346,11 +471,15 @@ class PronunciationEvaluator {
       case 'آ':
       case 'ء':
       case 'ئ':
-      case 'ؤ': return 'ء';
-      case 'ى': return 'ي';
+      case 'ؤ':
+        return 'ء';
+      case 'ى':
+        return 'ي';
       case 'ة':
-      case 'ه': return 'ه';
-      default: return c;
+      case 'ه':
+        return 'ه';
+      default:
+        return c;
     }
   }
 }

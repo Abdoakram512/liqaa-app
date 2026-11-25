@@ -17,7 +17,7 @@ class PhonemeRecognitionView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
       appBar: AppBar(
-        title: const Text('4. التعرف على الفونيمات (Zipformer CTC)'),
+        title: const Text('4. التعرف على الفونيمات (Wav2Vec2-eSpeak IPA)'),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -95,8 +95,23 @@ class PhonemeRecognitionView extends StatelessWidget {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            'المحرك الصوتي: Zipformer2 CTC Head (250 tokens)',
+                            'المحرك الصوتي: Wav2Vec2-LV60-eSpeak-CV-FT (392 IPA Tokens)',
                             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                          ),
+                          SizedBox(height: 6.h),
+                          Row(
+                            children: [
+                              Switch.adaptive(
+                                value: state.rawBypassMode,
+                                onChanged: (v) => context.read<AiLabCubit>().setRawBypassMode(v),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  state.rawBypassMode ? 'الوضع: استدلال خام مباشر (بدون VAD/GTCRN)' : 'الوضع: VAD + GTCRN + Wav2Vec2',
+                                  style: AppTextStyles.bodySmall,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

@@ -4,6 +4,8 @@ import '../../../../core/ai/models/audio_processing_result.dart';
 import '../../../../core/ai/models/phoneme_token.dart';
 import '../../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../../core/ai/models/vocabulary_word.dart';
+import '../../../../core/ai/phoneme_recognition_engine.dart';
+import '../../../../core/ai/rnnoise_denoiser_engine.dart';
 import '../../../../core/ai/speech_to_text_engine.dart';
 
 enum AiLabStatus { initial, loading, recording, processing, ready, error }
@@ -20,11 +22,15 @@ class AiLabState extends Equatable {
   final List<PhonemeToken> lastRecognizedPhonemes;
   final PronunciationAssessment? lastAssessment;
   final SttResult? lastSttResult;
+  final PhonemeRecognitionResult? lastPhonemeResult;
   final bool noiseReductionEnabled;
+  final bool rawBypassMode;
+  final DenoiserMode denoiserMode;
   final String? errorMessage;
   final String? comparisonJson;
   final String? lastBlindTranscript;
   final List<PhonemeToken> lastBlindPhonemes;
+  final List<PhonemeToken> lastRawPhonemes;
 
   const AiLabState({
     this.status = AiLabStatus.initial,
@@ -38,11 +44,15 @@ class AiLabState extends Equatable {
     this.lastRecognizedPhonemes = const [],
     this.lastAssessment,
     this.lastSttResult,
+    this.lastPhonemeResult,
     this.noiseReductionEnabled = true,
+    this.rawBypassMode = false,
+    this.denoiserMode = DenoiserMode.neuralGtcrn,
     this.errorMessage,
     this.comparisonJson,
     this.lastBlindTranscript,
     this.lastBlindPhonemes = const [],
+    this.lastRawPhonemes = const [],
   });
 
   AiLabState copyWith({
@@ -57,11 +67,16 @@ class AiLabState extends Equatable {
     List<PhonemeToken>? lastRecognizedPhonemes,
     PronunciationAssessment? lastAssessment,
     SttResult? lastSttResult,
+    PhonemeRecognitionResult? lastPhonemeResult,
     bool? noiseReductionEnabled,
+    bool? rawBypassMode,
+    DenoiserMode? denoiserMode,
     String? errorMessage,
+    bool clearError = false,
     String? comparisonJson,
     String? lastBlindTranscript,
     List<PhonemeToken>? lastBlindPhonemes,
+    List<PhonemeToken>? lastRawPhonemes,
   }) {
     return AiLabState(
       status: status ?? this.status,
@@ -75,30 +90,38 @@ class AiLabState extends Equatable {
       lastRecognizedPhonemes: lastRecognizedPhonemes ?? this.lastRecognizedPhonemes,
       lastAssessment: lastAssessment ?? this.lastAssessment,
       lastSttResult: lastSttResult ?? this.lastSttResult,
+      lastPhonemeResult: lastPhonemeResult ?? this.lastPhonemeResult,
       noiseReductionEnabled: noiseReductionEnabled ?? this.noiseReductionEnabled,
-      errorMessage: errorMessage ?? this.errorMessage,
+      rawBypassMode: rawBypassMode ?? this.rawBypassMode,
+      denoiserMode: denoiserMode ?? this.denoiserMode,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       comparisonJson: comparisonJson ?? this.comparisonJson,
       lastBlindTranscript: lastBlindTranscript ?? this.lastBlindTranscript,
       lastBlindPhonemes: lastBlindPhonemes ?? this.lastBlindPhonemes,
+      lastRawPhonemes: lastRawPhonemes ?? this.lastRawPhonemes,
     );
   }
 
   @override
   List<Object?> get props => [
-    status,
-    models,
-    totalRamUsageMb,
-    vocabulary,
-    selectedWord,
-    isRecording,
-    currentLiveAmplitude,
-    lastAudioResult,
-    lastRecognizedPhonemes,
-    lastAssessment,
-    lastSttResult,
-    noiseReductionEnabled,
-    errorMessage,
-    lastBlindTranscript,
-    lastBlindPhonemes,
-  ];
+        status,
+        models,
+        totalRamUsageMb,
+        vocabulary,
+        selectedWord,
+        isRecording,
+        currentLiveAmplitude,
+        lastAudioResult,
+        lastRecognizedPhonemes,
+        lastAssessment,
+        lastSttResult,
+        lastPhonemeResult,
+        noiseReductionEnabled,
+        rawBypassMode,
+        denoiserMode,
+        errorMessage,
+        lastBlindTranscript,
+        lastBlindPhonemes,
+        lastRawPhonemes,
+      ];
 }

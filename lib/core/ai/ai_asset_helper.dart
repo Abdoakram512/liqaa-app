@@ -3,15 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Manages extraction of bundled AI model assets to the local filesystem for native C/FFI consumption.
+/// Manages extraction of bundled AI model assets to local storage for native FFI / C++ engines.
 class AiAssetHelper {
   static final Map<String, String> _extractedPaths = {};
 
-  /// Ensures an asset file is written to local device storage and returns its absolute path.
+  /// Ensures an asset file exists on local filesystem and returns its verified absolute path.
+  /// Throws [FileSystemException] if neither extracted asset nor direct disk asset exists.
   static Future<String> getLocalAssetPath(String assetPath) async {
     if (_extractedPaths.containsKey(assetPath)) {
       final cached = _extractedPaths[assetPath]!;
-      if (File(cached).existsSync()) {
+      final f = File(cached);
+      if (f.existsSync() && f.lengthSync() > 0) {
         return cached;
       }
     }
@@ -24,7 +26,6 @@ class AiAssetHelper {
         baseDir = await getTemporaryDirectory();
       }
 
-      // Preserve relative path structure inside the app directory
       final sanitizedSubPath = assetPath.replaceAll('assets/', '').replaceAll('\\', '/');
       final targetFile = File('${baseDir.path}/$sanitizedSubPath');
 
@@ -42,16 +43,24 @@ class AiAssetHelper {
       debugPrint('[AiAssetHelper] Extracted $assetPath -> ${targetFile.path} (${bytes.length} bytes)');
       return targetFile.path;
     } catch (e) {
-      debugPrint('[AiAssetHelper] Error extracting asset $assetPath: $e');
-      // If filesystem extraction fails, return the raw asset path as fallback
-      return assetPath;
+      // Fallback for host unit tests running in project root without path_provider plugin
+      final directFile = File(assetPath);
+      if (directFile.existsSync() && directFile.lengthSync() > 0) {
+        final absPath = directFile.absolute.path;
+        _extractedPaths[assetPath] = absPath;
+        return absPath;
+      }
+      debugPrint('[AiAssetHelper] Asset unavailable ($assetPath): $e');
+      rethrow;
     }
   }
 
-  /// Checks if a file exists on local storage
-  static bool fileExists(String path) {
+  /// Checks if a file exists on local storage with non-zero length.
+  static bool fileExists(String? path) {
+    if (path == null || path.isEmpty) return false;
     try {
-      return File(path).existsSync();
+      final f = File(path);
+      return f.existsSync() && f.lengthSync() > 0;
     } catch (_) {
       return false;
     }

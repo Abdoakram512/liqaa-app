@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/ai/rnnoise_denoiser_engine.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -30,7 +31,7 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
       appBar: AppBar(
-        title: const Text('3. عزل الضوضاء (RNNoise Suppression)'),
+        title: const Text('3. عزل الضوضاء العصبي (GTCRN)'),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -41,7 +42,7 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
           return ListView(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             children: [
-              // Settings Toggle Card
+              // Denoiser Mode Selector (GTCRN Neural / DSP Wiener / Bypass)
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
@@ -49,36 +50,32 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusM),
                   border: Border.all(color: AppColors.borderSoft),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'تفعيل عزل الضوضاء (RNNoise Toggle)',
-                            style: AppTextStyles.titleSmall.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'يقوم بتخفيف الضجيج البيئي الثابت مثل صوت المروحة والمكيف',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'وضع معالجة الضوضاء (16kHz Enhancement Mode)',
+                      style: AppTextStyles.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    Switch.adaptive(
-                      value: state.noiseReductionEnabled,
-                      activeTrackColor: AppColors.primary,
-                      onChanged: (val) {
-                        context.read<AiLabCubit>().toggleNoiseReduction(val);
+                    SizedBox(height: 8.h),
+                    SegmentedButton<DenoiserMode>(
+                      segments: const [
+                        ButtonSegment(value: DenoiserMode.neuralGtcrn, label: Text('GTCRN عصبي')),
+                        ButtonSegment(value: DenoiserMode.dspWienerFallback, label: Text('DSP احتياطي')),
+                        ButtonSegment(value: DenoiserMode.bypass, label: Text('تخطي خام')),
+                      ],
+                      selected: {state.denoiserMode},
+                      onSelectionChanged: (s) {
+                        context.read<AiLabCubit>().setDenoiserMode(s.first);
                       },
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      'GTCRN Simple (ONNX 16kHz) يحفظ أصوات الاحتكاك (س، ش، ف) بخلاف rnnoise 48kHz غير المتوافق.',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -153,7 +150,22 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
               else
                 Column(
                   children: [
-                    // Dual comparison players
+                    // Dual comparison players (STRICTLY NO silent fallback to rawAudioBytes)
+                    if (audio.errorMessage != null)
+                      Container(
+                        width: double.infinity,
+                        margin: EdgeInsets.only(bottom: 12.h),
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Text(
+                          'خطأ المعالجة: ${audio.errorMessage}',
+                          style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade900),
+                        ),
+                      ),
                     Row(
                       children: [
                         Expanded(
@@ -168,17 +180,17 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                               children: [
                                 const Icon(Icons.mic_none_rounded, color: Colors.orange, size: 28),
                                 SizedBox(height: 6.h),
-                                Text('الصوت الأصلي (Raw)', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                                Text('الأصلي (${audio.sampleRate} Hz)', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
                                 SizedBox(height: 4.h),
-                                Text('SNR: ${audio.snrDb} dB', style: AppTextStyles.bodySmall),
+                                Text('RMS: ${audio.averageRms}\nPeak: ${audio.peakAmplitude}\nSNR: ${audio.snrDb} dB', textAlign: TextAlign.center, style: AppTextStyles.bodySmall),
                                 SizedBox(height: 10.h),
                                 IconButton(
                                   icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.orange, size: 40),
-                                  onPressed: () async {
-                                    if (audio.rawAudioBytes.isNotEmpty) {
-                                      await _audioPlayer.play(BytesSource(audio.rawAudioBytes));
-                                    }
-                                  },
+                                  onPressed: audio.rawAudioBytes.isEmpty
+                                      ? null
+                                      : () async {
+                                          await _audioPlayer.play(BytesSource(audio.rawAudioBytes));
+                                        },
                                 ),
                               ],
                             ),
@@ -197,18 +209,30 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                               children: [
                                 const Icon(Icons.auto_fix_high_rounded, color: Colors.deepPurpleAccent, size: 28),
                                 SizedBox(height: 6.h),
-                                Text('المعالج (RNNoise)', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                                Text('المعالج (${audio.denoiserFilterType})', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
                                 SizedBox(height: 4.h),
-                                Text('تحسن: +${audio.snrImprovementDb} dB', style: AppTextStyles.bodySmall.copyWith(color: Colors.green.shade800, fontWeight: FontWeight.bold)),
+                                Text(
+                                  audio.denoisedAudioBytes != null
+                                      ? 'RMS: ${audio.denoisedRms}\nPeak: ${audio.denoisedPeakAmplitude}\nSNR Δ: ${audio.snrImprovementDb >= 0 ? "+" : ""}${audio.snrImprovementDb} dB'
+                                      : 'تعذّر التشغيل (فشل المعالجة)',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: audio.denoisedAudioBytes != null ? Colors.green.shade800 : Colors.red.shade700,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 SizedBox(height: 10.h),
                                 IconButton(
-                                  icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.deepPurpleAccent, size: 40),
-                                  onPressed: () async {
-                                    final denoised = audio.denoisedAudioBytes ?? audio.rawAudioBytes;
-                                    if (denoised.isNotEmpty) {
-                                      await _audioPlayer.play(BytesSource(denoised));
-                                    }
-                                  },
+                                  icon: Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: audio.denoisedAudioBytes != null ? Colors.deepPurpleAccent : Colors.grey.shade400,
+                                    size: 40,
+                                  ),
+                                  onPressed: audio.denoisedAudioBytes == null || audio.denoisedAudioBytes!.isEmpty
+                                      ? null
+                                      : () async {
+                                          await _audioPlayer.play(BytesSource(audio.denoisedAudioBytes!));
+                                        },
                                 ),
                               ],
                             ),

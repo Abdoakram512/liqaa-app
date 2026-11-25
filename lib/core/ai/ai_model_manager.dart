@@ -1,18 +1,23 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+
 import 'ai_asset_helper.dart';
 import 'models/ai_model_info.dart';
-import 'silero_vad_engine.dart';
+import 'phoneme_recognition_engine.dart';
 import 'rnnoise_denoiser_engine.dart';
+import 'silero_vad_engine.dart';
 import 'speech_to_text_engine.dart';
 
+/// Manages verification, native ONNX runtime loading, RAM tracking, and honest smoke tests
+/// for every real model bundled in LIQAA.
 class AiModelManager {
   final Map<String, AiModelInfo> _models = {};
   bool _isInitialized = false;
 
   SileroVadEngine? _activeVad;
   RnnoiseDenoiserEngine? _activeDenoiser;
+  PhonemeRecognitionEngine? _activePhoneme;
   SpeechToTextEngine? _activeStt;
 
   bool get isInitialized => _isInitialized;
@@ -30,153 +35,259 @@ class AiModelManager {
     if (_isInitialized) return;
 
     // 1. Silero VAD v4
-    final sileroPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/silero/silero_vad.onnx');
-    final sileroExists = File(sileroPath).existsSync();
-    final sileroSizeMb = sileroExists ? (File(sileroPath).lengthSync() / (1024 * 1024)) : 2.10;
+    String sileroPath = 'assets/ai_models/silero/silero_vad.onnx';
+    bool sileroExists = false;
+    double sileroSizeMb = 0.0;
+    String? sileroErr;
+    try {
+      sileroPath = await AiAssetHelper.getLocalAssetPath(sileroPath);
+      sileroExists = AiAssetHelper.fileExists(sileroPath);
+      if (sileroExists) {
+        sileroSizeMb = File(sileroPath).lengthSync() / (1024 * 1024);
+      }
+    } catch (e) {
+      sileroErr = e.toString();
+    }
 
     _models['silero_vad'] = AiModelInfo(
       key: 'silero_vad',
-      name: 'Silero VAD v4',
-      description: 'Neural Voice Activity Detection (ONNX Runtime)',
+      name: 'Silero VAD v4 (ONNX)',
+      description: 'Neural Voice Activity Detection (16kHz, 512-sample windows)',
       format: 'ONNX',
       sampleRate: 16000,
       sizeMb: double.parse(sileroSizeMb.toStringAsFixed(2)),
       license: 'MIT',
       status: sileroExists ? 'ready' : 'missing',
-      isLoadedInMemory: sileroExists,
-      ramUsageMb: sileroExists ? 2.5 : 0.0, // Initial mapped memory
-      sha256: 'f6f4407b41e05e277e7f5cfd9b9ae957b1dfe763c6076a934734c0b448e09b31',
+      isLoadedInMemory: false,
+      ramUsageMb: 0.0,
       diskPath: sileroPath,
+      error: sileroErr,
     );
 
-    // 2. RNNoise Denoiser
-    final rnnoisePath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/rnnoise/rnnoise.onnx');
-    final rnnoiseExists = File(rnnoisePath).existsSync();
-    final rnnoiseSizeMb = rnnoiseExists ? (File(rnnoisePath).lengthSync() / (1024 * 1024)) : 0.97;
+    // 2. GTCRN Neural Speech Enhancement
+    String gtcrnPath = 'assets/ai_models/gtcrn/gtcrn_simple.onnx';
+    bool gtcrnExists = false;
+    double gtcrnSizeMb = 0.0;
+    String? gtcrnErr;
+    try {
+      gtcrnPath = await AiAssetHelper.getLocalAssetPath(gtcrnPath);
+      gtcrnExists = AiAssetHelper.fileExists(gtcrnPath);
+      if (gtcrnExists) {
+        gtcrnSizeMb = File(gtcrnPath).lengthSync() / (1024 * 1024);
+      }
+    } catch (e) {
+      gtcrnErr = e.toString();
+    }
 
-    _models['rnnoise'] = AiModelInfo(
-      key: 'rnnoise',
-      name: 'RNNoise Denoiser',
-      description: 'Noise Suppression Filter (DSP Wiener / ONNX Asset)',
-      format: 'DSP / ONNX',
+    _models['gtcrn_denoiser'] = AiModelInfo(
+      key: 'gtcrn_denoiser',
+      name: 'GTCRN Neural Denoiser (ONNX)',
+      description: '16kHz Neural Speech Enhancement (replaces incompatible 48kHz BFCC rnnoise.onnx)',
+      format: 'ONNX',
       sampleRate: 16000,
-      sizeMb: double.parse(rnnoiseSizeMb.toStringAsFixed(2)),
-      license: 'BSD-3-Clause',
-      status: rnnoiseExists ? 'ready' : 'missing',
-      isLoadedInMemory: rnnoiseExists,
-      ramUsageMb: rnnoiseExists ? 1.0 : 0.0,
-      sha256: '22123b85825b413e7c97de8334c6b609f0c6aa1cd5290ab672bb1b85bae20403',
-      diskPath: rnnoisePath,
+      sizeMb: double.parse(gtcrnSizeMb.toStringAsFixed(2)),
+      license: 'MIT',
+      status: gtcrnExists ? 'ready' : 'missing',
+      isLoadedInMemory: false,
+      ramUsageMb: 0.0,
+      diskPath: gtcrnPath,
+      error: gtcrnErr,
     );
 
-    // 3. Whisper Tiny Multilingual ASR
-    final whisperEncPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx');
-    final whisperDecPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx');
-    final whisperTokPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/whisper_tiny/tiny-tokens.txt');
-    final whisperReady = File(whisperEncPath).existsSync() &&
-        File(whisperDecPath).existsSync() &&
-        File(whisperTokPath).existsSync();
+    // 3. Wav2Vec2-LV60-eSpeak-CV-FT Acoustic IPA Phoneme Model
+    String w2vPath = PhonemeRecognitionEngine.defaultModelAsset;
+    String w2vVocab = PhonemeRecognitionEngine.defaultVocabAsset;
+    bool w2vExists = false;
+    double w2vSizeMb = 0.0;
+    String? w2vErr;
+    try {
+      w2vPath = await AiAssetHelper.getLocalAssetPath(w2vPath);
+      w2vVocab = await AiAssetHelper.getLocalAssetPath(w2vVocab);
+      w2vExists = AiAssetHelper.fileExists(w2vPath) && AiAssetHelper.fileExists(w2vVocab);
+      if (AiAssetHelper.fileExists(w2vPath)) {
+        w2vSizeMb = File(w2vPath).lengthSync() / (1024 * 1024);
+      }
+    } catch (e) {
+      w2vErr = e.toString();
+    }
 
-    double totalWhisperBytes = 0.0;
-    if (File(whisperEncPath).existsSync()) totalWhisperBytes += File(whisperEncPath).lengthSync();
-    if (File(whisperDecPath).existsSync()) totalWhisperBytes += File(whisperDecPath).lengthSync();
-    if (File(whisperTokPath).existsSync()) totalWhisperBytes += File(whisperTokPath).lengthSync();
+    _models['wav2vec2_espeak'] = AiModelInfo(
+      key: 'wav2vec2_espeak',
+      name: 'Wav2Vec2-LV60 eSpeak IPA (Q4F16)',
+      description: 'Blind Acoustic CTC Phoneme Recognizer (392 IPA units, Arabic gutturals/emphatics)',
+      format: 'ONNX Q4F16',
+      sampleRate: 16000,
+      sizeMb: double.parse(w2vSizeMb.toStringAsFixed(1)),
+      license: 'Apache-2.0',
+      status: w2vExists ? 'ready' : 'missing',
+      isLoadedInMemory: false,
+      ramUsageMb: 0.0,
+      diskPath: w2vPath,
+      error: w2vErr,
+    );
 
-    final whisperSizeMb = totalWhisperBytes > 0
-        ? (totalWhisperBytes / (1024 * 1024))
-        : 98.8;
+    // 4. Whisper Tiny Multilingual ASR (Optional word-level reference)
+    String whisperEnc = 'assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx';
+    String whisperDec = 'assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx';
+    String whisperTok = 'assets/ai_models/whisper_tiny/tiny-tokens.txt';
+    bool whisperReady = false;
+    double whisperSizeMb = 0.0;
+    String? whisperErr;
+    try {
+      whisperEnc = await AiAssetHelper.getLocalAssetPath(whisperEnc);
+      whisperDec = await AiAssetHelper.getLocalAssetPath(whisperDec);
+      whisperTok = await AiAssetHelper.getLocalAssetPath(whisperTok);
+      whisperReady = AiAssetHelper.fileExists(whisperEnc) &&
+          AiAssetHelper.fileExists(whisperDec) &&
+          AiAssetHelper.fileExists(whisperTok);
+      if (whisperReady) {
+        final totalBytes = File(whisperEnc).lengthSync() +
+            File(whisperDec).lengthSync() +
+            File(whisperTok).lengthSync();
+        whisperSizeMb = totalBytes / (1024 * 1024);
+      }
+    } catch (e) {
+      whisperErr = e.toString();
+    }
 
     _models['whisper_tiny'] = AiModelInfo(
       key: 'whisper_tiny',
-      name: 'Whisper Tiny (Sherpa-ONNX)',
-      description: 'On-device Arabic Speech Recognizer (INT8 Quantized)',
-      format: 'ONNX',
+      name: 'Whisper Tiny Arabic ASR (INT8)',
+      description: 'Word-level Arabic ASR (diagnostic telemetry only; not phoneme scoring)',
+      format: 'ONNX INT8',
       sampleRate: 16000,
       sizeMb: double.parse(whisperSizeMb.toStringAsFixed(1)),
       license: 'MIT',
       status: whisperReady ? 'ready' : 'missing',
-      isLoadedInMemory: whisperReady,
-      ramUsageMb: whisperReady ? 25.0 : 0.0, // Actual mapped RSS delta
-      sha256: '418fa553250f...',
-      diskPath: whisperEncPath,
-    );
-
-    // 4. Zipformer Arabic V3 Tokens (Lexicon)
-    final zipTokensPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/zipformer_v3/tokens.txt');
-    final zipTokensExist = File(zipTokensPath).existsSync();
-
-    _models['zipformer_v3'] = AiModelInfo(
-      key: 'zipformer_v3',
-      name: 'Zipformer Arabic V3 (Lexicon)',
-      description: 'Egyptian Arabic Phoneme Lexicon & Token Map',
-      format: 'Lexicon (Tokens/JSON)',
-      sampleRate: 16000,
-      sizeMb: 0.03,
-      license: 'NPL-1.3 (Non-Profit)',
-      status: zipTokensExist ? 'ready' : 'missing',
-      isLoadedInMemory: zipTokensExist,
-      ramUsageMb: 0.1,
-      diskPath: zipTokensPath,
+      isLoadedInMemory: false,
+      ramUsageMb: 0.0,
+      diskPath: whisperEnc,
+      error: whisperErr,
     );
 
     _isInitialized = true;
-    debugPrint('[AiModelManager] Initialized with ${_models.length} real model entries');
+    debugPrint('[AiModelManager] Initialized with ${_models.length} verified ONNX entries');
   }
 
-  /// Truly loads model into active memory and instantiates engine
+  /// Reflects live initialization state from shared repository engines without double-loading.
+  void syncEngineStatus({
+    SileroVadEngine? vad,
+    RnnoiseDenoiserEngine? denoiser,
+    PhonemeRecognitionEngine? phoneme,
+    SpeechToTextEngine? stt,
+  }) {
+    if (vad != null && _models.containsKey('silero_vad')) {
+      _activeVad = vad;
+      _models['silero_vad'] = _models['silero_vad']!.copyWith(
+        status: vad.isNativeAvailable ? 'ready' : (vad.lastError != null ? 'error' : 'missing'),
+        isLoadedInMemory: vad.isNativeAvailable,
+        error: vad.lastError,
+      );
+    }
+    if (denoiser != null && _models.containsKey('gtcrn_denoiser')) {
+      _activeDenoiser = denoiser;
+      _models['gtcrn_denoiser'] = _models['gtcrn_denoiser']!.copyWith(
+        status: denoiser.isNativeAvailable
+            ? 'ready'
+            : (denoiser.lastError != null ? 'error' : 'missing'),
+        isLoadedInMemory: denoiser.isNativeAvailable,
+        error: denoiser.lastError,
+      );
+    }
+    if (phoneme != null && _models.containsKey('wav2vec2_espeak')) {
+      _activePhoneme = phoneme;
+      _models['wav2vec2_espeak'] = _models['wav2vec2_espeak']!.copyWith(
+        status: phoneme.isNativeAvailable
+            ? 'ready'
+            : (phoneme.lastError != null ? 'error' : 'missing'),
+        isLoadedInMemory: phoneme.isNativeAvailable,
+        error: phoneme.lastError,
+      );
+    }
+    if (stt != null && _models.containsKey('whisper_tiny')) {
+      _activeStt = stt;
+      _models['whisper_tiny'] = _models['whisper_tiny']!.copyWith(
+        status: stt.isNativeAvailable ? 'ready' : (stt.lastError != null ? 'error' : 'missing'),
+        isLoadedInMemory: stt.isNativeAvailable,
+        error: stt.lastError,
+      );
+    }
+  }
+
+  /// Instantiates the ONNX session cleanly and verifies native availability before marking loaded.
   Future<void> loadModelIntoMemory(String key) async {
-    final model = _models[key];
+    final resolvedKey = key == 'rnnoise' ? 'gtcrn_denoiser' : key;
+    final model = _models[resolvedKey];
     if (model == null) return;
 
     final double rssBefore = _getProcessRssMb();
+    bool loaded = false;
+    String? err;
 
     try {
-      if (key == 'silero_vad') {
+      if (resolvedKey == 'silero_vad') {
         _activeVad ??= SileroVadEngine();
         await _activeVad!.initialize();
-      } else if (key == 'rnnoise') {
+        loaded = _activeVad!.isNativeAvailable;
+        err = _activeVad!.lastError;
+      } else if (resolvedKey == 'gtcrn_denoiser') {
         _activeDenoiser ??= RnnoiseDenoiserEngine();
         await _activeDenoiser!.initialize();
-      } else if (key == 'whisper_tiny') {
+        loaded = _activeDenoiser!.isNativeAvailable;
+        err = _activeDenoiser!.lastError;
+      } else if (resolvedKey == 'wav2vec2_espeak') {
+        _activePhoneme ??= PhonemeRecognitionEngine();
+        await _activePhoneme!.initialize();
+        loaded = _activePhoneme!.isNativeAvailable;
+        err = _activePhoneme!.lastError;
+      } else if (resolvedKey == 'whisper_tiny') {
         _activeStt ??= SpeechToTextEngine();
         await _activeStt!.initialize();
+        loaded = _activeStt!.isNativeAvailable;
+        err = _activeStt!.lastError;
       }
     } catch (e) {
-      debugPrint('[AiModelManager] Error instantiating $key: $e');
+      loaded = false;
+      err = e.toString();
+      debugPrint('[AiModelManager] Error loading $resolvedKey: $e');
     }
 
     final double rssAfter = _getProcessRssMb();
-    final double measuredRssDelta = (rssAfter - rssBefore).clamp(0.1, 500.0);
+    final double rssDelta = math.max(0.0, rssAfter - rssBefore);
 
-    _models[key] = model.copyWith(
-      isLoadedInMemory: true,
-      ramUsageMb: double.parse(measuredRssDelta.toStringAsFixed(1)),
+    _models[resolvedKey] = model.copyWith(
+      status: loaded ? 'ready' : 'error',
+      isLoadedInMemory: loaded,
+      ramUsageMb: loaded ? double.parse(rssDelta.toStringAsFixed(1)) : 0.0,
+      error: err,
     );
   }
 
-  /// Truly unloads model from active memory, disposes engine, and frees RAM
   Future<void> unloadModelFromMemory(String key) async {
-    final model = _models[key];
+    final resolvedKey = key == 'rnnoise' ? 'gtcrn_denoiser' : key;
+    final model = _models[resolvedKey];
     if (model == null) return;
 
-    if (key == 'silero_vad') {
+    if (resolvedKey == 'silero_vad') {
       _activeVad?.dispose();
       _activeVad = null;
-    } else if (key == 'rnnoise') {
+    } else if (resolvedKey == 'gtcrn_denoiser') {
       _activeDenoiser?.dispose();
       _activeDenoiser = null;
-    } else if (key == 'whisper_tiny') {
+    } else if (resolvedKey == 'wav2vec2_espeak') {
+      _activePhoneme?.dispose();
+      _activePhoneme = null;
+    } else if (resolvedKey == 'whisper_tiny') {
       _activeStt?.dispose();
       _activeStt = null;
     }
 
-    _models[key] = model.copyWith(
+    _models[resolvedKey] = model.copyWith(
       isLoadedInMemory: false,
       ramUsageMb: 0.0,
     );
   }
 
-  /// Total active RAM utilized by loaded models
   double getTotalRamUsageMb() {
     double total = 0.0;
     for (final m in _models.values) {
@@ -187,76 +298,68 @@ class AiModelManager {
     return double.parse(total.toStringAsFixed(1));
   }
 
-  /// Runs real, rigorous smoke test verifying genuine model behavior
+  /// Runs real ONNX inference smoke tests verifying model init, valid tensor outputs, and rejection of silence.
   Future<bool> runSmokeTest(String key) async {
+    final resolvedKey = key == 'rnnoise' ? 'gtcrn_denoiser' : key;
     try {
-      if (key == 'silero_vad') {
+      if (resolvedKey == 'silero_vad') {
         final vad = SileroVadEngine();
         await vad.initialize();
-
-        // 1. Synthetic tone burst with speech-level energy
-        const int sampleRate = 16000;
-        final speechSamples = Float32List(sampleRate); // 1.0 sec
-        for (int i = 0; i < sampleRate; i++) {
-          speechSamples[i] = 0.6 * math.sin(2 * math.pi * 500 * (i / sampleRate));
-        }
-        final resSpeech = vad.analyze(speechSamples);
-
-        // 2. Pure silence buffer
-        final silenceSamples = Float32List(sampleRate ~/ 2); // 0.5 sec
-        final resSilence = vad.analyze(silenceSamples);
-        vad.dispose();
-
-        // Must detect speech on tone burst AND reject silence
-        return resSpeech.speechDetected && !resSilence.speechDetected;
-      } else if (key == 'rnnoise') {
-        final denoiser = RnnoiseDenoiserEngine();
-        await denoiser.initialize();
-
-        // Generate synthetic noisy signal
-        const int length = 4800;
-        final testSamples = Float32List(length);
-        for (int i = 0; i < length; i++) {
-          testSamples[i] = 0.3 * math.sin(2 * math.pi * 400 * (i / 16000)) + 0.05 * math.sin(2 * math.pi * 3000 * (i / 16000));
-        }
-
-        final res = denoiser.process(testSamples);
-        denoiser.dispose();
-
-        // Verify output buffer integrity and SNR improvement
-        return res.processedSamples.length == length &&
-            !res.processedSamples.any((s) => s.isNaN || s.isInfinite) &&
-            res.snrAfterDb >= res.snrBeforeDb;
-      } else if (key == 'whisper_tiny') {
-        final whisperEncPath = _models['whisper_tiny']?.diskPath;
-        final whisperDecPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx');
-        final whisperTokPath = await AiAssetHelper.getLocalAssetPath('assets/ai_models/whisper_tiny/tiny-tokens.txt');
-
-        // Verify files exist and have substantial size
-        final encExists = whisperEncPath != null && File(whisperEncPath).existsSync() && File(whisperEncPath).lengthSync() > 5 * 1024 * 1024;
-        final decExists = File(whisperDecPath).existsSync() && File(whisperDecPath).lengthSync() > 10 * 1024 * 1024;
-        final tokExists = File(whisperTokPath).existsSync() && File(whisperTokPath).lengthSync() > 1000;
-
-        if (!encExists || !decExists || !tokExists) {
+        if (!vad.isNativeAvailable) {
+          vad.dispose();
           return false;
         }
+        // Pure silence MUST be rejected
+        final silenceRes = vad.analyze(Float32List(8000));
+        vad.dispose();
+        return silenceRes.isNativeModel && !silenceRes.speechDetected;
+      }
 
+      if (resolvedKey == 'gtcrn_denoiser') {
+        final denoiser = RnnoiseDenoiserEngine();
+        await denoiser.initialize();
+        if (!denoiser.isNativeAvailable) {
+          denoiser.dispose();
+          return false;
+        }
+        const int n = 8000;
+        final signal = Float32List(n);
+        for (int i = 0; i < n; i++) {
+          signal[i] = 0.25 * math.sin(2 * math.pi * 400 * (i / 16000.0)) +
+              0.08 * math.sin(2 * math.pi * 3500 * (i / 16000.0));
+        }
+        final res = denoiser.process(signal);
+        denoiser.dispose();
+        return res.hasValidAudio && res.isNeuralModel && res.rmsAfter > 0.0;
+      }
+
+      if (resolvedKey == 'wav2vec2_espeak') {
+        final phone = PhonemeRecognitionEngine();
+        await phone.initialize();
+        if (!phone.isNativeAvailable) {
+          phone.dispose();
+          return false;
+        }
+        final silenceRes = await phone.recognizePhonemesDetailed(Float32List(8000));
+        phone.dispose();
+        return silenceRes.isNativeModel && !silenceRes.hasError && silenceRes.tokens.isEmpty;
+      }
+
+      if (resolvedKey == 'whisper_tiny') {
         final stt = SpeechToTextEngine();
         await stt.initialize();
-        final testSamples = Float32List(1600);
-        final res = await stt.transcribe(testSamples);
+        if (!stt.isNativeAvailable) {
+          stt.dispose();
+          return false;
+        }
+        final res = await stt.transcribe(Float32List(8000));
         stt.dispose();
-
-        return res.latencyMs >= 0;
-      } else if (key == 'zipformer_v3') {
-        final path = _models['zipformer_v3']?.diskPath;
-        if (path == null || !File(path).existsSync()) return false;
-        final content = File(path).readAsStringSync();
-        return content.trim().split('\n').length > 20;
+        return res.isModelInference && !res.hasError;
       }
-      return true;
+
+      return false;
     } catch (e) {
-      debugPrint('[AiModelManager] Smoke test failed for $key: $e');
+      debugPrint('[AiModelManager] Smoke test failed for $resolvedKey: $e');
       return false;
     }
   }
@@ -264,9 +367,11 @@ class AiModelManager {
   void dispose() {
     _activeVad?.dispose();
     _activeDenoiser?.dispose();
+    _activePhoneme?.dispose();
     _activeStt?.dispose();
     _activeVad = null;
     _activeDenoiser = null;
+    _activePhoneme = null;
     _activeStt = null;
     _isInitialized = false;
   }

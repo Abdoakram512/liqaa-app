@@ -46,6 +46,7 @@ dependencies:
   share_plus: ^12.0.2
   sherpa_onnx: ^2.0.3
   rive: 0.14.11
+  ffi: ^2.2.0
 
 dependency_overrides:
   permission_handler_android: 13.0.1
@@ -101,8 +102,10 @@ flutter:
     - assets/images/illustrations/
     - assets/translations/
     - assets/ai_models/silero/
+    - assets/ai_models/gtcrn/
     - assets/ai_models/rnnoise/
     - assets/ai_models/whisper_tiny/
+    - assets/ai_models/wav2vec2_espeak/
     - assets/ai_models/zipformer_v3/
     - assets/ai_models/zipformer_v2/
     - assets/pronunciation/

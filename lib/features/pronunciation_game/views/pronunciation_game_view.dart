@@ -64,8 +64,12 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
 
                           SizedBox(height: 16.h),
 
-                          // Assessment Feedback Banner
-                          if (assessment != null)
+                          // Error Banner or Assessment Feedback Banner
+                          if (state.status == GameStatus.error &&
+                              state.errorMessage != null &&
+                              assessment == null)
+                            _buildSystemErrorBanner(state.errorMessage!)
+                          else if (assessment != null)
                             _buildAssessmentBanner(
                               assessment,
                               passed:
@@ -314,60 +318,125 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
     );
   }
 
+  Widget _buildSystemErrorBanner(String message) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusM),
+        border: Border.all(color: Colors.red.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded, color: Colors.red.shade700, size: 28),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'تعذّر التحليل الصوتي',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade900,
+                  ),
+                ),
+                Text(
+                  message,
+                  style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade800),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAssessmentBanner(
     PronunciationAssessment assessment, {
     required bool passed,
   }) {
-    final hasScore = !const {
-      AssessmentErrorType.noSpeech,
-      AssessmentErrorType.poorAudioQuality,
-      AssessmentErrorType.uncertain,
-      AssessmentErrorType.modelUnavailable,
-      AssessmentErrorType.unrecognized,
-    }.contains(assessment.errorType);
+    final bool isSystemError = assessment.errorType.isSystemFailure;
+    final hasScore = !isSystemError &&
+        !const {
+          AssessmentErrorType.noSpeech,
+          AssessmentErrorType.poorAudioQuality,
+          AssessmentErrorType.uncertain,
+          AssessmentErrorType.unrecognized,
+        }.contains(assessment.errorType);
+
+    final Color bgColor = isSystemError
+        ? Colors.red.shade50
+        : (passed ? Colors.green.shade50 : Colors.amber.shade50);
+    final Color borderColor = isSystemError
+        ? Colors.red.shade400
+        : (passed ? Colors.green.shade400 : Colors.amber.shade400);
+    final Color iconColor = isSystemError
+        ? Colors.red.shade700
+        : (passed ? Colors.green.shade700 : Colors.amber.shade800);
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: passed ? Colors.green.shade50 : Colors.amber.shade50,
+        color: bgColor,
         borderRadius: BorderRadius.circular(AppSpacing.radiusM),
-        border: Border.all(
-          color: passed ? Colors.green.shade400 : Colors.amber.shade400,
-        ),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(
-                passed ? Icons.check_circle_rounded : Icons.lightbulb_rounded,
-                color: passed ? Colors.green.shade700 : Colors.amber.shade800,
-                size: 28,
-              ),
-              SizedBox(width: 10.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    passed ? 'نطق ممتاز يا بطل!' : 'محاولة حلوة.. يلا نركز!',
-                    style: AppTextStyles.titleSmall.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: passed
-                          ? Colors.green.shade900
-                          : Colors.amber.shade900,
-                    ),
-                  ),
-                  if (hasScore)
-                    Text(
-                      'درجة الدقة: ${assessment.overallScore}%',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+          Expanded(
+            child: Row(
+              children: [
+                Icon(
+                  isSystemError
+                      ? Icons.error_outline_rounded
+                      : (passed
+                          ? Icons.check_circle_rounded
+                          : Icons.lightbulb_rounded),
+                  color: iconColor,
+                  size: 28,
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isSystemError
+                            ? (assessment.clinicalErrorName ?? 'خطأ في التشغيل')
+                            : (passed
+                                ? 'نطق ممتاز يا بطل!'
+                                : 'محاولة حلوة.. يلا نركز!'),
+                        style: AppTextStyles.titleSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isSystemError
+                              ? Colors.red.shade900
+                              : (passed
+                                  ? Colors.green.shade900
+                                  : Colors.amber.shade900),
+                        ),
                       ),
-                    ),
-                ],
-              ),
-            ],
+                      if (hasScore)
+                        Text(
+                          'درجة الدقة: ${assessment.overallScore}%',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        )
+                      else if (isSystemError && assessment.diagnosticError != null)
+                        Text(
+                          '${assessment.pipelineStageFailed ?? 'Pipeline'}: ${assessment.diagnosticError}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.red.shade800,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           if (hasScore)
             Row(

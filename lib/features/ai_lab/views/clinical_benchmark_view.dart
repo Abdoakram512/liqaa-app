@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/dependency_injection/service_locator.dart';
 import '../../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../../core/ai/models/vocabulary_word.dart';
 import '../../../../core/ai/pronunciation_repository.dart';
@@ -18,7 +19,7 @@ class ClinicalBenchmarkView extends StatefulWidget {
 }
 
 class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
-  final PronunciationRepository _repository = PronunciationRepository();
+  final PronunciationRepository _repository = sl<PronunciationRepository>();
   bool _isInitialized = false;
   bool _isRunning = false;
 

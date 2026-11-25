@@ -166,16 +166,39 @@ class _MicVadViewState extends State<MicVadView> {
               else
                 Column(
                   children: [
-                    _buildMetricRow('وجود صوت بشري (Speech Detected):', audio.speechDetected ? 'نعم (صحيح)' : 'لا (صمت فقط)'),
-                    _buildMetricRow('بداية الكلام (Speech Start):', '${audio.speechStartMs} ms'),
-                    _buildMetricRow('نهاية الكلام (Speech End):', '${audio.speechEndMs} ms'),
-                    _buildMetricRow('مدة المقطع المفيد (Duration):', '${audio.durationMs} ms'),
-                    _buildMetricRow('متوسط الطاقة الصوتية (RMS):', '${audio.averageRms}'),
+                    if (audio.errorMessage != null)
+                      Container(
+                        width: double.infinity,
+                        margin: EdgeInsets.only(bottom: 12.h),
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Text(
+                          'خطأ تحليل الصوت/VAD: ${audio.errorMessage}',
+                          style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade900),
+                        ),
+                      ),
+                    _buildMetricRow('وجود صوت بشري (Silero VAD):', audio.speechDetected ? 'نعم (${audio.vadSegments.length} مقاطع)' : 'لا (صمت فقط)'),
+                    _buildMetricRow('التردد / القنوات / العمق:', '${audio.sampleRate} Hz • ${audio.channels}ch • ${audio.bitsPerSample}-bit'),
+                    _buildMetricRow('عدد العينات / التشبع (Clip):', '${audio.sampleCount} samples (${audio.clippingCount} clipped)'),
+                    _buildMetricRow('بداية ونهاية الكلام:', '${audio.speechStartMs} ms -> ${audio.speechEndMs} ms'),
+                    _buildMetricRow('مدة التسجيل الكلية:', '${audio.durationMs} ms'),
+                    _buildMetricRow('طاقة RMS / قمة السعة Peak:', '${audio.averageRms} / ${audio.peakAmplitude}'),
                     _buildMetricRow('نسبة الإشارة للضوضاء (SNR):', '${audio.snrDb} dB'),
+                    if (audio.vadSegments.isNotEmpty) ...[
+                      SizedBox(height: 8.h),
+                      ...audio.vadSegments.map((seg) => _buildMetricRow(
+                            'مقطع كلام #${seg.index + 1}:',
+                            '${seg.startMs}-${seg.endMs} ms (${seg.sampleCount} smp, RMS ${seg.rms})',
+                          )),
+                    ],
 
                     SizedBox(height: 16.h),
 
-                    // Audio play buttons
+                    // Separate Audio Play Buttons (zero silent fallback!)
                     Row(
                       children: [
                         Expanded(
@@ -185,12 +208,12 @@ class _MicVadViewState extends State<MicVadView> {
                               foregroundColor: AppColors.primaryDark,
                             ),
                             icon: const Icon(Icons.volume_up_rounded, size: 18),
-                            label: const Text('تشغيل الصوت الخام'),
-                            onPressed: () async {
-                              if (audio.rawAudioBytes.isNotEmpty) {
-                                await _audioPlayer.play(BytesSource(audio.rawAudioBytes));
-                              }
-                            },
+                            label: const Text('تشغيل الصوت الأصلي'),
+                            onPressed: audio.rawAudioBytes.isEmpty
+                                ? null
+                                : () async {
+                                    await _audioPlayer.play(BytesSource(audio.rawAudioBytes));
+                                  },
                           ),
                         ),
                         SizedBox(width: 12.w),
@@ -201,13 +224,16 @@ class _MicVadViewState extends State<MicVadView> {
                               foregroundColor: Colors.teal.shade800,
                             ),
                             icon: const Icon(Icons.content_cut_rounded, size: 18),
-                            label: const Text('تشغيل المقتطع (Trimmed)'),
-                            onPressed: () async {
-                              final trimmed = audio.trimmedAudioBytes ?? audio.rawAudioBytes;
-                              if (trimmed.isNotEmpty) {
-                                await _audioPlayer.play(BytesSource(trimmed));
-                              }
-                            },
+                            label: Text(
+                              audio.trimmedAudioBytes != null
+                                  ? 'تشغيل المقتطع (WAV)'
+                                  : 'لا يوجد مقطع صوتي',
+                            ),
+                            onPressed: audio.trimmedAudioBytes == null || audio.trimmedAudioBytes!.isEmpty
+                                ? null
+                                : () async {
+                                    await _audioPlayer.play(BytesSource(audio.trimmedAudioBytes!));
+                                  },
                           ),
                         ),
                       ],

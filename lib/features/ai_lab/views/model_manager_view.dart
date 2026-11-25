@@ -130,8 +130,25 @@ class ModelManagerView extends StatelessWidget {
                             _buildInfoPill('الحجم: ${model.sizeMb} MB'),
                             _buildInfoPill('التردد: ${model.sampleRate} Hz'),
                             _buildInfoPill('الترخيص: ${model.license}'),
+                            _buildInfoPill('في الذاكرة: ${model.isLoadedInMemory ? "نعم" : "لا"}'),
                           ],
                         ),
+                        if (model.error != null && model.error!.isNotEmpty) ...[
+                          SizedBox(height: 8.h),
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Text(
+                              'خطأ التهيئة: ${model.error}',
+                              style: TextStyle(fontSize: 11.sp, color: Colors.red.shade900),
+                            ),
+                          ),
+                        ],
                         SizedBox(height: 12.h),
                         Wrap(
                           spacing: 8.w,
@@ -160,12 +177,16 @@ class ModelManagerView extends StatelessWidget {
                               icon: const Icon(Icons.verified_rounded, size: 16),
                               label: const Text('فحص Smoke Test'),
                               onPressed: () async {
-                                await context.read<AiLabCubit>().smokeTestModel(model.key);
+                                final passed = await context.read<AiLabCubit>().smokeTestModel(model.key);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('اجتاز ${model.name} اختبار الفحص بنجاح!'),
-                                      backgroundColor: Colors.green.shade800,
+                                      content: Text(
+                                        passed
+                                            ? 'اجتاز ${model.name} اختبار الاستدلال الحقيقي بنجاح!'
+                                            : 'فشل ${model.name} في اختبار Smoke Test!',
+                                      ),
+                                      backgroundColor: passed ? Colors.green.shade800 : Colors.red.shade800,
                                     ),
                                   );
                                 }

@@ -146,7 +146,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     }
   }
 
-  /// Stops recording and runs on-device evaluation
+  /// Stops recording and runs real on-device evaluation with honest error differentiation
   Future<void> stopListeningAndEvaluate() async {
     if (_closing || !state.isListening) return;
     emit(state.copyWith(isListening: false, status: GameStatus.evaluating));
@@ -156,11 +156,25 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
       if (_closing) return;
       final word = state.currentWord;
 
-      if (word == null || rawBytes.isEmpty) {
+      if (word == null) {
         emit(
           state.copyWith(
-            status: GameStatus.readyToSpeak,
-            yasserMessage: 'مش سامع صوتك يا بطل! يلا نجرب تاني.',
+            status: GameStatus.error,
+            clearAssessment: true,
+            errorMessage: 'لم يتم تحديد كلمة للتدريب.',
+            yasserPose: 'thinking',
+          ),
+        );
+        return;
+      }
+
+      if (rawBytes.isEmpty) {
+        emit(
+          state.copyWith(
+            status: GameStatus.error,
+            clearAssessment: true,
+            errorMessage: _repository.recorder.lastError ?? 'لم يتم تسجيل بيانات صوتية.',
+            yasserMessage: 'تعذّر تسجيل الصوت من الميكروفون.. تأكد من الصلاحية وجرب تاني.',
             yasserPose: 'thinking',
           ),
         );
@@ -174,7 +188,17 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
       );
 
       if (_closing) return;
-      if (assessment.passed &&
+      if (assessment.errorType.isSystemFailure) {
+        emit(
+          state.copyWith(
+            status: GameStatus.error,
+            lastAssessment: assessment,
+            errorMessage: assessment.diagnosticError ?? assessment.clinicalErrorName,
+            yasserMessage: assessment.yasserFeedbackMessage,
+            yasserPose: 'thinking',
+          ),
+        );
+      } else if (assessment.passed &&
           assessment.errorType == AssessmentErrorType.correct) {
         final newStars = state.totalStarsEarned + assessment.stars;
         final newMastered = state.wordsMasteredCount + 1;
@@ -205,8 +229,10 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
       if (_closing) return;
       emit(
         state.copyWith(
-          status: GameStatus.readyToSpeak,
-          yasserMessage: 'حصل خطأ بسيط.. يلا ندوس على المايك ونجرب تاني!',
+          status: GameStatus.error,
+          clearAssessment: true,
+          errorMessage: e.toString(),
+          yasserMessage: 'تعذّر تسجيل أو تحليل الصوت: $e',
           yasserPose: 'thinking',
         ),
       );
