@@ -1,0 +1,8 @@
+name: yasser-phase1-source
+logs:
+  file: build/rive.log
+  problems: build/problems.log
+main: "Yasser - Main Character"
+push:
+  projectId: 1752778
+  fileId: 2745783
