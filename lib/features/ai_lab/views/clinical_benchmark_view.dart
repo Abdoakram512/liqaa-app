@@ -242,6 +242,8 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                       backgroundColor: isSelected ? AppColors.primary : Colors.grey.shade200,
                       foregroundColor: isSelected ? Colors.white : AppColors.textPrimary,
                       elevation: 0,
+                      minimumSize: Size(0, 36.h),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                     ),
                     onPressed: _isRunning ? null : () => _runBenchmarkCase(idx),
                     child: _isRunning && isSelected

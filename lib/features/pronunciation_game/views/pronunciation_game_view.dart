@@ -396,6 +396,10 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: Size(0, 40.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            ),
             icon: const Icon(Icons.arrow_back_rounded, size: 18),
             label: const Text('الكلمة السابقة'),
             onPressed: () => context.read<PronunciationGameCubit>().previousWord(),
@@ -411,6 +415,8 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
+              minimumSize: Size(0, 40.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             ),
             label: const Text('الكلمة التالية'),
             icon: const Icon(Icons.arrow_forward_rounded, size: 18),

@@ -110,6 +110,9 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         onPressed: () => context.push(AppRoutes.game),
                         child: const Text('ابدأ اللعبة'),

@@ -133,13 +133,17 @@ class ModelManagerView extends StatelessWidget {
                           ],
                         ),
                         SizedBox(height: 12.h),
-                        Row(
+                        Wrap(
+                          spacing: 8.w,
+                          runSpacing: 8.h,
                           children: [
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: model.isLoadedInMemory ? Colors.red.shade50 : AppColors.primaryLight,
                                 foregroundColor: model.isLoadedInMemory ? Colors.red.shade800 : AppColors.primaryDark,
                                 elevation: 0,
+                                minimumSize: Size(0, 36.h),
+                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                               ),
                               icon: Icon(
                                 model.isLoadedInMemory ? Icons.eject_rounded : Icons.play_arrow_rounded,
@@ -148,8 +152,11 @@ class ModelManagerView extends StatelessWidget {
                               label: Text(model.isLoadedInMemory ? 'تفريغ من RAM' : 'تحميل إلى RAM'),
                               onPressed: () => context.read<AiLabCubit>().toggleModelMemory(model.key),
                             ),
-                            SizedBox(width: 8.w),
                             OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: Size(0, 36.h),
+                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                              ),
                               icon: const Icon(Icons.verified_rounded, size: 16),
                               label: const Text('فحص Smoke Test'),
                               onPressed: () async {

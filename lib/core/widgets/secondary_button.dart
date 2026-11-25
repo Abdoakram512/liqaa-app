@@ -23,7 +23,7 @@ class SecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width,
+      width: width ?? double.infinity,
       height: height ?? AppSpacing.buttonHeight.h,
       child: OutlinedButton(
         onPressed: onPressed,

@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liqaa_app/core/ai/models/ai_model_info.dart';
 import 'package:liqaa_app/core/ai/models/vocabulary_word.dart';
+import 'package:liqaa_app/core/theme/app_theme.dart';
 import 'package:liqaa_app/features/ai_lab/cubits/ai_lab_cubit.dart';
 import 'package:liqaa_app/features/ai_lab/cubits/ai_lab_state.dart';
 import 'package:liqaa_app/features/ai_lab/views/ai_lab_hub_view.dart';
@@ -60,6 +61,7 @@ void main() {
       ScreenUtilInit(
         designSize: const Size(390, 844),
         builder: (context, child) => MaterialApp(
+          theme: AppTheme.lightTheme,
           home: BlocProvider<AiLabCubit>.value(
             value: mockCubit,
             child: const AiLabHubView(),

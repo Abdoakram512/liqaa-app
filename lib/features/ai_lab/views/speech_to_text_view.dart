@@ -44,14 +44,17 @@ class SpeechToTextView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 12.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      spacing: 12.w,
+                      runSpacing: 8.h,
+                      alignment: WrapAlignment.center,
                       children: [
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: state.isRecording ? Colors.red : AppColors.primary,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                            minimumSize: Size(0, 44.h),
                           ),
                           icon: Icon(state.isRecording ? Icons.stop_rounded : Icons.mic_rounded),
                           label: Text(state.isRecording ? 'إيقاف التسجيل' : 'بدء التسجيل'),
@@ -63,8 +66,11 @@ class SpeechToTextView extends StatelessWidget {
                             }
                           },
                         ),
-                        SizedBox(width: 12.w),
                         OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                            minimumSize: Size(0, 44.h),
+                          ),
                           icon: const Icon(Icons.transcribe_rounded, size: 18),
                           label: const Text('تشغيل STT'),
                           onPressed: () {
