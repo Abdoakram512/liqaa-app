@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/animation/yasser/yasser_animation_state.dart';
+import '../../../core/animation/yasser/yasser_viseme.dart';
 import '../../../core/widgets/yasser_character.dart';
 
 class YasserSpeechFeedbackCard extends StatelessWidget {
@@ -13,6 +14,7 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
   final String poseString;
   final bool isListening;
   final bool isPlayingAudioPrompt;
+  final YasserViseme promptViseme;
 
   const YasserSpeechFeedbackCard({
     super.key,
@@ -20,6 +22,7 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
     required this.poseString,
     this.isListening = false,
     this.isPlayingAudioPrompt = false,
+    this.promptViseme = YasserViseme.rest,
   });
 
   YasserAnimationState get _animation {
@@ -41,6 +44,7 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
         // Yasser Character Avatar
         YasserCharacter(
           state: _animation,
+          viseme: isPlayingAudioPrompt ? promptViseme : null,
           width: 98.w,
           height: 140.h,
           enableTapReaction: false,

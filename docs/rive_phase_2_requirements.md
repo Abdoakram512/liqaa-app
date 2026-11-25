@@ -12,7 +12,7 @@ This document serves as the formal engineering contract for the Rive animation t
 
 Flutter drives procedural motion on the original Rive rig. The startup scenes now use the live character for the greeting, puzzle and celebration. The authentication views pass a normalized caret position for non-password fields. Password visibility drives a one-eye peek while the other eye stays covered. The pronunciation game drives the listening pose and mouth motion from its actual microphone and prompt-playback states.
 
-Flutter implements ambient motion, blinking, gaze, thinking, listening and celebration using exported rig components. The mouth opens and closes during playback. Phoneme-synchronized Arabic visemes and a separate editor-authored Phase 2 export remain open, along with Android frame-rate and visual verification.
+Flutter implements ambient motion, blinking, gaze, thinking, listening and celebration using exported rig components. The pronunciation pilot uses position-based mouth cues for two bundled words (Samaka and Koora). The WAVs were generated locally with the Windows Egyptian Arabic Hoda voice for the pilot. Cue times are approximate annotations for these clips, and the poses are transforms of the existing mouth bone. The game uses stable dictionary IDs for these clips. A separate editor-authored Phase 2 export and visual and frame-rate verification on Android remain open.
 
 ## 3. Editor authoring targets
 

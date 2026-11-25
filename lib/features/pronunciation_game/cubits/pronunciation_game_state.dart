@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../core/animation/yasser/yasser_viseme.dart';
 import '../../../core/ai/models/vocabulary_word.dart';
 import '../../../core/ai/models/pronunciation_assessment.dart';
 
@@ -10,7 +11,7 @@ enum GameStatus {
   evaluating,
   successCelebration,
   supportiveHint,
-  error
+  error,
 }
 
 class PronunciationGameState extends Equatable {
@@ -27,6 +28,7 @@ class PronunciationGameState extends Equatable {
   final String yasserPose; // 'celebrating', 'thinking', 'pointing', 'waving'
   final String? errorMessage;
   final bool isPlayingAudioPrompt;
+  final YasserViseme promptViseme;
 
   const PronunciationGameState({
     this.status = GameStatus.initial,
@@ -42,6 +44,7 @@ class PronunciationGameState extends Equatable {
     this.yasserPose = 'waving',
     this.errorMessage,
     this.isPlayingAudioPrompt = false,
+    this.promptViseme = YasserViseme.rest,
   });
 
   PronunciationGameState copyWith({
@@ -58,6 +61,8 @@ class PronunciationGameState extends Equatable {
     String? yasserPose,
     String? errorMessage,
     bool? isPlayingAudioPrompt,
+    YasserViseme? promptViseme,
+    bool clearAssessment = false,
   }) {
     return PronunciationGameState(
       status: status ?? this.status,
@@ -66,13 +71,16 @@ class PronunciationGameState extends Equatable {
       currentWord: currentWord ?? this.currentWord,
       isListening: isListening ?? this.isListening,
       liveAmplitude: liveAmplitude ?? this.liveAmplitude,
-      lastAssessment: lastAssessment ?? this.lastAssessment,
+      lastAssessment: clearAssessment
+          ? null
+          : lastAssessment ?? this.lastAssessment,
       totalStarsEarned: totalStarsEarned ?? this.totalStarsEarned,
       wordsMasteredCount: wordsMasteredCount ?? this.wordsMasteredCount,
       yasserMessage: yasserMessage ?? this.yasserMessage,
       yasserPose: yasserPose ?? this.yasserPose,
       errorMessage: errorMessage ?? this.errorMessage,
       isPlayingAudioPrompt: isPlayingAudioPrompt ?? this.isPlayingAudioPrompt,
+      promptViseme: promptViseme ?? this.promptViseme,
     );
   }
 
@@ -90,5 +98,7 @@ class PronunciationGameState extends Equatable {
     yasserMessage,
     yasserPose,
     isPlayingAudioPrompt,
+    promptViseme,
+    errorMessage,
   ];
 }

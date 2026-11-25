@@ -4,6 +4,7 @@ import 'yasser_animation_config.dart';
 import 'yasser_animation_mapper.dart';
 import 'yasser_animation_state.dart';
 import 'yasser_rig_motion.dart';
+import 'yasser_viseme.dart';
 
 /// Drives the Phase 1 rig and its authored wave on the same artboard.
 final class YasserRiveController extends rive.RiveWidgetController {
@@ -14,6 +15,14 @@ final class YasserRiveController extends rive.RiveWidgetController {
   late final rive.Animation? _wave;
   bool _waving = false;
   bool reducedMotion = false;
+  YasserViseme? _viseme;
+
+  set viseme(YasserViseme? value) {
+    if (_viseme == value) return;
+    _viseme = value;
+    scheduleRepaint();
+  }
+
   late final YasserRigMotion _motion;
   final double _breathingPeriod;
   YasserStateMapping _mapping = YasserAnimationMapper.map(
@@ -94,6 +103,7 @@ final class YasserRiveController extends rive.RiveWidgetController {
         elapsedSeconds,
         reducedMotion: reducedMotion,
         breathingPeriod: _breathingPeriod,
+        viseme: _viseme,
       );
       // Flush bone edits without applying the state machine again.
       // ignore: invalid_use_of_internal_member

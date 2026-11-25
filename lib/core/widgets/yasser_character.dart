@@ -6,6 +6,7 @@ import '../animation/yasser/yasser_animation_mapper.dart';
 import '../animation/yasser/yasser_animation_state.dart';
 import '../animation/yasser/yasser_controller.dart';
 import '../animation/yasser/yasser_rive_controller.dart';
+import '../animation/yasser/yasser_viseme.dart';
 
 /// Flagship unified character widget for Yasser (ياسر).
 ///
@@ -32,6 +33,7 @@ class YasserCharacter extends StatefulWidget {
 
   final YasserController? controller;
   final YasserAnimationState? state;
+  final YasserViseme? viseme;
   final double? width;
   final double? height;
   final Alignment alignment;
@@ -44,6 +46,7 @@ class YasserCharacter extends StatefulWidget {
     super.key,
     this.controller,
     this.state,
+    this.viseme,
     this.width,
     this.height,
     this.alignment = Alignment.center,
@@ -115,7 +118,8 @@ class _YasserCharacterState extends State<YasserCharacter>
       if (!mounted) return;
 
       final controller = YasserRiveController(file, _controller.config)
-        ..reducedMotion = _reducedMotion;
+        ..reducedMotion = _reducedMotion
+        ..viseme = widget.viseme;
       _riveWidgetController = controller;
       _controller.attachWidgetController(controller);
       _breathingController.stop();
@@ -151,6 +155,7 @@ class _YasserCharacterState extends State<YasserCharacter>
   @override
   void didUpdateWidget(covariant YasserCharacter oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _riveWidgetController?.viseme = widget.viseme;
     if (widget.state != oldWidget.state) {
       _controller.returnToIdle();
       if (widget.state != null) {

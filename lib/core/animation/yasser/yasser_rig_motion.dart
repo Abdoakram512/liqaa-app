@@ -5,6 +5,7 @@ import 'package:rive/rive.dart' as rive;
 
 import 'yasser_animation_mapper.dart';
 import 'yasser_animation_state.dart';
+import 'yasser_viseme.dart';
 
 /// Applies small procedural poses to the exported Phase 1 bones after Rive
 /// advances its authored animation. Every adjustment is restored before the
@@ -46,6 +47,7 @@ final class YasserRigMotion {
     double elapsed, {
     required bool reducedMotion,
     required double breathingPeriod,
+    YasserViseme? viseme,
   }) {
     final state = mapping.semanticState;
     if (_previousState != state) {
@@ -95,6 +97,7 @@ final class YasserRigMotion {
     var lift = 0.0;
     var brow = _gaze.dy * 1.2;
     var mouth = 1.0;
+    var mouthWidth = 1.0;
     switch (state) {
       case YasserAnimationState.thinking:
         tilt -= .07;
@@ -110,9 +113,14 @@ final class YasserRigMotion {
         tilt += .055;
         brow += 4;
       case YasserAnimationState.talking:
-        mouth += reducedMotion
-            ? .12
-            : .21 * (1 + math.sin(_elapsedInState * 2 * math.pi * 4));
+        if (viseme != null) {
+          mouth = viseme.height;
+          mouthWidth = viseme.width;
+        } else {
+          mouth += reducedMotion
+              ? .12
+              : .21 * (1 + math.sin(_elapsedInState * 2 * math.pi * 4));
+        }
       case YasserAnimationState.happy:
         brow += 4;
         mouth += .18;
@@ -138,10 +146,12 @@ final class YasserRigMotion {
         _stretch('P1_Neck_Head_Face_Eye$side', y: .12);
       }
     }
-    _stretch('P1_Neck_Head_Face_Mouth', y: mouth);
+    _stretch('P1_Neck_Head_Face_Mouth', x: mouthWidth, y: mouth);
     return (!reducedMotion && breathingPeriod > 0) ||
         _gaze != gazeTarget ||
-        (!reducedMotion && state == YasserAnimationState.talking) ||
+        (!reducedMotion &&
+            state == YasserAnimationState.talking &&
+            viseme == null) ||
         (!reducedMotion &&
             state == YasserAnimationState.thinking &&
             _elapsedInState < .3) ||

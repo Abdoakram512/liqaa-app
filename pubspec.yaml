@@ -107,4 +107,5 @@ flutter:
     - assets/ai_models/zipformer_v2/
     - assets/pronunciation/
     - assets/audio_samples/
+    - assets/pronunciation/prompts/
     - assets/rive/

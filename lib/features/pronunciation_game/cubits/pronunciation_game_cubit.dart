@@ -3,22 +3,51 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../core/ai/pronunciation_repository.dart';
+import '../../../core/animation/yasser/yasser_viseme.dart';
+import '../models/yasser_prompt.dart';
 import 'pronunciation_game_state.dart';
 
 class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   final PronunciationRepository _repository;
   final AudioPlayer _audioPlayer;
-  StreamSubscription<double>? _amplitudeSubscription;
+  late final StreamSubscription<double> _amplitudeSubscription;
+  late final StreamSubscription<Duration> _positionSubscription;
+  late final StreamSubscription<PlayerState> _playbackSubscription;
+  YasserPrompt? _prompt;
+  Future<void>? _startingPrompt;
+  bool _startingRecording = false;
+  bool _closing = false;
 
-  PronunciationGameCubit(
-    this._repository, {
-    AudioPlayer? audioPlayer,
-  })  : _audioPlayer = audioPlayer ?? AudioPlayer(),
-        super(const PronunciationGameState()) {
+  bool get _canInteract =>
+      !_closing &&
+      !_startingRecording &&
+      _prompt == null &&
+      !state.isListening &&
+      state.status != GameStatus.evaluating;
+
+  PronunciationGameCubit(this._repository, {AudioPlayer? audioPlayer})
+    : _audioPlayer = audioPlayer ?? AudioPlayer(),
+      super(const PronunciationGameState()) {
     _amplitudeSubscription = _repository.recorder.amplitudeStream.listen((amp) {
-      if (state.isListening) {
+      if (!_closing && state.isListening) {
         emit(state.copyWith(liveAmplitude: amp));
+      }
+    });
+    _positionSubscription = _audioPlayer.onPositionChanged.listen((position) {
+      if (_closing || !state.isPlayingAudioPrompt) return;
+      final pose = _prompt?.poseAt(position) ?? YasserViseme.rest;
+      if (pose != state.promptViseme) emit(state.copyWith(promptViseme: pose));
+    });
+    _playbackSubscription = _audioPlayer.onPlayerStateChanged.listen((
+      playback,
+    ) {
+      if (_closing || _prompt == null) return;
+      if (playback == PlayerState.playing) {
+        emit(state.copyWith(isPlayingAudioPrompt: true));
+      } else if (state.isPlayingAudioPrompt) {
+        _clearPrompt();
       }
     });
   }
@@ -28,37 +57,45 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     emit(state.copyWith(status: GameStatus.loading));
     try {
       await _repository.initialize();
+      if (_closing) return;
       final words = _repository.vocabulary;
       final currentWord = words.isNotEmpty ? words.first : null;
 
-      emit(state.copyWith(
-        status: GameStatus.readyToSpeak,
-        words: words,
-        currentWordIndex: 0,
-        currentWord: currentWord,
-        yasserMessage: 'أهلاً بيك يا بطل! يلا ندوس على المايك وننطق سوا!',
-        yasserPose: 'waving',
-      ));
+      emit(
+        state.copyWith(
+          status: GameStatus.readyToSpeak,
+          words: words,
+          currentWordIndex: 0,
+          currentWord: currentWord,
+          yasserMessage: 'أهلاً بيك يا بطل! يلا ندوس على المايك وننطق سوا!',
+          yasserPose: 'waving',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: GameStatus.error,
-        errorMessage: 'فشل تحميل الكلمات: $e',
-      ));
+      if (_closing) return;
+      emit(
+        state.copyWith(
+          status: GameStatus.error,
+          errorMessage: 'فشل تحميل الكلمات: $e',
+        ),
+      );
     }
   }
 
   /// Selects a specific word card by index
   void selectWord(int index) {
-    if (index < 0 || index >= state.words.length) return;
+    if (!_canInteract || index < 0 || index >= state.words.length) return;
     final word = state.words[index];
-    emit(state.copyWith(
-      currentWordIndex: index,
-      currentWord: word,
-      status: GameStatus.readyToSpeak,
-      lastAssessment: null,
-      yasserMessage: 'يلا ننطق كلمة "${word.wordArabic}" مع ياسر!',
-      yasserPose: 'waving',
-    ));
+    emit(
+      state.copyWith(
+        currentWordIndex: index,
+        currentWord: word,
+        status: GameStatus.readyToSpeak,
+        clearAssessment: true,
+        yasserMessage: 'يلا ننطق كلمة "${word.wordArabic}" مع ياسر!',
+        yasserPose: 'waving',
+      ),
+    );
   }
 
   /// Advances to next word in dictionary
@@ -71,45 +108,62 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   /// Goes to previous word in dictionary
   void previousWord() {
     if (state.words.isEmpty) return;
-    final prevIndex = (state.currentWordIndex - 1 + state.words.length) % state.words.length;
+    final prevIndex =
+        (state.currentWordIndex - 1 + state.words.length) % state.words.length;
     selectWord(prevIndex);
   }
 
   /// Starts child recording
   Future<void> startListening() async {
-    if (state.isListening) return;
+    if (!_canInteract || state.currentWord == null) return;
+    _startingRecording = true;
     try {
       await _repository.recorder.startRecording();
-      emit(state.copyWith(
-        isListening: true,
-        status: GameStatus.listening,
-        yasserMessage: 'ياسر سامعك.. اتكلم يا بطل!',
-        yasserPose: 'thinking',
-      ));
+      if (_closing) {
+        await _repository.recorder.stopRecording();
+        return;
+      }
+      emit(
+        state.copyWith(
+          isListening: true,
+          clearAssessment: true,
+          status: GameStatus.listening,
+          yasserMessage: 'ياسر سامعك.. اتكلم يا بطل!',
+          yasserPose: 'thinking',
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isListening: false,
-        status: GameStatus.error,
-        errorMessage: 'فشل فتح الميكروفون: $e',
-      ));
+      if (_closing) return;
+      emit(
+        state.copyWith(
+          isListening: false,
+          status: GameStatus.error,
+          errorMessage: 'فشل فتح الميكروفون: $e',
+        ),
+      );
+    } finally {
+      _startingRecording = false;
     }
   }
 
   /// Stops recording and runs on-device evaluation
   Future<void> stopListeningAndEvaluate() async {
-    if (!state.isListening) return;
+    if (_closing || !state.isListening) return;
     emit(state.copyWith(isListening: false, status: GameStatus.evaluating));
 
     try {
       final Uint8List rawBytes = await _repository.recorder.stopRecording();
+      if (_closing) return;
       final word = state.currentWord;
 
       if (word == null || rawBytes.isEmpty) {
-        emit(state.copyWith(
-          status: GameStatus.readyToSpeak,
-          yasserMessage: 'مش سامع صوتك يا بطل! يلا نجرب تاني.',
-          yasserPose: 'thinking',
-        ));
+        emit(
+          state.copyWith(
+            status: GameStatus.readyToSpeak,
+            yasserMessage: 'مش سامع صوتك يا بطل! يلا نجرب تاني.',
+            yasserPose: 'thinking',
+          ),
+        );
         return;
       }
 
@@ -119,56 +173,98 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         targetWord: word,
       );
 
-      if (assessment.passed) {
+      if (_closing) return;
+      if (assessment.passed &&
+          assessment.errorType == AssessmentErrorType.correct) {
         final newStars = state.totalStarsEarned + assessment.stars;
         final newMastered = state.wordsMasteredCount + 1;
 
-        emit(state.copyWith(
-          status: GameStatus.successCelebration,
-          lastAssessment: assessment,
-          totalStarsEarned: newStars,
-          wordsMasteredCount: newMastered,
-          yasserMessage: assessment.yasserFeedbackMessage,
-          yasserPose: assessment.yasserPose,
-        ));
+        emit(
+          state.copyWith(
+            status: GameStatus.successCelebration,
+            lastAssessment: assessment,
+            totalStarsEarned: newStars,
+            wordsMasteredCount: newMastered,
+            yasserMessage: assessment.yasserFeedbackMessage,
+            yasserPose: assessment.yasserPose,
+          ),
+        );
       } else {
-        emit(state.copyWith(
-          status: GameStatus.supportiveHint,
-          lastAssessment: assessment,
-          yasserMessage: assessment.yasserFeedbackMessage,
-          yasserPose: assessment.yasserPose,
-        ));
+        emit(
+          state.copyWith(
+            status: GameStatus.supportiveHint,
+            lastAssessment: assessment,
+            yasserMessage: assessment.yasserFeedbackMessage,
+            yasserPose: assessment.yasserPose == 'celebrating'
+                ? 'thinking'
+                : assessment.yasserPose,
+          ),
+        );
       }
     } catch (e) {
-      emit(state.copyWith(
-        status: GameStatus.readyToSpeak,
-        yasserMessage: 'حصل خطأ بسيط.. يلا ندوس على المايك ونجرب تاني!',
-        yasserPose: 'thinking',
-      ));
+      if (_closing) return;
+      emit(
+        state.copyWith(
+          status: GameStatus.readyToSpeak,
+          yasserMessage: 'حصل خطأ بسيط.. يلا ندوس على المايك ونجرب تاني!',
+          yasserPose: 'thinking',
+        ),
+      );
     }
   }
 
-  /// Plays pronunciation audio prompt from Yasser
   Future<void> playYasserAudioPrompt() async {
-    emit(state.copyWith(isPlayingAudioPrompt: true));
+    if (!_canInteract) return;
+    final prompt = YasserPrompt.byWordId[state.currentWord?.id];
+    if (prompt == null) return;
+
+    _prompt = prompt;
     try {
-      final word = state.currentWord;
-      if (word != null) {
-        final fixturePath = 'audio_samples/correct_${word.wordTransliteration.toLowerCase()}.wav';
-        await _audioPlayer.stop();
-        await _audioPlayer.play(AssetSource(fixturePath));
+      final starting = _audioPlayer.play(AssetSource(prompt.assetPath));
+      _startingPrompt = starting;
+      await starting;
+      if (!_closing && _audioPlayer.state != PlayerState.playing) {
+        _clearPrompt();
       }
-    } catch (e) {
-      // Audio playback fallback for test environment or missing audio driver
+    } catch (_) {
+      if (_closing) return;
+      _clearPrompt();
+      emit(
+        state.copyWith(
+          yasserMessage: 'مش قادر أشغّل المثال دلوقتي. جرّب تاني.',
+        ),
+      );
     } finally {
-      emit(state.copyWith(isPlayingAudioPrompt: false));
+      _startingPrompt = null;
     }
+  }
+
+  void _clearPrompt() {
+    _prompt = null;
+    emit(
+      state.copyWith(
+        isPlayingAudioPrompt: false,
+        promptViseme: YasserViseme.rest,
+      ),
+    );
   }
 
   @override
-  Future<void> close() {
-    _amplitudeSubscription?.cancel();
-    _audioPlayer.dispose();
-    return super.close();
+  Future<void> close() async {
+    _closing = true;
+    await _amplitudeSubscription.cancel();
+    await _positionSubscription.cancel();
+    await _playbackSubscription.cancel();
+    try {
+      await _startingPrompt;
+    } catch (_) {
+      // The owning playback call handles startup errors.
+    }
+    try {
+      await _audioPlayer.dispose();
+      if (state.isListening) await _repository.recorder.stopRecording();
+    } finally {
+      await super.close();
+    }
   }
 }

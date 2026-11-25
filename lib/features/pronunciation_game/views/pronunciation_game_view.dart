@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -11,6 +12,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/phonological_background.dart';
 import '../cubits/pronunciation_game_cubit.dart';
 import '../cubits/pronunciation_game_state.dart';
+import '../models/yasser_prompt.dart';
 import '../widgets/phonetic_breakdown_pill.dart';
 import '../widgets/sound_waveform_wave.dart';
 import '../widgets/yasser_speech_feedback_card.dart';
@@ -57,12 +59,18 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                           SizedBox(height: 12.h),
 
                           // Target Word Flashcard
-                          if (word != null) _buildWordCard(context, state, word),
+                          if (word != null)
+                            _buildWordCard(context, state, word),
 
                           SizedBox(height: 16.h),
 
                           // Assessment Feedback Banner
-                          if (assessment != null) _buildAssessmentBanner(assessment),
+                          if (assessment != null)
+                            _buildAssessmentBanner(
+                              assessment,
+                              passed:
+                                  state.status == GameStatus.successCelebration,
+                            ),
 
                           SizedBox(height: 16.h),
 
@@ -72,6 +80,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                             poseString: state.yasserPose,
                             isListening: state.isListening,
                             isPlayingAudioPrompt: state.isPlayingAudioPrompt,
+                            promptViseme: state.promptViseme,
                           ),
 
                           SizedBox(height: 12.h),
@@ -111,7 +120,10 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.arrow_back_ios_rounded,
+              color: AppColors.textPrimary,
+            ),
             onPressed: () => context.pop(),
           ),
           Row(
@@ -126,7 +138,11 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       '${state.totalStarsEarned}',
@@ -151,7 +167,11 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.emoji_events_rounded, color: Colors.green, size: 18),
+                    const Icon(
+                      Icons.emoji_events_rounded,
+                      color: Colors.green,
+                      size: 18,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       '${state.wordsMasteredCount}',
@@ -166,7 +186,10 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.psychology_alt_rounded, color: AppColors.primary),
+            icon: const Icon(
+              Icons.psychology_alt_rounded,
+              color: AppColors.primary,
+            ),
             tooltip: 'مختبر الذكاء الاصطناعي',
             onPressed: () => context.push(AppRoutes.aiLab),
           ),
@@ -246,7 +269,8 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                 final String ar = index < word.expectedArabicPhonemes.length
                     ? word.expectedArabicPhonemes[index]
                     : ph;
-                final bool isTarget = ar == word.targetPhoneme || ph == word.targetPhonemeIpa;
+                final bool isTarget =
+                    ar == word.targetPhoneme || ph == word.targetPhonemeIpa;
 
                 return PhoneticBreakdownPill(
                   letter: ar,
@@ -259,28 +283,48 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
 
           SizedBox(height: 12.h),
 
-          // Listen to Yasser Prompt Button
-          TextButton.icon(
-            style: TextButton.styleFrom(foregroundColor: AppColors.primaryDark),
-            icon: Icon(
-              state.isPlayingAudioPrompt ? Icons.volume_up_rounded : Icons.volume_mute_rounded,
-              size: 20,
+          if (YasserPrompt.byWordId.containsKey(word.id))
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryDark,
+              ),
+              icon: Icon(
+                state.isPlayingAudioPrompt
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_mute_rounded,
+                size: 20,
+              ),
+              label: Text(
+                'اسمع نطق ياسر للكلمة',
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed:
+                  state.isPlayingAudioPrompt ||
+                      state.isListening ||
+                      state.status == GameStatus.evaluating
+                  ? null
+                  : context
+                        .read<PronunciationGameCubit>()
+                        .playYasserAudioPrompt,
             ),
-            label: Text(
-              'اسمع نطق ياسر للكلمة',
-              style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
-            ),
-            onPressed: () {
-              context.read<PronunciationGameCubit>().playYasserAudioPrompt();
-            },
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildAssessmentBanner(dynamic assessment) {
-    final bool passed = assessment.passed;
+  Widget _buildAssessmentBanner(
+    PronunciationAssessment assessment, {
+    required bool passed,
+  }) {
+    final hasScore = !const {
+      AssessmentErrorType.noSpeech,
+      AssessmentErrorType.poorAudioQuality,
+      AssessmentErrorType.uncertain,
+      AssessmentErrorType.modelUnavailable,
+      AssessmentErrorType.unrecognized,
+    }.contains(assessment.errorType);
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -309,28 +353,34 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                     passed ? 'نطق ممتاز يا بطل!' : 'محاولة حلوة.. يلا نركز!',
                     style: AppTextStyles.titleSmall.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: passed ? Colors.green.shade900 : Colors.amber.shade900,
+                      color: passed
+                          ? Colors.green.shade900
+                          : Colors.amber.shade900,
                     ),
                   ),
-                  Text(
-                    'درجة الدقة: ${assessment.overallScore}%',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                  if (hasScore)
+                    Text(
+                      'درجة الدقة: ${assessment.overallScore}%',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ],
           ),
-          Row(
-            children: List.generate(3, (i) {
-              return Icon(
-                i < assessment.stars ? Icons.star_rounded : Icons.star_border_rounded,
-                color: Colors.amber,
-                size: 24,
-              );
-            }),
-          ),
+          if (hasScore)
+            Row(
+              children: List.generate(3, (i) {
+                return Icon(
+                  passed && i < assessment.stars
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  color: Colors.amber,
+                  size: 24,
+                );
+              }),
+            ),
         ],
       ),
     ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
@@ -361,7 +411,8 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (isListening ? Colors.red : AppColors.primary).withOpacity(0.4),
+                  color: (isListening ? Colors.red : AppColors.primary)
+                      .withOpacity(0.4),
                   blurRadius: 20,
                   spreadRadius: 4,
                 ),
@@ -376,7 +427,9 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
         ),
         SizedBox(height: 10.h),
         Text(
-          isListening ? 'دوس هنا لما تخلص كلام' : 'اضغط على المايك وانطق الكلمة',
+          isListening
+              ? 'دوس هنا لما تخلص كلام'
+              : 'اضغط على المايك وانطق الكلمة',
           style: AppTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.bold,
             color: isListening ? Colors.red.shade800 : AppColors.textPrimary,
@@ -386,7 +439,10 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context, PronunciationGameState state) {
+  Widget _buildBottomNavigation(
+    BuildContext context,
+    PronunciationGameState state,
+  ) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
       decoration: const BoxDecoration(
@@ -403,7 +459,8 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
             ),
             icon: const Icon(Icons.arrow_back_rounded, size: 18),
             label: const Text('الكلمة السابقة'),
-            onPressed: () => context.read<PronunciationGameCubit>().previousWord(),
+            onPressed: () =>
+                context.read<PronunciationGameCubit>().previousWord(),
           ),
           Text(
             '${state.currentWordIndex + 1} / ${state.words.length}',
