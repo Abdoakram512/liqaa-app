@@ -7,6 +7,8 @@ enum GameStatus {
   initial,
   loading,
   readyToSpeak,
+  preparingPrompt,
+  preparingRecording,
   listening,
   evaluating,
   successCelebration,
@@ -29,6 +31,16 @@ class PronunciationGameState extends Equatable {
   final String? errorMessage;
   final bool isPlayingAudioPrompt;
   final YasserViseme promptViseme;
+
+  bool get canChooseWord =>
+      words.isNotEmpty &&
+      !isPlayingAudioPrompt &&
+      (status == GameStatus.readyToSpeak ||
+          status == GameStatus.successCelebration ||
+          status == GameStatus.supportiveHint ||
+          status == GameStatus.error);
+
+  bool get canStartAudio => canChooseWord && currentWord != null;
 
   const PronunciationGameState({
     this.status = GameStatus.initial,
@@ -78,7 +90,7 @@ class PronunciationGameState extends Equatable {
       wordsMasteredCount: wordsMasteredCount ?? this.wordsMasteredCount,
       yasserMessage: yasserMessage ?? this.yasserMessage,
       yasserPose: yasserPose ?? this.yasserPose,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage ?? (status == null ? this.errorMessage : null),
       isPlayingAudioPrompt: isPlayingAudioPrompt ?? this.isPlayingAudioPrompt,
       promptViseme: promptViseme ?? this.promptViseme,
     );

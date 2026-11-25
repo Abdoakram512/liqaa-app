@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ai/models/pronunciation_assessment.dart';
+import '../../../core/ai/models/vocabulary_word.dart';
 import '../../../core/routing/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -195,7 +196,9 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
               color: AppColors.primary,
             ),
             tooltip: 'مختبر الذكاء الاصطناعي',
-            onPressed: () => context.push(AppRoutes.aiLab),
+            onPressed: state.canChooseWord
+                ? () => context.push(AppRoutes.aiLab)
+                : null,
           ),
         ],
       ),
@@ -205,7 +208,7 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
   Widget _buildWordCard(
     BuildContext context,
     PronunciationGameState state,
-    dynamic word,
+    VocabularyWord word,
   ) {
     return Container(
       width: double.infinity,
@@ -304,14 +307,11 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed:
-                  state.isPlayingAudioPrompt ||
-                      state.isListening ||
-                      state.status == GameStatus.evaluating
-                  ? null
-                  : context
+              onPressed: state.canStartAudio
+                  ? context
                         .read<PronunciationGameCubit>()
-                        .playYasserAudioPrompt,
+                        .playYasserAudioPrompt
+                  : null,
             ),
         ],
       ),
@@ -457,17 +457,17 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
 
   Widget _buildMicButton(BuildContext context, PronunciationGameState state) {
     final bool isListening = state.isListening;
+    final enabled = isListening || state.canStartAudio;
+    final cubit = context.read<PronunciationGameCubit>();
 
     return Column(
       children: [
         GestureDetector(
-          onTap: () {
-            if (isListening) {
-              context.read<PronunciationGameCubit>().stopListeningAndEvaluate();
-            } else {
-              context.read<PronunciationGameCubit>().startListening();
-            }
-          },
+          onTap: isListening
+              ? cubit.stopListeningAndEvaluate
+              : enabled
+              ? cubit.startListening
+              : null,
           child: Container(
             width: 84.w,
             height: 84.w,
@@ -475,7 +475,9 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
               gradient: LinearGradient(
                 colors: isListening
                     ? [Colors.redAccent, Colors.red.shade700]
-                    : [AppColors.primary, AppColors.primaryDark],
+                    : enabled
+                    ? [AppColors.primary, AppColors.primaryDark]
+                    : [Colors.grey.shade400, Colors.grey.shade600],
               ),
               shape: BoxShape.circle,
               boxShadow: [
@@ -496,9 +498,15 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
         ),
         SizedBox(height: 10.h),
         Text(
-          isListening
-              ? 'دوس هنا لما تخلص كلام'
-              : 'اضغط على المايك وانطق الكلمة',
+          switch (state.status) {
+            GameStatus.preparingPrompt => 'بنجهّز المثال الصوتي',
+            GameStatus.preparingRecording => 'بنجهّز الميكروفون',
+            GameStatus.listening => 'دوس هنا لما تخلص كلام',
+            GameStatus.evaluating => 'بنراجع التسجيل',
+            _ when state.isPlayingAudioPrompt => 'اسمع ياسر وهو بينطق الكلمة',
+            _ when enabled => 'اضغط على المايك وانطق الكلمة',
+            _ => 'الميكروفون غير متاح',
+          },
           style: AppTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.bold,
             color: isListening ? Colors.red.shade800 : AppColors.textPrimary,
@@ -528,11 +536,12 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
             ),
             icon: const Icon(Icons.arrow_back_rounded, size: 18),
             label: const Text('الكلمة السابقة'),
-            onPressed: () =>
-                context.read<PronunciationGameCubit>().previousWord(),
+            onPressed: state.canChooseWord
+                ? context.read<PronunciationGameCubit>().previousWord
+                : null,
           ),
           Text(
-            '${state.currentWordIndex + 1} / ${state.words.length}',
+            '${state.words.isEmpty ? 0 : state.currentWordIndex + 1} / ${state.words.length}',
             style: AppTextStyles.labelLarge.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textSecondary,
@@ -547,7 +556,9 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
             ),
             label: const Text('الكلمة التالية'),
             icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-            onPressed: () => context.read<PronunciationGameCubit>().nextWord(),
+            onPressed: state.canChooseWord
+                ? context.read<PronunciationGameCubit>().nextWord
+                : null,
           ),
         ],
       ),

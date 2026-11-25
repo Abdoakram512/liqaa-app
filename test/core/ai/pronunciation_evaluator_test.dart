@@ -32,6 +32,19 @@ void main() {
     ],
   );
 
+  test('detected speech without decoded phonemes is unrecognized', () {
+    final assessment = evaluator.evaluate(
+      word: testWord,
+      recognizedTokens: const [],
+      speechDetected: true,
+    );
+
+    expect(assessment.errorType, AssessmentErrorType.unrecognized);
+    expect(assessment.alignments, isEmpty);
+    expect(assessment.stars, 0);
+    expect(assessment.passed, isFalse);
+  });
+
   group('PronunciationEvaluator Clinical Diagnostic Tests', () {
     test('Accurate pronunciation evaluates to passed and 3 stars', () {
       final recognized = [

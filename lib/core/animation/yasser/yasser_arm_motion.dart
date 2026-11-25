@@ -39,7 +39,7 @@ final class YasserArmMotion {
       _gesture = state;
       _gestureSeconds = 0;
     }
-    if (wave && !_waveRequested) _waveTime = 0;
+    if (wave && !_waveRequested && _waveWeight == 0) _waveTime = 0;
     _waveRequested = wave;
     _coverRequested = cover;
     _peekRequested = peek;
@@ -71,7 +71,7 @@ final class YasserArmMotion {
 
     if (_waveRequested && !reducedMotion && _waveTime < waveDuration) {
       _waveTime = math.min(waveDuration, _waveTime + elapsed);
-      _waveWeight = 1;
+      _waveWeight = _approach(_waveWeight, 1, elapsed / .23);
     } else {
       _waveWeight = _approach(_waveWeight, 0, elapsed / .23);
     }
@@ -116,15 +116,14 @@ final class YasserArmMotion {
     final bend = 22 * math.sin(math.pi * privacy);
     final thought = _thinking;
     final cheer = celebration;
+    // Blend overlapping gestures so their rotations cannot add up.
+    final leftGesture = _mix(wave * (2.45 + .14 * sway), 2.59, cheer);
+    final leftWrist = _mix(wave * (.22 + .07 * sway), .17, cheer);
+    final leftReach = _mix(wave, 1, cheer);
     _left?.apply(
-      angleOffset: _mix(
-        wave * (2.45 + .14 * sway) + 2.59 * cheer,
-        3.26,
-        privacy,
-      ),
-      radius:
-          _mix(_mix(_left.restRadius, 82, wave + cheer), 90, privacy) - bend,
-      wristOffset: _mix(wave * (.22 + .07 * sway) + .17 * cheer, .05, privacy),
+      angleOffset: _mix(leftGesture, 3.26, privacy),
+      radius: _mix(_mix(_left.restRadius, 82, leftReach), 90, privacy) - bend,
+      wristOffset: _mix(leftWrist, .05, privacy),
     );
     _right?.apply(
       angleOffset: _mix(

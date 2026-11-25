@@ -272,6 +272,7 @@ class PronunciationRepository {
     return evaluator.evaluate(
       word: targetWord,
       recognizedTokens: phonemeResult.tokens,
+      speechDetected: true,
       latencyMs: sw.elapsedMilliseconds,
     );
   }

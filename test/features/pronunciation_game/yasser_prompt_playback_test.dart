@@ -58,6 +58,7 @@ void main() {
     ).thenAnswer((_) => const Stream.empty());
     when(() => recorder.startRecording()).thenAnswer((_) async {});
     when(() => recorder.stopRecording()).thenAnswer((_) async => recording);
+    when(() => recorder.cancelRecording()).thenAnswer((_) async {});
     when(() => repository.recorder).thenReturn(recorder);
     when(() => repository.initialize()).thenAnswer((_) async {});
     when(() => repository.vocabulary).thenReturn([word]);
@@ -162,5 +163,51 @@ void main() {
     expect(cubit.state.status, GameStatus.supportiveHint);
     expect(cubit.state.yasserPose, 'thinking');
     expect(cubit.state.totalStarsEarned, 0);
+  });
+
+  test(
+    'a failed microphone retry clears the prior success immediately',
+    () async {
+      when(
+        () => repository.evaluateAudio(
+          rawAudioBytes: recording,
+          targetWord: word,
+        ),
+      ).thenAnswer(
+        (_) async => assessment(AssessmentErrorType.correct, passed: true),
+      );
+      await cubit.startListening();
+      await cubit.stopListeningAndEvaluate();
+
+      final startup = Completer<void>();
+      when(() => recorder.startRecording()).thenAnswer((_) => startup.future);
+      final retry = cubit.startListening();
+      expect(cubit.state.status, GameStatus.preparingRecording);
+      expect(cubit.state.lastAssessment, isNull);
+      expect(cubit.state.canChooseWord, isFalse);
+      await cubit.playYasserAudioPrompt();
+      verifyNever(() => player.play(any()));
+
+      startup.completeError(StateError('Microphone unavailable'));
+      await retry;
+      expect(cubit.state.status, GameStatus.error);
+      expect(cubit.state.lastAssessment, isNull);
+      expect(cubit.state.totalStarsEarned, 3);
+    },
+  );
+
+  test('success on the same word twice only masters one word', () async {
+    when(
+      () =>
+          repository.evaluateAudio(rawAudioBytes: recording, targetWord: word),
+    ).thenAnswer(
+      (_) async => assessment(AssessmentErrorType.correct, passed: true),
+    );
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await cubit.startListening();
+      await cubit.stopListeningAndEvaluate();
+    }
+    expect(cubit.state.wordsMasteredCount, 1);
+    expect(cubit.state.totalStarsEarned, 6);
   });
 }

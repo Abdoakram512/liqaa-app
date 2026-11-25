@@ -17,15 +17,9 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   late final StreamSubscription<PlayerState> _playbackSubscription;
   YasserPrompt? _prompt;
   Future<void>? _startingPrompt;
-  bool _startingRecording = false;
+  Future<void>? _startingRecording;
+  final _masteredWordIds = <String>{};
   bool _closing = false;
-
-  bool get _canInteract =>
-      !_closing &&
-      !_startingRecording &&
-      _prompt == null &&
-      !state.isListening &&
-      state.status != GameStatus.evaluating;
 
   PronunciationGameCubit(this._repository, {AudioPlayer? audioPlayer})
     : _audioPlayer = audioPlayer ?? AudioPlayer(),
@@ -45,8 +39,14 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     ) {
       if (_closing || _prompt == null) return;
       if (playback == PlayerState.playing) {
-        emit(state.copyWith(isPlayingAudioPrompt: true));
-      } else if (state.isPlayingAudioPrompt) {
+        emit(
+          state.copyWith(
+            status: GameStatus.readyToSpeak,
+            isPlayingAudioPrompt: true,
+          ),
+        );
+      } else if (state.isPlayingAudioPrompt ||
+          playback == PlayerState.completed) {
         _clearPrompt();
       }
     });
@@ -84,7 +84,11 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
 
   /// Selects a specific word card by index
   void selectWord(int index) {
-    if (!_canInteract || index < 0 || index >= state.words.length) return;
+    if (_closing ||
+        !state.canChooseWord ||
+        index < 0 ||
+        index >= state.words.length)
+      return;
     final word = state.words[index];
     emit(
       state.copyWith(
@@ -115,14 +119,21 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
 
   /// Starts child recording
   Future<void> startListening() async {
-    if (!_canInteract || state.currentWord == null) return;
-    _startingRecording = true;
+    if (_closing || !state.canStartAudio) return;
+    emit(
+      state.copyWith(
+        status: GameStatus.preparingRecording,
+        clearAssessment: true,
+        liveAmplitude: 0,
+        yasserMessage: 'ثانية واحدة، بنجهّز الميكروفون.',
+        yasserPose: 'thinking',
+      ),
+    );
     try {
-      await _repository.recorder.startRecording();
-      if (_closing) {
-        await _repository.recorder.stopRecording();
-        return;
-      }
+      final starting = _repository.recorder.startRecording();
+      _startingRecording = starting;
+      await starting;
+      if (_closing) return;
       emit(
         state.copyWith(
           isListening: true,
@@ -138,18 +149,26 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         state.copyWith(
           isListening: false,
           status: GameStatus.error,
+          yasserMessage: 'اتأكد إن إذن الميكروفون مفتوح وجرب تاني.',
           errorMessage: 'فشل فتح الميكروفون: $e',
         ),
       );
     } finally {
-      _startingRecording = false;
+      _startingRecording = null;
     }
   }
 
   /// Stops recording and runs real on-device evaluation with honest error differentiation
   Future<void> stopListeningAndEvaluate() async {
     if (_closing || !state.isListening) return;
-    emit(state.copyWith(isListening: false, status: GameStatus.evaluating));
+    emit(
+      state.copyWith(
+        isListening: false,
+        liveAmplitude: 0,
+        status: GameStatus.evaluating,
+        yasserMessage: 'ثانية واحدة، بنراجع التسجيل.',
+      ),
+    );
 
     try {
       final Uint8List rawBytes = await _repository.recorder.stopRecording();
@@ -173,8 +192,10 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           state.copyWith(
             status: GameStatus.error,
             clearAssessment: true,
-            errorMessage: _repository.recorder.lastError ?? 'لم يتم تسجيل بيانات صوتية.',
-            yasserMessage: 'تعذّر تسجيل الصوت من الميكروفون.. تأكد من الصلاحية وجرب تاني.',
+            errorMessage:
+                _repository.recorder.lastError ?? 'لم يتم تسجيل بيانات صوتية.',
+            yasserMessage:
+                'تعذّر تسجيل الصوت من الميكروفون.. تأكد من الصلاحية وجرب تاني.',
             yasserPose: 'thinking',
           ),
         );
@@ -193,7 +214,8 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           state.copyWith(
             status: GameStatus.error,
             lastAssessment: assessment,
-            errorMessage: assessment.diagnosticError ?? assessment.clinicalErrorName,
+            errorMessage:
+                assessment.diagnosticError ?? assessment.clinicalErrorName,
             yasserMessage: assessment.yasserFeedbackMessage,
             yasserPose: 'thinking',
           ),
@@ -201,14 +223,14 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
       } else if (assessment.passed &&
           assessment.errorType == AssessmentErrorType.correct) {
         final newStars = state.totalStarsEarned + assessment.stars;
-        final newMastered = state.wordsMasteredCount + 1;
+        _masteredWordIds.add(word.id);
 
         emit(
           state.copyWith(
             status: GameStatus.successCelebration,
             lastAssessment: assessment,
             totalStarsEarned: newStars,
-            wordsMasteredCount: newMastered,
+            wordsMasteredCount: _masteredWordIds.length,
             yasserMessage: assessment.yasserFeedbackMessage,
             yasserPose: assessment.yasserPose,
           ),
@@ -240,17 +262,34 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   }
 
   Future<void> playYasserAudioPrompt() async {
-    if (!_canInteract) return;
+    if (_closing || !state.canStartAudio || _startingPrompt != null) return;
     final prompt = YasserPrompt.byWordId[state.currentWord?.id];
     if (prompt == null) return;
 
     _prompt = prompt;
+    emit(
+      state.copyWith(
+        status: GameStatus.preparingPrompt,
+        clearAssessment: true,
+        yasserMessage: 'اسمع الكلمة من ياسر، وبعدها جرّب تقولها.',
+        yasserPose: 'pointing',
+      ),
+    );
     try {
       final starting = _audioPlayer.play(AssetSource(prompt.assetPath));
       _startingPrompt = starting;
       await starting;
-      if (!_closing && _audioPlayer.state != PlayerState.playing) {
-        _clearPrompt();
+      if (!_closing && _prompt != null) {
+        if (_audioPlayer.state == PlayerState.playing) {
+          emit(
+            state.copyWith(
+              status: GameStatus.readyToSpeak,
+              isPlayingAudioPrompt: true,
+            ),
+          );
+        } else {
+          _clearPrompt();
+        }
       }
     } catch (_) {
       if (_closing) return;
@@ -269,8 +308,10 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     _prompt = null;
     emit(
       state.copyWith(
+        status: GameStatus.readyToSpeak,
         isPlayingAudioPrompt: false,
         promptViseme: YasserViseme.rest,
+        yasserMessage: 'دلوقتي دورك. اضغط على الميكروفون وقول الكلمة.',
       ),
     );
   }
@@ -278,19 +319,36 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   @override
   Future<void> close() async {
     _closing = true;
+    final startingRecording = _startingRecording;
+    final startingPrompt = _startingPrompt;
+    final wasListening = state.isListening;
     await _amplitudeSubscription.cancel();
     await _positionSubscription.cancel();
     await _playbackSubscription.cancel();
     try {
-      await _startingPrompt;
+      await startingPrompt;
     } catch (_) {
       // The owning playback call handles startup errors.
     }
+    var shouldCancelRecording = wasListening;
     try {
-      await _audioPlayer.dispose();
-      if (state.isListening) await _repository.recorder.stopRecording();
+      if (startingRecording != null) {
+        try {
+          await startingRecording;
+          shouldCancelRecording = true;
+        } catch (_) {
+          // Startup failed before this cubit acquired the microphone.
+        }
+      }
+      if (shouldCancelRecording) {
+        await _repository.recorder.cancelRecording();
+      }
     } finally {
-      await super.close();
+      try {
+        await _audioPlayer.dispose();
+      } finally {
+        await super.close();
+      }
     }
   }
 }

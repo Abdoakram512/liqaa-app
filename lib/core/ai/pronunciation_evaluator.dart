@@ -23,9 +23,27 @@ class PronunciationEvaluator {
     required VocabularyWord word,
     required List<PhonemeToken> recognizedTokens,
     int latencyMs = 0,
+    bool speechDetected = false,
   }) {
-    // 1. Genuine empty / silent audio -> NoSpeech failure state
+    // An empty decoder result can also follow a valid speech segment.
     if (recognizedTokens.isEmpty) {
+      if (speechDetected) {
+        return PronunciationAssessment(
+          targetWord: word.id,
+          targetWordArabic: word.wordArabic,
+          recognizedTranscript: '',
+          overallScore: 0,
+          stars: 0,
+          errorType: AssessmentErrorType.unrecognized,
+          targetPhoneme: word.targetPhoneme,
+          alignments: const [],
+          recognizedPhonemes: const [],
+          yasserFeedbackMessage: 'سمعت صوتك، بس الكلمة ما كانتش واضحة. جرّب تقولها تاني.',
+          yasserPose: 'thinking',
+          latencyMs: latencyMs,
+          passed: false,
+        );
+      }
       return PronunciationAssessment(
         targetWord: word.id,
         targetWordArabic: word.wordArabic,
