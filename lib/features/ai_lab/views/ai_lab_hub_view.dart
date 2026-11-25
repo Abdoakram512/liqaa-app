@@ -230,13 +230,16 @@ class _AiLabHubViewState extends State<AiLabHubView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'حالة محرك الذكاء الاصطناعي (On-Device)',
-                style: AppTextStyles.titleSmall.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'حالة محرك الذكاء الاصطناعي (On-Device)',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
+              SizedBox(width: 8.w),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
@@ -244,6 +247,7 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.check_circle_rounded, color: Colors.green, size: 14),
                     SizedBox(width: 4.w),

@@ -74,6 +74,6 @@ Future<void> setupServiceLocator() async {
   sl.registerFactory<SplashCubit>(() => SplashCubit(sl()));
   sl.registerFactory<OnboardingCubit>(() => OnboardingCubit(sl()));
   sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
-  sl.registerFactory<AiLabCubit>(() => AiLabCubit(sl()));
+  sl.registerLazySingleton<AiLabCubit>(() => AiLabCubit(sl()));
   sl.registerFactory<PronunciationGameCubit>(() => PronunciationGameCubit(sl()));
 }

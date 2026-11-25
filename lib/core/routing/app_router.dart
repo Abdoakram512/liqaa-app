@@ -151,8 +151,8 @@ abstract final class AppRouter {
       GoRoute(
         path: AppRoutes.aiLab,
         name: 'aiLab',
-        builder: (context, state) => BlocProvider<AiLabCubit>(
-          create: (_) => sl<AiLabCubit>(),
+        builder: (context, state) => BlocProvider.value(
+          value: sl<AiLabCubit>(),
           child: const AiLabHubView(),
         ),
         routes: [
