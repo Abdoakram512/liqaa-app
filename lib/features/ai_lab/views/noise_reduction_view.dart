@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +21,25 @@ class NoiseReductionView extends StatefulWidget {
 
 class _NoiseReductionViewState extends State<NoiseReductionView> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool _startingPlayback = false;
+
+  Future<void> _playWav(Uint8List bytes) async {
+    if (_startingPlayback || bytes.isEmpty) return;
+    _startingPlayback = true;
+    try {
+      await _audioPlayer.stop();
+      if (!mounted) return;
+      await _audioPlayer.play(BytesSource(bytes, mimeType: 'audio/wav'));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذّر تشغيل ملف WAV: $e')),
+      );
+    } finally {
+      _startingPlayback = false;
+    }
+  }
 
   @override
   void dispose() {
@@ -109,7 +130,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                       ),
                       icon: Icon(state.isRecording ? Icons.stop_rounded : Icons.mic_rounded),
                       label: Text(state.isRecording ? 'إيقاف التسجيل والتحليل' : 'بدء تسجيل تجريبي'),
-                      onPressed: () {
+                      onPressed: () async {
+                        await _audioPlayer.stop();
+                        if (!context.mounted) return;
                         if (state.isRecording) {
                           context.read<AiLabCubit>().stopRecordingAndAnalyze();
                         } else {
@@ -189,7 +212,7 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                                   onPressed: audio.rawAudioBytes.isEmpty
                                       ? null
                                       : () async {
-                                          await _audioPlayer.play(BytesSource(audio.rawAudioBytes));
+                                          await _playWav(audio.rawAudioBytes);
                                         },
                                 ),
                               ],
@@ -231,7 +254,7 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                                   onPressed: audio.denoisedAudioBytes == null || audio.denoisedAudioBytes!.isEmpty
                                       ? null
                                       : () async {
-                                          await _audioPlayer.play(BytesSource(audio.denoisedAudioBytes!));
+                                          await _playWav(audio.denoisedAudioBytes!);
                                         },
                                 ),
                               ],
