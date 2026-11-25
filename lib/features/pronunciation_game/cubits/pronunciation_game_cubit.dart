@@ -87,8 +87,9 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     if (_closing ||
         !state.canChooseWord ||
         index < 0 ||
-        index >= state.words.length)
+        index >= state.words.length) {
       return;
+    }
     final word = state.words[index];
     emit(
       state.copyWith(

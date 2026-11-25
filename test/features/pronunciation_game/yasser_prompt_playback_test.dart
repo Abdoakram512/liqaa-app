@@ -10,6 +10,7 @@ import 'package:liqaa_app/core/ai/pronunciation_repository.dart';
 import 'package:liqaa_app/core/animation/yasser/yasser_viseme.dart';
 import 'package:liqaa_app/features/pronunciation_game/cubits/pronunciation_game_cubit.dart';
 import 'package:liqaa_app/features/pronunciation_game/cubits/pronunciation_game_state.dart';
+import 'package:liqaa_app/features/pronunciation_game/models/yasser_prompt.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _Player extends Mock implements AudioPlayer {}
@@ -67,7 +68,7 @@ void main() {
   });
 
   tearDown(() async {
-    await cubit.close();
+    if (!cubit.isClosed) await cubit.close();
     await positions.close();
     await playback.close();
   });
@@ -108,6 +109,42 @@ void main() {
     await cubit.startListening();
     expect(cubit.state.isListening, isTrue);
   });
+
+  test('Samaka follows the annotated consonants and returns to rest', () {
+    final prompt = YasserPrompt.byWordId['word_samaka']!;
+    expect(prompt.assetPath, 'pronunciation/prompts/samaka.wav');
+    expect(
+      prompt.poseAt(const Duration(milliseconds: 140)),
+      YasserViseme.teeth,
+    );
+    expect(
+      prompt.poseAt(const Duration(milliseconds: 324)),
+      YasserViseme.closed,
+    );
+    expect(
+      prompt.poseAt(const Duration(milliseconds: 523)),
+      YasserViseme.consonant,
+    );
+    expect(prompt.poseAt(const Duration(milliseconds: 645)), YasserViseme.rest);
+  });
+
+  test(
+    'leaving while the recorder starts cancels capture after startup',
+    () async {
+      final startup = Completer<void>();
+      when(() => recorder.startRecording()).thenAnswer((_) => startup.future);
+
+      final startRecording = cubit.startListening();
+      final closing = cubit.close();
+      verifyNever(() => recorder.cancelRecording());
+      startup.complete();
+
+      await startRecording;
+      await closing;
+      verify(() => recorder.cancelRecording()).called(1);
+      expect(cubit.state.isListening, isFalse);
+    },
+  );
 
   PronunciationAssessment assessment(
     AssessmentErrorType type, {
