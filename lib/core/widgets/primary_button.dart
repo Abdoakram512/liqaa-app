@@ -54,7 +54,14 @@ class PrimaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(label, style: AppTextStyles.buttonLabel),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: AppTextStyles.buttonLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   if (icon != null) ...[SizedBox(width: 8.w), icon!],
                 ],
               ),

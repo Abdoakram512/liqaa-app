@@ -29,35 +29,41 @@ class OnboardingHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Step pill badge
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-              border: Border.all(color: AppColors.borderSoft),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.auto_stories_rounded,
-                  size: 14,
-                  color: AppColors.primary,
-                ),
-                SizedBox(width: 6.w),
-                Text(
-                  LocaleKeys.onboardingStepOf.tr(
-                    namedArgs: {
-                      'current': '$currentStep',
-                      'total': '$totalSteps',
-                    },
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                border: Border.all(color: AppColors.borderSoft),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.auto_stories_rounded,
+                    size: 14,
+                    color: AppColors.primary,
                   ),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                  SizedBox(width: 6.w),
+                  Flexible(
+                    child: Text(
+                      LocaleKeys.onboardingStepOf.tr(
+                        namedArgs: {
+                          'current': '$currentStep',
+                          'total': '$totalSteps',
+                        },
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 

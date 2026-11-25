@@ -40,10 +40,14 @@ class SecondaryButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[icon!, SizedBox(width: 8.w)],
-            Text(
-              label,
-              style: AppTextStyles.buttonLabel.copyWith(
-                color: AppColors.textPrimary,
+            Flexible(
+              child: Text(
+                label,
+                style: AppTextStyles.buttonLabel.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
