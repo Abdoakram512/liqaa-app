@@ -44,21 +44,21 @@ class PhonemeAlignment extends Equatable {
   });
 
   Map<String, dynamic> toJson() => {
-        'expected_phoneme': expectedPhoneme,
-        'expected_arabic': expectedArabic,
-        'recognized_token': recognizedToken?.toJson(),
-        'is_match': isMatch,
-        'status': status,
-      };
+    'expected_phoneme': expectedPhoneme,
+    'expected_arabic': expectedArabic,
+    'recognized_token': recognizedToken?.toJson(),
+    'is_match': isMatch,
+    'status': status,
+  };
 
   @override
   List<Object?> get props => [
-        expectedPhoneme,
-        expectedArabic,
-        recognizedToken,
-        isMatch,
-        status,
-      ];
+    expectedPhoneme,
+    expectedArabic,
+    recognizedToken,
+    isMatch,
+    status,
+  ];
 }
 
 class PronunciationAssessment extends Equatable {
@@ -101,36 +101,37 @@ class PronunciationAssessment extends Equatable {
   });
 
   Map<String, dynamic> toJson() => {
-        'target_word': targetWord,
-        'target_word_arabic': targetWordArabic,
-        'recognized_transcript': recognizedTranscript,
-        'overall_score': overallScore,
-        'stars': stars,
-        'error_type': errorType.name,
-        'clinical_error_name': clinicalErrorName,
-        'target_phoneme': targetPhoneme,
-        'substituted_phoneme': substitutedPhoneme,
-        'alignments': alignments.map((e) => e.toJson()).toList(),
-        'recognized_phonemes': recognizedPhonemes.map((e) => e.toJson()).toList(),
-        'yasser_feedback_message': yasserFeedbackMessage,
-        'yasser_pose': yasserPose,
-        'latency_ms': latencyMs,
-        'passed': passed,
-        if (pipelineStageFailed != null) 'pipeline_stage_failed': pipelineStageFailed,
-        if (diagnosticError != null) 'diagnostic_error': diagnosticError,
-      };
+    'target_word': targetWord,
+    'target_word_arabic': targetWordArabic,
+    'recognized_transcript': recognizedTranscript,
+    'overall_score': overallScore,
+    'stars': stars,
+    'error_type': errorType.name,
+    'clinical_error_name': clinicalErrorName,
+    'target_phoneme': targetPhoneme,
+    'substituted_phoneme': substitutedPhoneme,
+    'alignments': alignments.map((e) => e.toJson()).toList(),
+    'recognized_phonemes': recognizedPhonemes.map((e) => e.toJson()).toList(),
+    'yasser_feedback_message': yasserFeedbackMessage,
+    'yasser_pose': yasserPose,
+    'latency_ms': latencyMs,
+    'passed': passed,
+    if (pipelineStageFailed != null)
+      'pipeline_stage_failed': pipelineStageFailed,
+    if (diagnosticError != null) 'diagnostic_error': diagnosticError,
+  };
 
   @override
   List<Object?> get props => [
-        targetWord,
-        recognizedTranscript,
-        overallScore,
-        stars,
-        errorType,
-        targetPhoneme,
-        substitutedPhoneme,
-        passed,
-        pipelineStageFailed,
-        diagnosticError,
-      ];
+    targetWord,
+    recognizedTranscript,
+    overallScore,
+    stars,
+    errorType,
+    targetPhoneme,
+    substitutedPhoneme,
+    passed,
+    pipelineStageFailed,
+    diagnosticError,
+  ];
 }

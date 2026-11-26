@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -8,13 +7,14 @@ import '../../../../core/animation/yasser/yasser_controller.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/phonological_background.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/widgets/yasser_character.dart';
+import '../../../../core/widgets/yasser_otp_field.dart';
+import '../../../../core/widgets/yasser_surface_card.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
+import '../widgets/auth_stage_shell.dart';
 
-/// Interactive OTP Verification screen where Yasser follows input progression.
+/// OTP Verification view using tactile squircle [YasserOtpField].
 class OtpVerificationView extends StatefulWidget {
   final String email;
 
@@ -25,9 +25,11 @@ class OtpVerificationView extends StatefulWidget {
 }
 
 class _OtpVerificationViewState extends State<OtpVerificationView> {
-  late YasserController _yasserController;
-  final List<TextEditingController> _controllers = List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  late final YasserController _yasserController;
+  final GlobalKey<YasserOtpFieldState> _otpKey =
+      GlobalKey<YasserOtpFieldState>();
+  String _code = '';
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -37,41 +39,19 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
     _yasserController.dispose();
     super.dispose();
   }
 
-  String get _otpCode => _controllers.map((c) => c.text).join();
-
-  void _onDigitChanged(int index, String value) {
-    if (value.isNotEmpty) {
-      _yasserController.reactToValidation(true);
-      if (index < 3) {
-        _focusNodes[index + 1].requestFocus();
-      } else {
-        _focusNodes[index].unfocus();
-        _verify();
-      }
-    } else {
-      if (index > 0) {
-        _focusNodes[index - 1].requestFocus();
-      }
-    }
-  }
-
-  void _verify() {
-    final code = _otpCode;
+  void _verify([String? completedCode]) {
+    final code = completedCode ?? _code;
     if (code.length != 4) {
+      setState(() => _hasError = true);
       _yasserController.reactToValidation(false);
       return;
     }
 
+    setState(() => _hasError = false);
     context.read<AuthCubit>().verifyOtp(email: widget.email, otp: code);
   }
 
@@ -81,15 +61,16 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
       listener: (context, state) {
         if (state is AuthOtpVerified) {
           _yasserController.celebrate();
-          context.push('${AppRoutes.resetPassword}?email=${Uri.encodeComponent(state.email)}');
+          context.push(
+            '${AppRoutes.resetPassword}?email=${Uri.encodeComponent(state.email)}',
+          );
         } else if (state is AuthFailure) {
+          setState(() => _hasError = true);
           _yasserController.reactToValidation(false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.error,
           );
         }
       },
@@ -97,134 +78,68 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
         final isLoading = state is AuthLoading;
 
         return Scaffold(
-          body: PhonologicalBackground(
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  children: [
-                    SizedBox(height: 8.h),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => context.pop(),
-                          icon: const Icon(Icons.arrow_back_ios, color: AppColors.primary),
-                        ),
-                        const Spacer(),
-                        Text(
-                          'تأكيد الرمز',
-                          style: AppTextStyles.titleMedium.copyWith(
-                            color: AppColors.primaryDark,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-
-                    SizedBox(height: 12.h),
-
-                    // Attentive Yasser Character
-                    YasserCharacter(
-                      controller: _yasserController,
-                      width: 200.w,
-                      height: 230.h,
-                      heroTag: 'yasser_otp_character',
-                    ).animate().fadeIn(duration: 500.ms),
-
-                    SizedBox(height: 12.h),
-
-                    Text(
-                      'أدخل الرمز المكون من 4 أرقام',
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.primaryDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 6.h),
-                    Text(
-                      'تم إرسال الرمز إلى ${widget.email}',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-
-                    SizedBox(height: 28.h),
-
-                    // 4 Pin Input Boxes
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(4, (index) {
-                          return SizedBox(
-                            width: 60.w,
-                            height: 64.h,
-                            child: TextField(
-                              controller: _controllers[index],
-                              focusNode: _focusNodes[index],
-                              textAlign: TextAlign.center,
-                              keyboardType: TextInputType.number,
-                              maxLength: 1,
-                              style: TextStyle(
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryDark,
-                              ),
-                              decoration: InputDecoration(
-                                counterText: '',
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: EdgeInsets.zero,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
-                                  borderSide: BorderSide(
-                                    color: AppColors.primaryLight.withOpacity(0.5),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.primary,
-                                    width: 2.5,
-                                  ),
-                                ),
-                              ),
-                              onChanged: (v) => _onDigitChanged(index, v),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-
-                    SizedBox(height: 32.h),
-
-                    PrimaryButton(
-                      label: 'تأكيد الرمز والمتابعة ✅',
-                      isLoading: isLoading,
-                      onPressed: isLoading ? null : _verify,
-                    ),
-
-                    SizedBox(height: 16.h),
-
-                    TextButton(
-                      onPressed: () {
-                        context.read<AuthCubit>().sendPasswordReset(widget.email);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('تمت إعادة إرسال الرمز بنجاح!'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: const Text('لم يصلك الرمز؟ إعادة الإرسال'),
-                    ),
-                  ],
+          body: AuthStageShell(
+            title: 'تأكيد الرمز',
+            speechTitle: 'أدخل الرمز المكون من 4 أرقام',
+            speechSubtitle: widget.email.isNotEmpty
+                ? 'تم إرسال رمز التحقق إلى ${widget.email}'
+                : 'اكتب الأرقام الأربعة بالترتيب للمتابعة',
+            yasserController: _yasserController,
+            heroTag: 'yasser_otp_character',
+            formChild: Column(
+              children: [
+                YasserOtpField(
+                  key: _otpKey,
+                  hasError: _hasError,
+                  enabled: !isLoading,
+                  onChanged: (value) {
+                    setState(() {
+                      _code = value;
+                      if (_hasError) _hasError = false;
+                    });
+                    if (value.isNotEmpty) {
+                      _yasserController.reactToValidation(true);
+                    }
+                  },
+                  onCompleted: _verify,
                 ),
-              ),
+                if (_hasError) ...[
+                  SizedBox(height: 10.h),
+                  Text(
+                    'يرجى إدخال رمز صحيح مكون من 4 أرقام (أي رمز غير 0000 في الوضع المحلي)',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.errorDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+                SizedBox(height: 22.h),
+                PrimaryButton(
+                  label: 'تأكيد الرمز والمتابعة',
+                  icon: const Icon(Icons.verified_rounded, color: Colors.white),
+                  isLoading: isLoading,
+                  onPressed: isLoading ? null : () => _verify(),
+                ),
+                SizedBox(height: 10.h),
+                TextButton.icon(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          _otpKey.currentState?.clear();
+                          context.read<AuthCubit>().sendPasswordReset(
+                            widget.email,
+                          );
+                          showYasserSnackBar(
+                            context,
+                            message: 'تمت إعادة إرسال الرمز بنجاح',
+                            tone: YasserBannerTone.info,
+                          );
+                        },
+                  icon: const Icon(Icons.refresh_rounded, size: 17),
+                  label: const Text('لم يصلك الرمز؟ إعادة الإرسال'),
+                ),
+              ],
             ),
           ),
         );

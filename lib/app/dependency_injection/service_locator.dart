@@ -11,6 +11,7 @@ import '../../core/ai/pronunciation_repository.dart';
 import '../../core/ai/rnnoise_denoiser_engine.dart';
 import '../../core/ai/silero_vad_engine.dart';
 import '../../core/ai/speech_to_text_engine.dart';
+import '../../core/audio/yasser_audio_coordinator.dart';
 import '../../core/networking/api_client.dart';
 import '../../core/networking/dio_factory.dart';
 import '../../core/storage/secure_storage_service.dart';
@@ -19,10 +20,13 @@ import '../../features/ai_lab/cubits/ai_lab_cubit.dart';
 import '../../features/authentication/data/repos/auth_repo.dart';
 import '../../features/authentication/data/sources/auth_local_data_source.dart';
 import '../../features/authentication/presentation/cubits/auth_cubit.dart';
+import '../../features/home/data/child_progress_service.dart';
 import '../../features/onboarding/data/repos/onboarding_repo.dart';
 import '../../features/onboarding/data/src/onboarding_local_data_source.dart';
 import '../../features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../features/pronunciation_game/cubits/pronunciation_game_cubit.dart';
+import '../../features/specialist/data/repos/specialist_repository.dart';
+import '../../features/specialist/presentation/cubits/specialist_cubit.dart';
 import '../../features/splash/presentation/cubits/splash_cubit.dart';
 
 final sl = GetIt.instance;
@@ -34,6 +38,11 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<SharedPrefsService>(() => SharedPrefsService(sl()));
   sl.registerLazySingleton<SecureStorageService>(
     () => const SecureStorageService(),
+  );
+
+  // Audio, Voice & Haptics Coordinator
+  sl.registerLazySingleton<YasserAudioCoordinator>(
+    () => YasserAudioCoordinator(prefs: sl()),
   );
 
   // Networking
@@ -49,31 +58,54 @@ Future<void> setupServiceLocator() async {
     () => OnboardingLocalDataSourceImpl(sl()),
   );
   sl.registerLazySingleton<OnboardingRepo>(() => OnboardingRepo(sl()));
+  sl.registerLazySingleton<ChildProgressService>(
+    () => ChildProgressService(sl()),
+  );
+  sl.registerLazySingleton<SpecialistRepository>(
+    () => SpecialistLocalRepository(sl()),
+  );
 
   // AI & Speech Subsystem
   sl.registerLazySingleton<AudioRecorderService>(() => AudioRecorderService());
   sl.registerLazySingleton<AudioPreprocessor>(() => const AudioPreprocessor());
   sl.registerLazySingleton<SileroVadEngine>(() => SileroVadEngine());
-  sl.registerLazySingleton<RnnoiseDenoiserEngine>(() => RnnoiseDenoiserEngine(preprocessor: sl()));
-  sl.registerLazySingleton<PhonemeRecognitionEngine>(() => PhonemeRecognitionEngine());
-  sl.registerLazySingleton<PronunciationEvaluator>(() => const PronunciationEvaluator());
-  sl.registerLazySingleton<SpeechToTextEngine>(() => SpeechToTextEngine(preprocessor: sl()));
+  sl.registerLazySingleton<RnnoiseDenoiserEngine>(
+    () => RnnoiseDenoiserEngine(preprocessor: sl()),
+  );
+  sl.registerLazySingleton<PhonemeRecognitionEngine>(
+    () => PhonemeRecognitionEngine(),
+  );
+  sl.registerLazySingleton<PronunciationEvaluator>(
+    () => const PronunciationEvaluator(),
+  );
+  sl.registerLazySingleton<SpeechToTextEngine>(
+    () => SpeechToTextEngine(preprocessor: sl()),
+  );
   sl.registerLazySingleton<AiModelManager>(() => AiModelManager());
-  sl.registerLazySingleton<PronunciationRepository>(() => PronunciationRepository(
-    recorder: sl(),
-    preprocessor: sl(),
-    vadEngine: sl(),
-    denoiserEngine: sl(),
-    phonemeEngine: sl(),
-    evaluator: sl(),
-    sttEngine: sl(),
-    modelManager: sl(),
-  ));
+  sl.registerLazySingleton<PronunciationRepository>(
+    () => PronunciationRepository(
+      recorder: sl(),
+      preprocessor: sl(),
+      vadEngine: sl(),
+      denoiserEngine: sl(),
+      phonemeEngine: sl(),
+      evaluator: sl(),
+      sttEngine: sl(),
+      modelManager: sl(),
+    ),
+  );
 
   // Cubits
-  sl.registerFactory<SplashCubit>(() => SplashCubit(sl()));
+  sl.registerFactory<SplashCubit>(() => SplashCubit(sl(), sl()));
   sl.registerFactory<OnboardingCubit>(() => OnboardingCubit(sl()));
   sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
+  sl.registerLazySingleton<SpecialistCubit>(() => SpecialistCubit(sl()));
   sl.registerLazySingleton<AiLabCubit>(() => AiLabCubit(sl()));
-  sl.registerFactory<PronunciationGameCubit>(() => PronunciationGameCubit(sl()));
+  sl.registerFactory<PronunciationGameCubit>(
+    () => PronunciationGameCubit(
+      sl(),
+      audioCoordinator: sl(),
+      progressService: sl(),
+    ),
+  );
 }

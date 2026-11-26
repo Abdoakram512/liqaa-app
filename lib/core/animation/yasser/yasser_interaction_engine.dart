@@ -42,9 +42,9 @@ class YasserInteractionEngine {
   final List<CharacterEventLog> eventHistory = [];
 
   YasserInteractionEngine({this.config = const YasserAnimationConfig()})
-      : stateNotifier = ValueNotifier<YasserStateMapping>(
-          YasserAnimationMapper.map(YasserAnimationState.idle),
-        ) {
+    : stateNotifier = ValueNotifier<YasserStateMapping>(
+        YasserAnimationMapper.map(YasserAnimationState.idle),
+      ) {
     _scheduleNextBlink();
   }
 
@@ -93,7 +93,7 @@ class YasserInteractionEngine {
 
     // If this is a transient state (e.g. waving, celebration, confusion), schedule return to idle
     if ((requestedPriority == YasserAnimationPriority.transient ||
-        requestedPriority == YasserAnimationPriority.gesture) &&
+            requestedPriority == YasserAnimationPriority.gesture) &&
         requestedState != YasserAnimationState.listening &&
         requestedState != YasserAnimationState.talking) {
       final hold = customHoldDuration ?? config.transientHoldDuration;
@@ -150,10 +150,14 @@ class YasserInteractionEngine {
 
     _blinkTimer = Timer(delay, () {
       if (_currentState == YasserAnimationState.idle) {
-        stateNotifier.value = YasserAnimationMapper.map(YasserAnimationState.blinking);
+        stateNotifier.value = YasserAnimationMapper.map(
+          YasserAnimationState.blinking,
+        );
         _blinkTimer = Timer(const Duration(milliseconds: 180), () {
           if (_currentState == YasserAnimationState.idle) {
-            stateNotifier.value = YasserAnimationMapper.map(YasserAnimationState.idle);
+            stateNotifier.value = YasserAnimationMapper.map(
+              YasserAnimationState.idle,
+            );
           }
           _scheduleNextBlink();
         });

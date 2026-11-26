@@ -20,6 +20,14 @@ class YasserCharacter extends StatefulWidget {
 
   static Future<rive.File>? _sharedFile;
 
+  /// Preloads Yasser's Rive file into memory so initial screens render immediately.
+  static Future<void> warmUp() async {
+    if (!enableRiveRuntime) return;
+    try {
+      await (_sharedFile ??= _loadFile());
+    } catch (_) {}
+  }
+
   static Future<rive.File> _loadFile() async {
     try {
       return await rive.File.asset(
@@ -227,49 +235,51 @@ class _YasserCharacterState extends State<YasserCharacter>
     return ValueListenableBuilder<YasserStateMapping>(
       valueListenable: _controller.stateNotifier,
       builder: (context, mapping, child) {
-        return GestureDetector(
-          onTap: _handleTap,
-          behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: targetWidth,
-            height: targetHeight,
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              clipBehavior: Clip.none,
-              children: [
-                // Organic Ground Shadow
-                if (widget.showShadow)
-                  Positioned(
-                    bottom: 2,
-                    child: Container(
-                      width: targetWidth * 0.55,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                          Radius.elliptical(targetWidth * 0.55, 16),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF1E293B,
-                            ).withValues(alpha: 0.18),
-                            blurRadius: 18,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
+        return RepaintBoundary(
+          child: GestureDetector(
+            onTap: _handleTap,
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: targetWidth,
+              height: targetHeight,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                clipBehavior: Clip.none,
+                children: [
+                  // Organic Ground Shadow
+                  if (widget.showShadow)
+                    Positioned(
+                      bottom: 2,
+                      child: Container(
+                        width: targetWidth * 0.55,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(
+                            Radius.elliptical(targetWidth * 0.55, 16),
                           ),
-                        ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF1E293B,
+                              ).withValues(alpha: 0.18),
+                              blurRadius: 18,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                // Character Render Layer (Rive or Fallback)
-                Positioned.fill(
-                  child: Align(
-                    alignment: widget.alignment,
-                    child: _buildCharacterContent(mapping),
+                  // Character Render Layer (Rive or Fallback)
+                  Positioned.fill(
+                    child: Align(
+                      alignment: widget.alignment,
+                      child: _buildCharacterContent(mapping),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

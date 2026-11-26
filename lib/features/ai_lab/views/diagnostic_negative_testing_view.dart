@@ -18,10 +18,12 @@ class DiagnosticNegativeTestingView extends StatefulWidget {
   const DiagnosticNegativeTestingView({super.key});
 
   @override
-  State<DiagnosticNegativeTestingView> createState() => _DiagnosticNegativeTestingViewState();
+  State<DiagnosticNegativeTestingView> createState() =>
+      _DiagnosticNegativeTestingViewState();
 }
 
-class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestingView> {
+class _DiagnosticNegativeTestingViewState
+    extends State<DiagnosticNegativeTestingView> {
   final PronunciationRepository _repository = sl<PronunciationRepository>();
   final AudioPreprocessor _preprocessor = const AudioPreprocessor();
   bool _isInitialized = false;
@@ -31,7 +33,8 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
     {
       'id': 'test_silence',
       'name': 'اختبار 1: الصمت التام (Zero Signal / Silence Rejection)',
-      'description': 'التحقق من عدم حدوث استدلال خاطئ (0% False Positive) عند تسجيل صمت تام.',
+      'description':
+          'التحقق من عدم حدوث استدلال خاطئ (0% False Positive) عند تسجيل صمت تام.',
       'expectedError': AssessmentErrorType.noSpeech,
       'status': 'idle', // 'idle', 'running', 'passed', 'failed'
       'resultDetails': '',
@@ -39,7 +42,8 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
     {
       'id': 'test_white_noise',
       'name': 'اختبار 2: الضوضاء البيضاء (Stationary White Noise Rejection)',
-      'description': 'التحقق من رفض الضوضاء العشوائية بدون كلمات وعدم تقييمها كإجابة صحيحة.',
+      'description':
+          'التحقق من رفض الضوضاء العشوائية بدون كلمات وعدم تقييمها كإجابة صحيحة.',
       'expectedError': AssessmentErrorType.noSpeech,
       'status': 'idle',
       'resultDetails': '',
@@ -47,7 +51,8 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
     {
       'id': 'test_unrelated_word',
       'name': 'اختبار 3: الكلمة غير المطابقة ("مدرسة" ضد كلمة "كورة")',
-      'description': 'التحقق من رصد الكلمات غير المطابقة تماماً ومنح 1 نجمة كحد أقصى مع تصنيف UnrelatedWord.',
+      'description':
+          'التحقق من رصد الكلمات غير المطابقة تماماً ومنح 1 نجمة كحد أقصى مع تصنيف UnrelatedWord.',
       'expectedError': AssessmentErrorType.unrelatedWord,
       'status': 'idle',
       'resultDetails': '',
@@ -55,7 +60,8 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
     {
       'id': 'test_clipping_detection',
       'name': 'اختبار 4: تشوه الموجة الصوتية (Acoustic Clipping & Distortion)',
-      'description': 'التحقق من حساب قمة السعة الحقيقية ورصد التشوه الترددي بدون قيم عشوائية.',
+      'description':
+          'التحقق من حساب قمة السعة الحقيقية ورصد التشوه الترددي بدون قيم عشوائية.',
       'expectedError': AssessmentErrorType.correct,
       'status': 'idle',
       'resultDetails': '',
@@ -63,7 +69,8 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
     {
       'id': 'test_missing_model_resilience',
       'name': 'اختبار 5: المتانة ضد غياب النموذج (Graceful Fallback)',
-      'description': 'التحقق من عدم انهيار التطبيق (Zero Crash) عند تعذر توفر مكتبات FFI الأصلية.',
+      'description':
+          'التحقق من عدم انهيار التطبيق (Zero Crash) عند تعذر توفر مكتبات FFI الأصلية.',
       'expectedError': null,
       'status': 'idle',
       'resultDetails': '',
@@ -98,67 +105,89 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
           targetWord: targetWord,
         );
 
-        final bool isPass = assessment.errorType == AssessmentErrorType.noSpeech &&
+        final bool isPass =
+            assessment.errorType == AssessmentErrorType.noSpeech &&
             assessment.stars == 0 &&
             !assessment.passed;
 
         setState(() {
           test['status'] = isPass ? 'passed' : 'failed';
-          test['resultDetails'] = 'النوع: ${assessment.errorType.name} | النجوم: ${assessment.stars} | النتيجة: ${assessment.passed ? "نجاح خاطئ!" : "تم الرفض بنجاح"}';
+          test['resultDetails'] =
+              'النوع: ${assessment.errorType.name} | النجوم: ${assessment.stars} | النتيجة: ${assessment.passed ? "نجاح خاطئ!" : "تم الرفض بنجاح"}';
         });
       } else if (testId == 'test_white_noise') {
-        final data = await rootBundle.load('assets/audio_samples/white_noise.wav');
+        final data = await rootBundle.load(
+          'assets/audio_samples/white_noise.wav',
+        );
         final assessment = await _repository.evaluateAudio(
           rawAudioBytes: data.buffer.asUint8List(),
           targetWord: targetWord,
         );
 
-        final bool isPass = (assessment.errorType == AssessmentErrorType.noSpeech ||
+        final bool isPass =
+            (assessment.errorType == AssessmentErrorType.noSpeech ||
                 assessment.errorType == AssessmentErrorType.poorAudioQuality) &&
             !assessment.passed;
 
         setState(() {
           test['status'] = isPass ? 'passed' : 'failed';
-          test['resultDetails'] = 'النوع: ${assessment.errorType.name} | النجوم: ${assessment.stars} | النتيجة: ${assessment.passed ? "نجاح خاطئ!" : "تم الرفض بنجاح"}';
+          test['resultDetails'] =
+              'النوع: ${assessment.errorType.name} | النجوم: ${assessment.stars} | النتيجة: ${assessment.passed ? "نجاح خاطئ!" : "تم الرفض بنجاح"}';
         });
       } else if (testId == 'test_unrelated_word') {
-        final data = await rootBundle.load('assets/audio_samples/word_madrasa.wav');
+        final data = await rootBundle.load(
+          'assets/audio_samples/word_madrasa.wav',
+        );
         final assessment = await _repository.evaluateAudio(
           rawAudioBytes: data.buffer.asUint8List(),
           targetWord: targetWord, // "كورة"
         );
 
-        final bool isPass = !assessment.passed &&
+        final bool isPass =
+            !assessment.passed &&
             assessment.overallScore <= 35.0 &&
-            (assessment.errorType == AssessmentErrorType.unrelatedWord || assessment.errorType == AssessmentErrorType.substitution);
+            (assessment.errorType == AssessmentErrorType.unrelatedWord ||
+                assessment.errorType == AssessmentErrorType.substitution);
 
         setState(() {
           test['status'] = isPass ? 'passed' : 'failed';
-          test['resultDetails'] = 'الدرجة: ${assessment.overallScore}% | المنطوق: "${assessment.recognizedTranscript}" | النوع: ${assessment.errorType.name}';
+          test['resultDetails'] =
+              'الدرجة: ${assessment.overallScore}% | المنطوق: "${assessment.recognizedTranscript}" | النوع: ${assessment.errorType.name}';
         });
       } else if (testId == 'test_clipping_detection') {
         // Generate clipped sine wave
         const int length = 16000;
         final Float32List clipped = Float32List(length);
         for (int i = 0; i < length; i++) {
-          clipped[i] = (2.5 * math.sin(2 * math.pi * 440 * (i / 16000))).clamp(-1.0, 1.0);
+          clipped[i] = (2.5 * math.sin(2 * math.pi * 440 * (i / 16000))).clamp(
+            -1.0,
+            1.0,
+          );
         }
         final double peak = _preprocessor.calculatePeak(clipped);
         final bool isPass = peak >= 0.99;
 
         setState(() {
           test['status'] = isPass ? 'passed' : 'failed';
-          test['resultDetails'] = 'قمة السعة المحسوبة: ${peak.toStringAsFixed(3)} (رصد التشبع بنجاح)';
+          test['resultDetails'] =
+              'قمة السعة المحسوبة: ${peak.toStringAsFixed(3)} (رصد التشبع بنجاح)';
         });
       } else if (testId == 'test_missing_model_resilience') {
-        final vadSmoke = await _repository.modelManager.runSmokeTest('silero_vad');
-        final denoiseSmoke = await _repository.modelManager.runSmokeTest('gtcrn_denoiser');
-        final w2vSmoke = await _repository.modelManager.runSmokeTest('wav2vec2_espeak');
+        final vadSmoke = await _repository.modelManager.runSmokeTest(
+          'silero_vad',
+        );
+        final denoiseSmoke = await _repository.modelManager.runSmokeTest(
+          'gtcrn_denoiser',
+        );
+        final w2vSmoke = await _repository.modelManager.runSmokeTest(
+          'wav2vec2_espeak',
+        );
         final isPass = vadSmoke && denoiseSmoke && w2vSmoke;
 
         setState(() {
           test['status'] = isPass ? 'passed' : 'failed';
-          test['resultDetails'] = 'VAD: $vadSmoke | GTCRN: $denoiseSmoke | Wav2Vec2: $w2vSmoke';
+          test['resultDetails'] =
+              'VAD: $vadSmoke | GTCRN: $denoiseSmoke | Wav2Vec2: $w2vSmoke';
         });
       }
     } catch (e) {
@@ -196,7 +225,10 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -215,7 +247,11 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
               ),
               child: Row(
                 children: [
-                  Icon(Icons.gpp_good_rounded, color: Colors.red.shade800, size: 28),
+                  Icon(
+                    Icons.gpp_good_rounded,
+                    color: Colors.red.shade800,
+                    size: 28,
+                  ),
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
@@ -238,13 +274,24 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 12.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               icon: _isRunningAll
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
                   : const Icon(Icons.play_circle_fill_rounded),
               label: Text(
-                _isRunningAll ? 'جاري تشغيل الاختبارات...' : 'تشغيل كافة الاختبارات السلبية تلقائياً',
+                _isRunningAll
+                    ? 'جاري تشغيل الاختبارات...'
+                    : 'تشغيل كافة الاختبارات السلبية تلقائياً',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               onPressed: _isRunningAll ? null : _runAllTests,
@@ -274,7 +321,11 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
                 margin: EdgeInsets.only(bottom: 12.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: status == 'passed' ? Colors.green.shade200 : AppColors.borderSoft),
+                  side: BorderSide(
+                    color: status == 'passed'
+                        ? Colors.green.shade200
+                        : AppColors.borderSoft,
+                  ),
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(14.w),
@@ -288,11 +339,15 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
                           Expanded(
                             child: Text(
                               test['name'] as String,
-                              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           TextButton(
-                            onPressed: status == 'running' ? null : () => _runSingleTest(idx),
+                            onPressed: status == 'running'
+                                ? null
+                                : () => _runSingleTest(idx),
                             child: const Text('فحص'),
                           ),
                         ],
@@ -300,17 +355,26 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
                       SizedBox(height: 4.h),
                       Text(
                         test['description'] as String,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       if ((test['resultDetails'] as String).isNotEmpty) ...[
                         SizedBox(height: 8.h),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 6.h,
+                          ),
                           decoration: BoxDecoration(
-                            color: status == 'passed' ? Colors.green.shade50 : Colors.red.shade50,
+                            color: status == 'passed'
+                                ? Colors.green.shade50
+                                : Colors.red.shade50,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: status == 'passed' ? Colors.green.shade300 : Colors.red.shade300,
+                              color: status == 'passed'
+                                  ? Colors.green.shade300
+                                  : Colors.red.shade300,
                             ),
                           ),
                           child: Text(
@@ -318,7 +382,9 @@ class _DiagnosticNegativeTestingViewState extends State<DiagnosticNegativeTestin
                             style: TextStyle(
                               fontSize: 11.sp,
                               fontWeight: FontWeight.bold,
-                              color: status == 'passed' ? Colors.green.shade800 : Colors.red.shade800,
+                              color: status == 'passed'
+                                  ? Colors.green.shade800
+                                  : Colors.red.shade800,
                             ),
                           ),
                         ),

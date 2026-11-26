@@ -19,16 +19,23 @@ class VadSegmentSummary extends Equatable {
   });
 
   Map<String, dynamic> toJson() => {
-        'index': index,
-        'start_ms': startMs,
-        'end_ms': endMs,
-        'start_sample': startSample,
-        'sample_count': sampleCount,
-        'rms': rms,
-      };
+    'index': index,
+    'start_ms': startMs,
+    'end_ms': endMs,
+    'start_sample': startSample,
+    'sample_count': sampleCount,
+    'rms': rms,
+  };
 
   @override
-  List<Object?> get props => [index, startMs, endMs, startSample, sampleCount, rms];
+  List<Object?> get props => [
+    index,
+    startMs,
+    endMs,
+    startSample,
+    sampleCount,
+    rms,
+  ];
 }
 
 class AudioProcessingResult extends Equatable {
@@ -93,46 +100,46 @@ class AudioProcessingResult extends Equatable {
   });
 
   Map<String, dynamic> toJson() => {
-        'is_valid_audio': isValidAudio,
-        'error_message': errorMessage,
-        'speech_detected': speechDetected,
-        'speech_start_ms': speechStartMs,
-        'speech_end_ms': speechEndMs,
-        'duration_ms': durationMs,
-        'sample_rate': sampleRate,
-        'channels': channels,
-        'bits_per_sample': bitsPerSample,
-        'sample_count': sampleCount,
-        'clipping_count': clippingCount,
-        'average_rms': averageRms,
-        'peak_amplitude': peakAmplitude,
-        'snr_db': snrDb,
-        'denoised_rms': denoisedRms,
-        'denoised_peak_amplitude': denoisedPeakAmplitude,
-        'snr_improvement_db': snrImprovementDb,
-        'denoiser_filter_type': denoiserFilterType,
-        'vad_segments': vadSegments.map((s) => s.toJson()).toList(),
-        'raw_bytes_length': rawAudioBytes.length,
-        'trimmed_bytes_length': trimmedAudioBytes?.length ?? 0,
-        'denoised_bytes_length': denoisedAudioBytes?.length ?? 0,
-      };
+    'is_valid_audio': isValidAudio,
+    'error_message': errorMessage,
+    'speech_detected': speechDetected,
+    'speech_start_ms': speechStartMs,
+    'speech_end_ms': speechEndMs,
+    'duration_ms': durationMs,
+    'sample_rate': sampleRate,
+    'channels': channels,
+    'bits_per_sample': bitsPerSample,
+    'sample_count': sampleCount,
+    'clipping_count': clippingCount,
+    'average_rms': averageRms,
+    'peak_amplitude': peakAmplitude,
+    'snr_db': snrDb,
+    'denoised_rms': denoisedRms,
+    'denoised_peak_amplitude': denoisedPeakAmplitude,
+    'snr_improvement_db': snrImprovementDb,
+    'denoiser_filter_type': denoiserFilterType,
+    'vad_segments': vadSegments.map((s) => s.toJson()).toList(),
+    'raw_bytes_length': rawAudioBytes.length,
+    'trimmed_bytes_length': trimmedAudioBytes?.length ?? 0,
+    'denoised_bytes_length': denoisedAudioBytes?.length ?? 0,
+  };
 
   @override
   List<Object?> get props => [
-        speechDetected,
-        speechStartMs,
-        speechEndMs,
-        durationMs,
-        averageRms,
-        peakAmplitude,
-        snrDb,
-        sampleRate,
-        channels,
-        sampleCount,
-        clippingCount,
-        denoisedRms,
-        denoiserFilterType,
-        isValidAudio,
-        errorMessage,
-      ];
+    speechDetected,
+    speechStartMs,
+    speechEndMs,
+    durationMs,
+    averageRms,
+    peakAmplitude,
+    snrDb,
+    sampleRate,
+    channels,
+    sampleCount,
+    clippingCount,
+    denoisedRms,
+    denoiserFilterType,
+    isValidAudio,
+    errorMessage,
+  ];
 }

@@ -51,18 +51,27 @@ class PhonemeRecognitionView extends StatelessWidget {
                     DropdownButtonFormField<VocabularyWord>(
                       initialValue: word,
                       decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 8.h,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       items: state.vocabulary.map((w) {
                         return DropdownMenuItem<VocabularyWord>(
                           value: w,
-                          child: Text('${w.wordArabic} (${w.meaningEn}) - صوت [${w.targetPhoneme}]'),
+                          child: Text(
+                            '${w.wordArabic} (${w.meaningEn}) - صوت [${w.targetPhoneme}]',
+                          ),
                         );
                       }).toList(),
                       onChanged: (selected) {
                         if (selected != null) {
-                          context.read<AiLabCubit>().selectVocabularyWord(selected);
+                          context.read<AiLabCubit>().selectVocabularyWord(
+                            selected,
+                          );
                         }
                       },
                     ),
@@ -87,27 +96,37 @@ class PhonemeRecognitionView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            state.isRecording ? 'جاري التسجيل...' : 'انطق الكلمة الآن (أو تظاهر بالخطأ مثل "تورة")',
+                            state.isRecording
+                                ? 'جاري التسجيل...'
+                                : 'انطق الكلمة الآن (أو تظاهر بالخطأ مثل "تورة")',
                             style: AppTextStyles.bodyMedium.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: state.isRecording ? Colors.red : AppColors.textPrimary,
+                              color: state.isRecording
+                                  ? Colors.red
+                                  : AppColors.textPrimary,
                             ),
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             'المحرك الصوتي: Wav2Vec2-LV60-eSpeak-CV-FT (392 IPA Tokens)',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                           SizedBox(height: 6.h),
                           Row(
                             children: [
                               Switch.adaptive(
                                 value: state.rawBypassMode,
-                                onChanged: (v) => context.read<AiLabCubit>().setRawBypassMode(v),
+                                onChanged: (v) => context
+                                    .read<AiLabCubit>()
+                                    .setRawBypassMode(v),
                               ),
                               Expanded(
                                 child: Text(
-                                  state.rawBypassMode ? 'الوضع: استدلال خام مباشر (بدون VAD/GTCRN)' : 'الوضع: VAD + GTCRN + Wav2Vec2',
+                                  state.rawBypassMode
+                                      ? 'الوضع: استدلال خام مباشر (بدون VAD/GTCRN)'
+                                      : 'الوضع: VAD + GTCRN + Wav2Vec2',
                                   style: AppTextStyles.bodySmall,
                                 ),
                               ),
@@ -118,10 +137,16 @@ class PhonemeRecognitionView extends StatelessWidget {
                     ),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: state.isRecording ? Colors.red : AppColors.primary,
+                        backgroundColor: state.isRecording
+                            ? Colors.red
+                            : AppColors.primary,
                         foregroundColor: Colors.white,
                       ),
-                      icon: Icon(state.isRecording ? Icons.stop_rounded : Icons.mic_rounded),
+                      icon: Icon(
+                        state.isRecording
+                            ? Icons.stop_rounded
+                            : Icons.mic_rounded,
+                      ),
                       label: Text(state.isRecording ? 'إيقاف' : 'تسجيل'),
                       onPressed: () {
                         if (state.isRecording) {
@@ -158,7 +183,9 @@ class PhonemeRecognitionView extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Text(
                     'سجّل نطق الكلمة لمشاهدة التسلسل الفونيمي ومقارنة الأصوات',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 )
               else
@@ -168,10 +195,14 @@ class PhonemeRecognitionView extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(14.w),
                       decoration: BoxDecoration(
-                        color: assessment.passed ? Colors.green.shade50 : Colors.red.shade50,
+                        color: assessment.passed
+                            ? Colors.green.shade50
+                            : Colors.red.shade50,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: assessment.passed ? Colors.green.shade300 : Colors.red.shade300,
+                          color: assessment.passed
+                              ? Colors.green.shade300
+                              : Colors.red.shade300,
                         ),
                       ),
                       child: Row(
@@ -184,7 +215,9 @@ class PhonemeRecognitionView extends StatelessWidget {
                                 'الدرجة: ${assessment.overallScore}% (${assessment.passed ? "اجتياز" : "بحاجة لتدريب"})',
                                 style: AppTextStyles.titleSmall.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: assessment.passed ? Colors.green.shade900 : Colors.red.shade900,
+                                  color: assessment.passed
+                                      ? Colors.green.shade900
+                                      : Colors.red.shade900,
                                 ),
                               ),
                               if (assessment.clinicalErrorName != null) ...[
@@ -202,7 +235,9 @@ class PhonemeRecognitionView extends StatelessWidget {
                           Row(
                             children: List.generate(3, (i) {
                               return Icon(
-                                i < assessment.stars ? Icons.star_rounded : Icons.star_border_rounded,
+                                i < assessment.stars
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
                                 color: Colors.amber,
                                 size: 24,
                               );
@@ -228,11 +263,16 @@ class PhonemeRecognitionView extends StatelessWidget {
 
                       return Container(
                         margin: EdgeInsets.only(bottom: 8.h),
-                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 10.h,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: statusColor.withOpacity(0.4)),
+                          border: Border.all(
+                            color: statusColor.withOpacity(0.4),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -242,12 +282,16 @@ class PhonemeRecognitionView extends StatelessWidget {
                               children: [
                                 Text(
                                   'المتوقع: [${a.expectedPhoneme}] (${a.expectedArabic})',
-                                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 SizedBox(height: 2.h),
                                 Text(
                                   'المنطوق: ${a.recognizedToken != null ? "[${a.recognizedToken!.symbol}] (${a.recognizedToken!.arabicSymbol})" : "مفقود"}',
-                                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -265,7 +309,10 @@ class PhonemeRecognitionView extends StatelessWidget {
                                   SizedBox(height: 2.h),
                                   Text(
                                     'الثقة: ${(a.recognizedToken!.confidence * 100).toInt()}%',
-                                    style: TextStyle(fontSize: 10.sp, color: AppColors.textMuted),
+                                    style: TextStyle(
+                                      fontSize: 10.sp,
+                                      color: AppColors.textMuted,
+                                    ),
                                   ),
                                 ],
                               ],

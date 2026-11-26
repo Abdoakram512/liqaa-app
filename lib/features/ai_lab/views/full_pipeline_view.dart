@@ -28,10 +28,15 @@ class FullPipelineView extends StatelessWidget {
           final assessment = state.lastAssessment;
           final phonemeRes = state.lastPhonemeResult;
           final sttRes = state.lastSttResult;
-          final jsonPretty = context.read<AiLabCubit>().buildDiagnosticJsonReport();
+          final jsonPretty = context
+              .read<AiLabCubit>()
+              .buildDiagnosticJsonReport();
 
-          final String? failedStage = assessment?.pipelineStageFailed ??
-              (audio != null && !audio.isValidAudio ? 'AudioPreprocessor / DSP' : null) ??
+          final String? failedStage =
+              assessment?.pipelineStageFailed ??
+              (audio != null && !audio.isValidAudio
+                  ? 'AudioPreprocessor / DSP'
+                  : null) ??
               (phonemeRes?.hasError == true ? 'PhonemeRecognition' : null);
 
           return ListView(
@@ -50,15 +55,24 @@ class FullPipelineView extends StatelessWidget {
                     Text(
                       'المسار الفعلي: Mic ➔ RIFF Validator ➔ Silero VAD ➔ GTCRN ➔ Wav2Vec2-eSpeak ➔ DP Evaluator',
                       textAlign: TextAlign.center,
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     SizedBox(height: 10.h),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('وضع التخطي الخام (Bypass VAD/Denoise)', style: AppTextStyles.bodyMedium),
-                      subtitle: Text('لاختبار Wav2Vec2 و Whisper على الموجة الخام مباشرة', style: AppTextStyles.bodySmall),
+                      title: Text(
+                        'وضع التخطي الخام (Bypass VAD/Denoise)',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                      subtitle: Text(
+                        'لاختبار Wav2Vec2 و Whisper على الموجة الخام مباشرة',
+                        style: AppTextStyles.bodySmall,
+                      ),
                       value: state.rawBypassMode,
-                      onChanged: (v) => context.read<AiLabCubit>().setRawBypassMode(v),
+                      onChanged: (v) =>
+                          context.read<AiLabCubit>().setRawBypassMode(v),
                     ),
                     SizedBox(height: 8.h),
                     Wrap(
@@ -68,14 +82,26 @@ class FullPipelineView extends StatelessWidget {
                       children: [
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: state.isRecording ? Colors.red : AppColors.primary,
+                            backgroundColor: state.isRecording
+                                ? Colors.red
+                                : AppColors.primary,
                             foregroundColor: Colors.white,
                           ),
-                          icon: Icon(state.isRecording ? Icons.stop_rounded : Icons.mic_rounded),
-                          label: Text(state.isRecording ? 'إيقاف وتحليل التسجيل' : 'تسجيل من الميكروفون'),
+                          icon: Icon(
+                            state.isRecording
+                                ? Icons.stop_rounded
+                                : Icons.mic_rounded,
+                          ),
+                          label: Text(
+                            state.isRecording
+                                ? 'إيقاف وتحليل التسجيل'
+                                : 'تسجيل من الميكروفون',
+                          ),
                           onPressed: () {
                             if (state.isRecording) {
-                              context.read<AiLabCubit>().stopRecordingAndAnalyze();
+                              context
+                                  .read<AiLabCubit>()
+                                  .stopRecordingAndAnalyze();
                             } else {
                               context.read<AiLabCubit>().startRecording();
                             }
@@ -85,9 +111,13 @@ class FullPipelineView extends StatelessWidget {
                           icon: const Icon(Icons.audiotrack_rounded, size: 18),
                           label: const Text('فحص عينة كورة'),
                           onPressed: () async {
-                            final data = await rootBundle.load('assets/audio_samples/correct_kora.wav');
+                            final data = await rootBundle.load(
+                              'assets/audio_samples/correct_kora.wav',
+                            );
                             if (context.mounted) {
-                              await context.read<AiLabCubit>().analyzeWavBytesForAllStages(
+                              await context
+                                  .read<AiLabCubit>()
+                                  .analyzeWavBytesForAllStages(
                                     data.buffer.asUint8List(),
                                   );
                             }
@@ -97,9 +127,13 @@ class FullPipelineView extends StatelessWidget {
                           icon: const Icon(Icons.volume_off_rounded, size: 18),
                           label: const Text('فحص عينة صمت'),
                           onPressed: () async {
-                            final data = await rootBundle.load('assets/audio_samples/silence.wav');
+                            final data = await rootBundle.load(
+                              'assets/audio_samples/silence.wav',
+                            );
                             if (context.mounted) {
-                              await context.read<AiLabCubit>().analyzeWavBytesForAllStages(
+                              await context
+                                  .read<AiLabCubit>()
+                                  .analyzeWavBytesForAllStages(
                                     data.buffer.asUint8List(),
                                   );
                             }
@@ -122,7 +156,9 @@ class FullPipelineView extends StatelessWidget {
                   ),
                   child: Text(
                     'المرحلة المتعطلة: ${failedStage ?? "System"}\nالتفاصيل: ${assessment?.diagnosticError ?? state.errorMessage}',
-                    style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade900),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: Colors.red.shade900,
+                    ),
                   ),
                 ),
               ],
@@ -131,7 +167,9 @@ class FullPipelineView extends StatelessWidget {
 
               Text(
                 'فحص المراحل والنتائج الحقيقية (Real Stage Telemetry)',
-                style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
 
               SizedBox(height: 10.h),
@@ -150,19 +188,20 @@ class FullPipelineView extends StatelessWidget {
                 title: '2. كشف الكلام (Silero VAD - 512 Window)',
                 detail: audio != null
                     ? (audio.speechDetected
-                        ? 'مكتشف: ${audio.vadSegments.length} مقاطع (${audio.speechStartMs}-${audio.speechEndMs}ms) | RMS=${audio.averageRms}'
-                        : 'لم يتم اكتشاف كلام (RMS=${audio.averageRms})')
+                          ? 'مكتشف: ${audio.vadSegments.length} مقاطع (${audio.speechStartMs}-${audio.speechEndMs}ms) | RMS=${audio.averageRms}'
+                          : 'لم يتم اكتشاف كلام (RMS=${audio.averageRms})')
                     : 'في الانتظار',
                 ok: audio?.errorMessage == null,
                 color: Colors.teal,
               ),
               _buildStageCard(
                 step: 3,
-                title: '3. عزل الضوضاء (${audio?.denoiserFilterType ?? state.denoiserMode.name})',
+                title:
+                    '3. عزل الضوضاء (${audio?.denoiserFilterType ?? state.denoiserMode.name})',
                 detail: audio != null
                     ? (audio.denoisedAudioBytes != null
-                        ? 'RMS ${audio.averageRms} -> ${audio.denoisedRms} | SNR Δ=${audio.snrImprovementDb} dB'
-                        : 'فشل أو غير متاح: ${audio.errorMessage ?? "لا يوجد خرج"}')
+                          ? 'RMS ${audio.averageRms} -> ${audio.denoisedRms} | SNR Δ=${audio.snrImprovementDb} dB'
+                          : 'فشل أو غير متاح: ${audio.errorMessage ?? "لا يوجد خرج"}')
                     : 'في الانتظار',
                 ok: audio == null || audio.denoisedAudioBytes != null,
                 color: Colors.deepPurpleAccent,
@@ -172,16 +211,19 @@ class FullPipelineView extends StatelessWidget {
                 title: '4. التعرف الصوتي للفونيمات (Wav2Vec2-eSpeak IPA)',
                 detail: phonemeRes != null
                     ? (phonemeRes.hasError
-                        ? 'فشل: ${phonemeRes.errorMessage}'
-                        : 'IPA=[${phonemeRes.tokens.map((t) => t.symbol).join(" ")}] | Conf=${phonemeRes.averageConfidence?.toStringAsFixed(2) ?? "-"} | Margin=${phonemeRes.averageAcousticMargin?.toStringAsFixed(2) ?? "-"} | ${phonemeRes.latencyMs}ms')
+                          ? 'فشل: ${phonemeRes.errorMessage}'
+                          : 'IPA=[${phonemeRes.tokens.map((t) => t.symbol).join(" ")}] | Conf=${phonemeRes.averageConfidence?.toStringAsFixed(2) ?? "-"} | Margin=${phonemeRes.averageAcousticMargin?.toStringAsFixed(2) ?? "-"} | ${phonemeRes.latencyMs}ms')
                     : 'في الانتظار',
-                ok: phonemeRes == null || (!phonemeRes.hasError && phonemeRes.isNativeModel),
+                ok:
+                    phonemeRes == null ||
+                    (!phonemeRes.hasError && phonemeRes.isNativeModel),
                 color: Colors.orangeAccent,
               ),
               _buildStageCard(
                 step: 5,
                 title: '5. مقارنة المسار الخام vs المعالج',
-                detail: 'الخام=[${state.lastRawPhonemes.map((t) => t.symbol).join(" ")}]\nالمعالج=[${state.lastBlindPhonemes.map((t) => t.symbol).join(" ")}]',
+                detail:
+                    'الخام=[${state.lastRawPhonemes.map((t) => t.symbol).join(" ")}]\nالمعالج=[${state.lastBlindPhonemes.map((t) => t.symbol).join(" ")}]',
                 ok: true,
                 color: Colors.indigo,
               ),
@@ -190,8 +232,8 @@ class FullPipelineView extends StatelessWidget {
                 title: '6. تحويل الكلام (Whisper Tiny - تشخيصي فقط)',
                 detail: sttRes != null
                     ? (sttRes.hasError
-                        ? 'خطأ: ${sttRes.errorMessage}'
-                        : 'النص="${sttRes.text}" | Latency=${sttRes.latencyMs}ms | RTF=${sttRes.realTimeFactor}x')
+                          ? 'خطأ: ${sttRes.errorMessage}'
+                          : 'النص="${sttRes.text}" | Latency=${sttRes.latencyMs}ms | RTF=${sttRes.realTimeFactor}x')
                     : 'في الانتظار',
                 ok: sttRes == null || !sttRes.hasError,
                 color: Colors.blueGrey,
@@ -211,7 +253,12 @@ class FullPipelineView extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('تقرير JSON التشخيصي القابل للتصدير', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'تقرير JSON التشخيصي القابل للتصدير',
+                    style: AppTextStyles.titleSmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Wrap(
                     spacing: 4.w,
                     children: [
@@ -221,14 +268,17 @@ class FullPipelineView extends StatelessWidget {
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: jsonPretty));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم نسخ تقرير JSON التشخيصي')),
+                            const SnackBar(
+                              content: Text('تم نسخ تقرير JSON التشخيصي'),
+                            ),
                           );
                         },
                       ),
                       TextButton.icon(
                         icon: const Icon(Icons.share_rounded, size: 16),
                         label: const Text('تصدير'),
-                        onPressed: () => context.read<AiLabCubit>().exportDiagnosticReport(),
+                        onPressed: () =>
+                            context.read<AiLabCubit>().exportDiagnosticReport(),
                       ),
                     ],
                   ),
@@ -273,7 +323,9 @@ class FullPipelineView extends StatelessWidget {
       decoration: BoxDecoration(
         color: ok ? Colors.white : Colors.red.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ok ? AppColors.borderSoft : Colors.red.shade300),
+        border: Border.all(
+          color: ok ? AppColors.borderSoft : Colors.red.shade300,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,9 +347,21 @@ class FullPipelineView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.titleSmall.copyWith(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 SizedBox(height: 2.h),
-                Text(detail, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11.sp)),
+                Text(
+                  detail,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11.sp,
+                  ),
+                ),
               ],
             ),
           ),

@@ -1,16 +1,20 @@
 import 'package:equatable/equatable.dart';
-import '../../../core/animation/yasser/yasser_viseme.dart';
-import '../../../core/ai/models/vocabulary_word.dart';
+
 import '../../../core/ai/models/pronunciation_assessment.dart';
+import '../../../core/ai/models/vocabulary_word.dart';
+import '../../../core/animation/yasser/yasser_viseme.dart';
 
 enum GameStatus {
   initial,
   loading,
+  preparingPrompt,
   readyToSpeak,
+  preparingRecording,
   listening,
   evaluating,
   successCelebration,
   supportiveHint,
+  sessionCompleted,
   error,
 }
 
@@ -24,11 +28,13 @@ class PronunciationGameState extends Equatable {
   final PronunciationAssessment? lastAssessment;
   final int totalStarsEarned;
   final int wordsMasteredCount;
+  final int attemptsCount;
   final String yasserMessage;
   final String yasserPose; // 'celebrating', 'thinking', 'pointing', 'waving'
   final String? errorMessage;
   final bool isPlayingAudioPrompt;
   final YasserViseme promptViseme;
+  final String? activeCaseName;
 
   const PronunciationGameState({
     this.status = GameStatus.initial,
@@ -40,12 +46,25 @@ class PronunciationGameState extends Equatable {
     this.lastAssessment,
     this.totalStarsEarned = 0,
     this.wordsMasteredCount = 0,
+    this.attemptsCount = 0,
     this.yasserMessage = 'أهلاً بيك يا بطل! جاهز ننطق سوا؟',
     this.yasserPose = 'waving',
     this.errorMessage,
     this.isPlayingAudioPrompt = false,
     this.promptViseme = YasserViseme.rest,
+    this.activeCaseName,
   });
+
+  bool get isBusyWithAudio =>
+      isListening ||
+      isPlayingAudioPrompt ||
+      status == GameStatus.loading ||
+      status == GameStatus.preparingPrompt ||
+      status == GameStatus.preparingRecording ||
+      status == GameStatus.evaluating;
+
+  bool get canChooseWord => !isBusyWithAudio;
+  bool get canStartAudio => !isBusyWithAudio && currentWord != null;
 
   PronunciationGameState copyWith({
     GameStatus? status,
@@ -57,12 +76,15 @@ class PronunciationGameState extends Equatable {
     PronunciationAssessment? lastAssessment,
     int? totalStarsEarned,
     int? wordsMasteredCount,
+    int? attemptsCount,
     String? yasserMessage,
     String? yasserPose,
     String? errorMessage,
     bool? isPlayingAudioPrompt,
     YasserViseme? promptViseme,
+    String? activeCaseName,
     bool clearAssessment = false,
+    bool clearError = false,
   }) {
     return PronunciationGameState(
       status: status ?? this.status,
@@ -76,11 +98,13 @@ class PronunciationGameState extends Equatable {
           : lastAssessment ?? this.lastAssessment,
       totalStarsEarned: totalStarsEarned ?? this.totalStarsEarned,
       wordsMasteredCount: wordsMasteredCount ?? this.wordsMasteredCount,
+      attemptsCount: attemptsCount ?? this.attemptsCount,
       yasserMessage: yasserMessage ?? this.yasserMessage,
       yasserPose: yasserPose ?? this.yasserPose,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isPlayingAudioPrompt: isPlayingAudioPrompt ?? this.isPlayingAudioPrompt,
       promptViseme: promptViseme ?? this.promptViseme,
+      activeCaseName: activeCaseName ?? this.activeCaseName,
     );
   }
 
@@ -95,10 +119,12 @@ class PronunciationGameState extends Equatable {
     lastAssessment,
     totalStarsEarned,
     wordsMasteredCount,
+    attemptsCount,
     yasserMessage,
     yasserPose,
     isPlayingAudioPrompt,
     promptViseme,
     errorMessage,
+    activeCaseName,
   ];
 }

@@ -26,11 +26,12 @@ class AudioRecorderService {
   DateTime? _recordingStartTime;
   String? _lastError;
 
-  final StreamController<double> _amplitudeController = StreamController<double>.broadcast();
+  final StreamController<double> _amplitudeController =
+      StreamController<double>.broadcast();
   Timer? _amplitudeTimer;
 
   AudioRecorderService({AudioPreprocessor? preprocessor})
-      : _preprocessor = preprocessor ?? const AudioPreprocessor();
+    : _preprocessor = preprocessor ?? const AudioPreprocessor();
 
   bool get isRecording => _isRecording;
   String? get currentRecordingPath => _currentRecordingPath;
@@ -95,11 +96,16 @@ class AudioRecorderService {
       _recordingStartTime = DateTime.now();
 
       _amplitudeTimer?.cancel();
-      _amplitudeTimer = Timer.periodic(const Duration(milliseconds: 50), (_) async {
+      _amplitudeTimer = Timer.periodic(const Duration(milliseconds: 50), (
+        _,
+      ) async {
         if (!_isRecording) return;
         try {
           final amp = await _recorder.getAmplitude();
-          final double normalized = (1.0 + (amp.current / 60.0)).clamp(0.0, 1.0);
+          final double normalized = (1.0 + (amp.current / 60.0)).clamp(
+            0.0,
+            1.0,
+          );
           _amplitudeController.add(normalized);
         } catch (_) {}
       });
@@ -168,7 +174,9 @@ class AudioRecorderService {
     }
 
     if (!await file.exists()) {
-      throw AudioRecordingException('Recorded WAV file missing at ${file.path}');
+      throw AudioRecordingException(
+        'Recorded WAV file missing at ${file.path}',
+      );
     }
     final Uint8List bytes = await file.readAsBytes();
     if (bytes.length <= 44) {

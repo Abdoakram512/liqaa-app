@@ -1,6 +1,5 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -9,16 +8,18 @@ import '../../../../core/animation/yasser/yasser_controller.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/yasser_design_tokens.dart';
 import '../../../../core/widgets/confetti_overlay.dart';
-import '../../../../core/widgets/phonological_background.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/widgets/yasser_character.dart';
+import '../../../../core/widgets/yasser_surface_card.dart';
 import '../../../../core/widgets/yasser_text_field.dart';
+import '../../data/models/user_model.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
+import '../widgets/auth_stage_shell.dart';
 
-/// Premium Interactive Login Screen where Yasser actively participates
-/// and reacts to form interactions, password privacy, and authentication states.
+/// Interactive Login Screen where Yasser responds to identity gaze, covers his
+/// eyes on password focus, peeks on password reveal, and routes by user role.
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -27,8 +28,8 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  late YasserController _yasserController;
-  late ConfettiController _confettiController;
+  late final YasserController _yasserController;
+  late final ConfettiController _confettiController;
   final _formKey = GlobalKey<FormState>();
 
   final _identityController = TextEditingController();
@@ -39,12 +40,15 @@ class _LoginViewState extends State<LoginView> {
 
   bool _rememberMe = true;
   bool _passwordVisible = false;
+  UserRole? _selectedPortalRole;
 
   @override
   void initState() {
     super.initState();
     _yasserController = YasserController();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
 
     _identityController.addListener(_updateIdentityGaze);
     _identityFocusNode.addListener(_handleIdentityFocus);
@@ -68,19 +72,23 @@ class _LoginViewState extends State<LoginView> {
   void _handleIdentityFocus() {
     if (_identityFocusNode.hasFocus) {
       _updateIdentityGaze();
+      setState(() {});
     } else if (!_passwordFocusNode.hasFocus) {
       _yasserController.returnToIdle();
+      setState(() {});
     }
   }
 
   void _handlePasswordFocus() {
     if (_passwordFocusNode.hasFocus) {
       _handlePasswordVisibility(_passwordVisible);
+      setState(() {});
     } else {
       _yasserController.uncoverEyes();
       if (_identityFocusNode.hasFocus) {
         _updateIdentityGaze();
       }
+      setState(() {});
     }
   }
 
@@ -101,6 +109,7 @@ class _LoginViewState extends State<LoginView> {
     } else {
       _yasserController.coverEyes();
     }
+    setState(() {});
   }
 
   void _submitLogin() {
@@ -110,9 +119,25 @@ class _LoginViewState extends State<LoginView> {
     }
 
     context.read<AuthCubit>().login(
-          identity: _identityController.text,
-          password: _passwordController.text,
-        );
+      identity: _identityController.text,
+      password: _passwordController.text,
+      preferredRole: _selectedPortalRole,
+    );
+  }
+
+  String get _dynamicSpeechTitle {
+    if (_passwordFocusNode.hasFocus) {
+      return _passwordVisible
+          ? 'نظرة سريعة فقط.. سرّك في أمان!'
+          : 'مغمّض عيوني علشان كلمة السر بتاعتك!';
+    }
+    if (_identityFocusNode.hasFocus) {
+      return 'اكتب اسمك أو بريدك يا صديقي!';
+    }
+    if (_selectedPortalRole == UserRole.specialist) {
+      return 'أهلاً بك في بوابة أخصائي التخاطب';
+    }
+    return 'وحشتني يا بطل! يلا نسجّل دخولنا';
   }
 
   @override
@@ -126,29 +151,27 @@ class _LoginViewState extends State<LoginView> {
             if (mounted) _yasserController.celebrate();
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.success,
           );
 
-          Future.delayed(const Duration(milliseconds: 1400), () {
+          final targetRoute = state.user.role == UserRole.specialist
+              ? AppRoutes.specialistDashboard
+              : AppRoutes.home;
+
+          Future.delayed(const Duration(milliseconds: 950), () {
             if (context.mounted) {
-              context.go(AppRoutes.game);
+              context.go(targetRoute);
             }
           });
         } else if (state is AuthFailure) {
           _yasserController.reactToValidation(false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.error,
           );
         }
       },
@@ -158,161 +181,225 @@ class _LoginViewState extends State<LoginView> {
         return Scaffold(
           body: ConfettiCelebrationOverlay(
             confettiController: _confettiController,
-            child: PhonologicalBackground(
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
+            child: AuthStageShell(
+              title: 'تسجيل الدخول',
+              speechTitle: _dynamicSpeechTitle,
+              speechSubtitle:
+                  'استخدم حسابك المحلي للطفل أو ولي الأمر أو الأخصائي',
+              yasserController: _yasserController,
+              heroTag: 'yasser_login_character',
+              formChild: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Optional Portal Mode Switcher (Child/Parent vs Specialist)
+                    Row(
                       children: [
-                        SizedBox(height: 8.h),
-
-                        // Back navigation bar
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => context.pop(),
-                              icon: const Icon(Icons.arrow_back_ios, color: AppColors.primary),
-                              tooltip: 'رجوع',
-                            ),
-                            const Spacer(),
-                            Text(
-                              'تسجيل الدخول',
-                              style: AppTextStyles.titleMedium.copyWith(
-                                color: AppColors.primaryDark,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Spacer(),
-                            const SizedBox(width: 48),
-                          ],
+                        Expanded(
+                          child: _PortalModeTab(
+                            label: 'البطل / الأسرة',
+                            icon: Icons.face_retouching_natural_rounded,
+                            selected:
+                                _selectedPortalRole != UserRole.specialist,
+                            accent: AppColors.primary,
+                            onTap: () =>
+                                setState(() => _selectedPortalRole = null),
+                          ),
                         ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: _PortalModeTab(
+                            label: 'الأخصائي',
+                            icon: Icons.psychology_rounded,
+                            selected:
+                                _selectedPortalRole == UserRole.specialist,
+                            accent: AppColors.secondary,
+                            onTap: () => setState(
+                              () => _selectedPortalRole = UserRole.specialist,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
 
-                        SizedBox(height: 8.h),
+                    SizedBox(height: 18.h),
 
-                        // Living Yasser Character responding to form
-                        YasserCharacter(
-                          controller: _yasserController,
-                          width: 220.w,
-                          height: 250.h,
-                          heroTag: 'yasser_login_character',
-                        ).animate().fadeIn(duration: 500.ms),
+                    YasserTextField(
+                      label: _selectedPortalRole == UserRole.specialist
+                          ? 'البريد المهني أو اسم الأخصائي'
+                          : 'اسم البطل أو البريد الإلكتروني',
+                      hint: _selectedPortalRole == UserRole.specialist
+                          ? 'dr.ahmed@clinic.org'
+                          : 'مثال: يوسف أو youssef@liqaa.local',
+                      variant: YasserFieldVariant.email,
+                      controller: _identityController,
+                      focusNode: _identityFocusNode,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'يرجى إدخال اسم المستخدم أو البريد الإلكتروني';
+                        }
+                        return null;
+                      },
+                    ),
 
-                        SizedBox(height: 12.h),
+                    SizedBox(height: 16.h),
 
-                        // Identity Input (Username or Email)
-                        YasserTextField(
-                          label: 'اسم البطل أو البريد الإلكتروني',
-                          hint: 'مثال: أحمد أو ahmed@liqaa.com',
-                          controller: _identityController,
-                          focusNode: _identityFocusNode,
-                          keyboardType: TextInputType.emailAddress,
-                          prefixIcon: const Icon(Icons.person_pin_rounded),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'يرجى إدخال اسم المستخدم أو البريد الإلكتروني';
-                            }
-                            return null;
-                          },
-                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+                    YasserTextField(
+                      label: 'كلمة المرور السرية',
+                      hint: '6 خانات على الأقل',
+                      variant: YasserFieldVariant.password,
+                      isPassword: true,
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      textInputAction: TextInputAction.done,
+                      onPasswordVisibilityChanged: _handlePasswordVisibility,
+                      onFieldSubmitted: _submitLogin,
+                      validator: (value) {
+                        if (value == null || value.length < 6) {
+                          return 'كلمة المرور يجب أن تتكون من 6 خانات على الأقل';
+                        }
+                        return null;
+                      },
+                    ),
 
-                        SizedBox(height: 16.h),
+                    SizedBox(height: 8.h),
 
-                        // Password Field with Eye-Covering Behavior
-                        YasserTextField(
-                          label: 'كلمة المرور السرية',
-                          hint: 'أدخل كلمة المرور (6 خانات على الأقل)',
-                          controller: _passwordController,
-                          focusNode: _passwordFocusNode,
-                          isPassword: true,
-                          textInputAction: TextInputAction.done,
-                          prefixIcon: const Icon(Icons.lock_rounded),
-                          onPasswordVisibilityChanged: _handlePasswordVisibility,
-                          onFieldSubmitted: _submitLogin,
-                          validator: (value) {
-                            if (value == null || value.length < 6) {
-                              return 'كلمة المرور يجب أن تتكون من 6 خانات على الأقل';
-                            }
-                            return null;
-                          },
-                        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
-
-                        SizedBox(height: 10.h),
-
-                        // Remember Me & Forgot Password Row
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8.w,
+                      runSpacing: 4.h,
+                      children: [
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Checkbox(
                               value: _rememberMe,
                               activeColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                              onChanged: (v) => setState(() => _rememberMe = v ?? true),
-                            ),
-                            Text(
-                              'تذكرني',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
+                              onChanged: (v) =>
+                                  setState(() => _rememberMe = v ?? true),
                             ),
-                            const Spacer(),
-                            TextButton(
-                              onPressed: () => context.push(AppRoutes.forgotPassword),
+                            Flexible(
                               child: Text(
-                                'نسيت كلمة المرور؟',
+                                'تذكرني على هذا الجهاز',
                                 style: AppTextStyles.labelMedium.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
                           ],
                         ),
-
-                        SizedBox(height: 16.h),
-
-                        // Login Action Button
-                        PrimaryButton(
-                          label: 'انطلق الآن 🚀',
-                          isLoading: isLoading,
-                          onPressed: isLoading ? null : _submitLogin,
-                        ).animate().fadeIn(delay: 400.ms),
-
-                        SizedBox(height: 16.h),
-
-                        // Registration prompt
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              'ليس لديك حساب بطل بعد؟',
-                              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                            ),
-                            TextButton(
-                              onPressed: () => context.push(AppRoutes.register),
-                              child: Text(
-                                'إنشاء حساب جديد',
-                                style: AppTextStyles.labelLarge.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+                        TextButton(
+                          onPressed: () =>
+                              context.push(AppRoutes.forgotPassword),
+                          child: const Text('نسيت كلمة المرور؟'),
                         ),
-
-                        SizedBox(height: 20.h),
                       ],
                     ),
-                  ),
+
+                    SizedBox(height: 12.h),
+
+                    PrimaryButton(
+                      label: 'انطلق الآن',
+                      icon: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                      ),
+                      isLoading: isLoading,
+                      onPressed: isLoading ? null : _submitLogin,
+                    ),
+                  ],
                 ),
+              ),
+              footerChild: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'ليس لديك حساب بعد؟',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push(AppRoutes.register),
+                    child: const Text('إنشاء حساب جديد'),
+                  ),
+                ],
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _PortalModeTab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _PortalModeTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: YasserMotion.microState,
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        decoration: ShapeDecoration(
+          color: selected
+              ? accent.withValues(alpha: 0.14)
+              : AppColors.surfaceSubtle,
+          shape: YasserShapes.squircle(
+            14,
+            side: BorderSide(
+              color: selected ? accent : AppColors.borderSoft,
+              width: selected ? 2.0 : 1.2,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? accent : AppColors.textSecondary,
+            ),
+            SizedBox(width: 6.w),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: selected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

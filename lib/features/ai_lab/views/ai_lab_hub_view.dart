@@ -42,7 +42,8 @@ class _AiLabHubViewState extends State<AiLabHubView> {
           IconButton(
             icon: const Icon(Icons.share_rounded, color: AppColors.primary),
             tooltip: 'تصدير تقرير التشخيص',
-            onPressed: () => context.read<AiLabCubit>().exportDiagnosticReport(),
+            onPressed: () =>
+                context.read<AiLabCubit>().exportDiagnosticReport(),
           ),
         ],
       ),
@@ -80,7 +81,11 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.sports_esports_rounded, color: Colors.white, size: 36),
+                      const Icon(
+                        Icons.sports_esports_rounded,
+                        color: Colors.white,
+                        size: 36,
+                      ),
                       SizedBox(width: 14.w),
                       Expanded(
                         child: Column(
@@ -110,7 +115,10 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 8.h,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -136,77 +144,91 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                 // 9 Feature Test Cards
                 _buildTestCard(
                   title: '1. إدارة النماذج (Model Manager)',
-                  subtitle: 'حالة النماذج، التحميل للذاكرة، التحقق من التجزئة (SHA256)',
+                  subtitle:
+                      'حالة النماذج، التحميل للذاكرة، التحقق من التجزئة (SHA256)',
                   icon: Icons.memory_rounded,
                   color: Colors.blueAccent,
                   onTap: () => context.push(AppRoutes.aiLabModels),
                 ),
                 _buildTestCard(
                   title: '2. الميكروفون ومحدد الصوت (Mic & Silero VAD)',
-                  subtitle: 'موجة الصوت الحية، كشف بداية ونهاية الكلام، واقتطاع الصمت',
+                  subtitle:
+                      'موجة الصوت الحية، كشف بداية ونهاية الكلام، واقتطاع الصمت',
                   icon: Icons.graphic_eq_rounded,
                   color: Colors.teal,
                   onTap: () => context.push(AppRoutes.aiLabVad),
                 ),
                 _buildTestCard(
                   title: '3. عزل الضوضاء العصبي (GTCRN Denoiser)',
-                  subtitle: 'مقارنة الصوت الخام بالمعالج عبر نموذج GTCRN (16kHz)، وقياس RMS و SNR',
+                  subtitle:
+                      'مقارنة الصوت الخام بالمعالج عبر نموذج GTCRN (16kHz)، وقياس RMS و SNR',
                   icon: Icons.multitrack_audio_rounded,
                   color: Colors.deepPurpleAccent,
                   onTap: () => context.push(AppRoutes.aiLabNoise),
                 ),
                 _buildTestCard(
                   title: '4. التعرف على الفونيمات (Wav2Vec2-eSpeak IPA)',
-                  subtitle: 'استخراج IPA الصوتي الأعمى، احتمالات النماذج الحقيقية، ومحاذاة الأخطاء',
+                  subtitle:
+                      'استخراج IPA الصوتي الأعمى، احتمالات النماذج الحقيقية، ومحاذاة الأخطاء',
                   icon: Icons.record_voice_over_rounded,
                   color: Colors.orangeAccent,
                   onTap: () => context.push(AppRoutes.aiLabPhonemes),
                 ),
                 _buildTestCard(
                   title: '5. تحويل الكلام لنص (Whisper Tiny STT)',
-                  subtitle: 'التعرف على مستوى الكلمات بالعربية، قياس معدل الوقت الحقيقي RTF',
+                  subtitle:
+                      'التعرف على مستوى الكلمات بالعربية، قياس معدل الوقت الحقيقي RTF',
                   icon: Icons.text_fields_rounded,
                   color: Colors.indigoAccent,
                   onTap: () => context.push(AppRoutes.aiLabStt),
                 ),
                 _buildTestCard(
                   title: '6. مقارنة النماذج والهيكلية (Real Architectures)',
-                  subtitle: 'مقارنة حقيقية بين Wav2Vec2-eSpeak و Whisper Tiny و GTCRN و Silero VAD',
+                  subtitle:
+                      'مقارنة حقيقية بين Wav2Vec2-eSpeak و Whisper Tiny و GTCRN و Silero VAD',
                   icon: Icons.compare_arrows_rounded,
                   color: Colors.pinkAccent,
                   onTap: () => context.push(AppRoutes.aiLabCompare),
                 ),
                 _buildTestCard(
                   title: '7. خط الأنابيب المتكامل (Full Pipeline & Export)',
-                  subtitle: 'تشغيل المسار كاملاً من الميكروفون للتقييم مع تصدير JSON/CSV',
+                  subtitle:
+                      'تشغيل المسار كاملاً من الميكروفون للتقييم مع تصدير JSON/CSV',
                   icon: Icons.account_tree_rounded,
                   color: Colors.green,
                   onTap: () => context.push(AppRoutes.aiLabPipeline),
                 ),
                 _buildTestCard(
-                  title: '8. معيار التقييم الإكلينيكي (Clinical Speech Benchmark)',
-                  subtitle: 'حزمة اختبارات ASMDD للإبدال الأمامي، اللدغات، الحذف، والصمت',
+                  title:
+                      '8. معيار التقييم الإكلينيكي (Clinical Speech Benchmark)',
+                  subtitle:
+                      'حزمة اختبارات ASMDD للإبدال الأمامي، اللدغات، الحذف، والصمت',
                   icon: Icons.medical_services_rounded,
                   color: Colors.purpleAccent,
                   onTap: () => context.push(AppRoutes.aiLabBenchmark),
                 ),
                 _buildTestCard(
-                  title: '9. التعرف الحر والفونيمات غير المقيدة (Blind Phonemes)',
-                  subtitle: 'برهان عدم تسريب الإجابة - استدلال أعمى لأي كلام أو فونيمات',
+                  title:
+                      '9. التعرف الحر والفونيمات غير المقيدة (Blind Phonemes)',
+                  subtitle:
+                      'برهان عدم تسريب الإجابة - استدلال أعمى لأي كلام أو فونيمات',
                   icon: Icons.visibility_off_rounded,
                   color: Colors.deepOrange,
                   onTap: () => context.push(AppRoutes.aiLabBlind),
                 ),
                 _buildTestCard(
-                  title: '10. الفحص التشخيصي والاختبارات السلبية (Negative Testing)',
-                  subtitle: 'رفض الصمت، الضوضاء البيضاء، الكلمات غير المطابقة، وتشبع الإشارة',
+                  title:
+                      '10. الفحص التشخيصي والاختبارات السلبية (Negative Testing)',
+                  subtitle:
+                      'رفض الصمت، الضوضاء البيضاء، الكلمات غير المطابقة، وتشبع الإشارة',
                   icon: Icons.gpp_good_rounded,
                   color: Colors.redAccent,
                   onTap: () => context.push(AppRoutes.aiLabNegative),
                 ),
                 _buildTestCard(
                   title: '11. لوحة معايير الأداء الشاملة (Benchmark Dashboard)',
-                  subtitle: 'تشغيل حقيقي لـ 100 عينة / فحص منفصل لكل نموذج وتصدير CSV/JSON',
+                  subtitle:
+                      'تشغيل حقيقي لـ 100 عينة / فحص منفصل لكل نموذج وتصدير CSV/JSON',
                   icon: Icons.analytics_rounded,
                   color: Colors.teal.shade700,
                   onTap: () => context.push(AppRoutes.aiLabSuite),
@@ -259,7 +281,11 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.check_circle_rounded, color: Colors.green, size: 14),
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 14,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       'أوفلاين 100%',
@@ -374,7 +400,11 @@ class _AiLabHubViewState extends State<AiLabHubView> {
             color: AppColors.textSecondary,
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted),
+        trailing: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 16,
+          color: AppColors.textMuted,
+        ),
         onTap: onTap,
       ),
     );

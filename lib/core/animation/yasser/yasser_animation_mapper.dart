@@ -34,13 +34,21 @@ class YasserStateMapping {
 /// Translates Flutter semantic character intents into Rive runtime values
 /// and high-fidelity fallback illustrations.
 abstract final class YasserAnimationMapper {
-  static const String standingPose = 'assets/images/yasser/original/yasser_standing.png';
-  static const String wavingPose = 'assets/images/yasser/poses/yasser_waving.png';
-  static const String thinkingPose = 'assets/images/yasser/poses/yasser_thinking.png';
-  static const String celebratingPose = 'assets/images/yasser/poses/yasser_celebrating.png';
-  static const String presentingPose = 'assets/images/yasser/poses/yasser_presenting.png';
+  static const String standingPose =
+      'assets/images/yasser/original/yasser_standing.png';
+  static const String wavingPose =
+      'assets/images/yasser/poses/yasser_waving.png';
+  static const String thinkingPose =
+      'assets/images/yasser/poses/yasser_thinking.png';
+  static const String celebratingPose =
+      'assets/images/yasser/poses/yasser_celebrating.png';
+  static const String presentingPose =
+      'assets/images/yasser/poses/yasser_presenting.png';
 
-  static YasserStateMapping map(YasserAnimationState state, {Offset? customGaze}) {
+  static YasserStateMapping map(
+    YasserAnimationState state, {
+    Offset? customGaze,
+  }) {
     switch (state) {
       case YasserAnimationState.idle:
       case YasserAnimationState.breathing:

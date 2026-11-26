@@ -59,10 +59,14 @@ class _MicVadViewState extends State<MicVadView> {
                 child: Column(
                   children: [
                     Text(
-                      state.isRecording ? 'ياسر يستمع الآن...' : 'اضغط للتسجيل الصوتي واختبار VAD',
+                      state.isRecording
+                          ? 'ياسر يستمع الآن...'
+                          : 'اضغط للتسجيل الصوتي واختبار VAD',
                       style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: state.isRecording ? Colors.red : AppColors.textPrimary,
+                        color: state.isRecording
+                            ? Colors.red
+                            : AppColors.textPrimary,
                       ),
                     ),
 
@@ -81,7 +85,13 @@ class _MicVadViewState extends State<MicVadView> {
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(24, (i) {
-                                final h = (20.0 + (state.currentLiveAmplitude * 60.0 * ((i % 5) + 1) / 5.0)).clamp(10.0, 70.0);
+                                final h =
+                                    (20.0 +
+                                            (state.currentLiveAmplitude *
+                                                60.0 *
+                                                ((i % 5) + 1) /
+                                                5.0))
+                                        .clamp(10.0, 70.0);
                                 return Container(
                                   width: 4.w,
                                   height: h,
@@ -116,18 +126,26 @@ class _MicVadViewState extends State<MicVadView> {
                         width: 72.w,
                         height: 72.w,
                         decoration: BoxDecoration(
-                          color: state.isRecording ? Colors.red : AppColors.primary,
+                          color: state.isRecording
+                              ? Colors.red
+                              : AppColors.primary,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: (state.isRecording ? Colors.red : AppColors.primary).withOpacity(0.4),
+                              color:
+                                  (state.isRecording
+                                          ? Colors.red
+                                          : AppColors.primary)
+                                      .withOpacity(0.4),
                               blurRadius: 16,
                               spreadRadius: 2,
                             ),
                           ],
                         ),
                         child: Icon(
-                          state.isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                          state.isRecording
+                              ? Icons.stop_rounded
+                              : Icons.mic_rounded,
                           color: Colors.white,
                           size: 36,
                         ),
@@ -160,7 +178,9 @@ class _MicVadViewState extends State<MicVadView> {
                   alignment: Alignment.center,
                   child: Text(
                     'قم بتسجيل مقطع صوتي لعرض نتائج كشف الصوت واقتطاع الصمت',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 )
               else
@@ -178,22 +198,49 @@ class _MicVadViewState extends State<MicVadView> {
                         ),
                         child: Text(
                           'خطأ تحليل الصوت/VAD: ${audio.errorMessage}',
-                          style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade900),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.red.shade900,
+                          ),
                         ),
                       ),
-                    _buildMetricRow('وجود صوت بشري (Silero VAD):', audio.speechDetected ? 'نعم (${audio.vadSegments.length} مقاطع)' : 'لا (صمت فقط)'),
-                    _buildMetricRow('التردد / القنوات / العمق:', '${audio.sampleRate} Hz • ${audio.channels}ch • ${audio.bitsPerSample}-bit'),
-                    _buildMetricRow('عدد العينات / التشبع (Clip):', '${audio.sampleCount} samples (${audio.clippingCount} clipped)'),
-                    _buildMetricRow('بداية ونهاية الكلام:', '${audio.speechStartMs} ms -> ${audio.speechEndMs} ms'),
-                    _buildMetricRow('مدة التسجيل الكلية:', '${audio.durationMs} ms'),
-                    _buildMetricRow('طاقة RMS / قمة السعة Peak:', '${audio.averageRms} / ${audio.peakAmplitude}'),
-                    _buildMetricRow('نسبة الإشارة للضوضاء (SNR):', '${audio.snrDb} dB'),
+                    _buildMetricRow(
+                      'وجود صوت بشري (Silero VAD):',
+                      audio.speechDetected
+                          ? 'نعم (${audio.vadSegments.length} مقاطع)'
+                          : 'لا (صمت فقط)',
+                    ),
+                    _buildMetricRow(
+                      'التردد / القنوات / العمق:',
+                      '${audio.sampleRate} Hz • ${audio.channels}ch • ${audio.bitsPerSample}-bit',
+                    ),
+                    _buildMetricRow(
+                      'عدد العينات / التشبع (Clip):',
+                      '${audio.sampleCount} samples (${audio.clippingCount} clipped)',
+                    ),
+                    _buildMetricRow(
+                      'بداية ونهاية الكلام:',
+                      '${audio.speechStartMs} ms -> ${audio.speechEndMs} ms',
+                    ),
+                    _buildMetricRow(
+                      'مدة التسجيل الكلية:',
+                      '${audio.durationMs} ms',
+                    ),
+                    _buildMetricRow(
+                      'طاقة RMS / قمة السعة Peak:',
+                      '${audio.averageRms} / ${audio.peakAmplitude}',
+                    ),
+                    _buildMetricRow(
+                      'نسبة الإشارة للضوضاء (SNR):',
+                      '${audio.snrDb} dB',
+                    ),
                     if (audio.vadSegments.isNotEmpty) ...[
                       SizedBox(height: 8.h),
-                      ...audio.vadSegments.map((seg) => _buildMetricRow(
-                            'مقطع كلام #${seg.index + 1}:',
-                            '${seg.startMs}-${seg.endMs} ms (${seg.sampleCount} smp, RMS ${seg.rms})',
-                          )),
+                      ...audio.vadSegments.map(
+                        (seg) => _buildMetricRow(
+                          'مقطع كلام #${seg.index + 1}:',
+                          '${seg.startMs}-${seg.endMs} ms (${seg.sampleCount} smp, RMS ${seg.rms})',
+                        ),
+                      ),
                     ],
 
                     SizedBox(height: 16.h),
@@ -212,7 +259,9 @@ class _MicVadViewState extends State<MicVadView> {
                             onPressed: audio.rawAudioBytes.isEmpty
                                 ? null
                                 : () async {
-                                    await _audioPlayer.play(BytesSource(audio.rawAudioBytes));
+                                    await _audioPlayer.play(
+                                      BytesSource(audio.rawAudioBytes),
+                                    );
                                   },
                           ),
                         ),
@@ -223,16 +272,23 @@ class _MicVadViewState extends State<MicVadView> {
                               backgroundColor: Colors.teal.shade50,
                               foregroundColor: Colors.teal.shade800,
                             ),
-                            icon: const Icon(Icons.content_cut_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.content_cut_rounded,
+                              size: 18,
+                            ),
                             label: Text(
                               audio.trimmedAudioBytes != null
                                   ? 'تشغيل المقتطع (WAV)'
                                   : 'لا يوجد مقطع صوتي',
                             ),
-                            onPressed: audio.trimmedAudioBytes == null || audio.trimmedAudioBytes!.isEmpty
+                            onPressed:
+                                audio.trimmedAudioBytes == null ||
+                                    audio.trimmedAudioBytes!.isEmpty
                                 ? null
                                 : () async {
-                                    await _audioPlayer.play(BytesSource(audio.trimmedAudioBytes!));
+                                    await _audioPlayer.play(
+                                      BytesSource(audio.trimmedAudioBytes!),
+                                    );
                                   },
                           ),
                         ),
@@ -259,8 +315,19 @@ class _MicVadViewState extends State<MicVadView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-          Text(value, style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            value,
+            style: AppTextStyles.titleSmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );

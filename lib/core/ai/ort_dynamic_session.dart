@@ -20,82 +20,136 @@ typedef _GetErrorMessageN = Pointer<Utf8> Function(Pointer<Void> status);
 typedef _GetErrorMessageD = Pointer<Utf8> Function(Pointer<Void> status);
 typedef _ReleaseStatusN = Void Function(Pointer<Void> status);
 typedef _ReleaseStatusD = void Function(Pointer<Void> status);
-typedef _CreateEnvN = Pointer<Void> Function(
-    Uint32 level, Pointer<Utf8> logid, Pointer<Pointer<Void>> out);
-typedef _CreateEnvD = Pointer<Void> Function(
-    int level, Pointer<Utf8> logid, Pointer<Pointer<Void>> out);
-typedef _CreateSessionOptsN = Pointer<Void> Function(Pointer<Pointer<Void>> out);
-typedef _CreateSessionOptsD = Pointer<Void> Function(Pointer<Pointer<Void>> out);
-typedef _SetIntraOpN = Pointer<Void> Function(Pointer<Void> opts, Int32 threads);
+typedef _CreateEnvN =
+    Pointer<Void> Function(
+      Uint32 level,
+      Pointer<Utf8> logid,
+      Pointer<Pointer<Void>> out,
+    );
+typedef _CreateEnvD =
+    Pointer<Void> Function(
+      int level,
+      Pointer<Utf8> logid,
+      Pointer<Pointer<Void>> out,
+    );
+typedef _CreateSessionOptsN =
+    Pointer<Void> Function(Pointer<Pointer<Void>> out);
+typedef _CreateSessionOptsD =
+    Pointer<Void> Function(Pointer<Pointer<Void>> out);
+typedef _SetIntraOpN =
+    Pointer<Void> Function(Pointer<Void> opts, Int32 threads);
 typedef _SetIntraOpD = Pointer<Void> Function(Pointer<Void> opts, int threads);
 typedef _SetGraphOptN = Pointer<Void> Function(Pointer<Void> opts, Int32 level);
 typedef _SetGraphOptD = Pointer<Void> Function(Pointer<Void> opts, int level);
 typedef _ReleasePtrN = Void Function(Pointer<Void> ptr);
 typedef _ReleasePtrD = void Function(Pointer<Void> ptr);
-typedef _CreateSessionN = Pointer<Void> Function(
-    Pointer<Void> env, Pointer<Void> path, Pointer<Void> opts, Pointer<Pointer<Void>> out);
-typedef _CreateSessionD = Pointer<Void> Function(
-    Pointer<Void> env, Pointer<Void> path, Pointer<Void> opts, Pointer<Pointer<Void>> out);
+typedef _CreateSessionN =
+    Pointer<Void> Function(
+      Pointer<Void> env,
+      Pointer<Void> path,
+      Pointer<Void> opts,
+      Pointer<Pointer<Void>> out,
+    );
+typedef _CreateSessionD =
+    Pointer<Void> Function(
+      Pointer<Void> env,
+      Pointer<Void> path,
+      Pointer<Void> opts,
+      Pointer<Pointer<Void>> out,
+    );
 typedef _GetAllocatorN = Pointer<Void> Function(Pointer<Pointer<Void>> out);
 typedef _GetAllocatorD = Pointer<Void> Function(Pointer<Pointer<Void>> out);
-typedef _AllocatorFreeN = Pointer<Void> Function(Pointer<Void> alloc, Pointer<Void> ptr);
-typedef _AllocatorFreeD = Pointer<Void> Function(Pointer<Void> alloc, Pointer<Void> ptr);
-typedef _SessionGetCountN = Pointer<Void> Function(Pointer<Void> sess, Pointer<Size> out);
-typedef _SessionGetCountD = Pointer<Void> Function(Pointer<Void> sess, Pointer<Size> out);
-typedef _SessionGetNameN = Pointer<Void> Function(
-    Pointer<Void> sess, Size index, Pointer<Void> alloc, Pointer<Pointer<Utf8>> out);
-typedef _SessionGetNameD = Pointer<Void> Function(
-    Pointer<Void> sess, int index, Pointer<Void> alloc, Pointer<Pointer<Utf8>> out);
-typedef _CreateTensorAsOrtValueN = Pointer<Void> Function(
-    Pointer<Void> alloc, Pointer<Int64> shape, Size shapeLen, Uint32 elemType, Pointer<Pointer<Void>> out);
-typedef _CreateTensorAsOrtValueD = Pointer<Void> Function(
-    Pointer<Void> alloc, Pointer<Int64> shape, int shapeLen, int elemType, Pointer<Pointer<Void>> out);
-typedef _GetTensorMutableDataN = Pointer<Void> Function(
-    Pointer<Void> val, Pointer<Pointer<Void>> out);
-typedef _GetTensorMutableDataD = Pointer<Void> Function(
-    Pointer<Void> val, Pointer<Pointer<Void>> out);
-typedef _GetTensorTypeAndShapeInfoN = Pointer<Void> Function(
-    Pointer<Void> val, Pointer<Pointer<Void>> out);
-typedef _GetTensorTypeAndShapeInfoD = Pointer<Void> Function(
-    Pointer<Void> val, Pointer<Pointer<Void>> out);
-typedef _GetDimensionsCountN = Pointer<Void> Function(
-    Pointer<Void> info, Pointer<Size> out);
-typedef _GetDimensionsCountD = Pointer<Void> Function(
-    Pointer<Void> info, Pointer<Size> out);
-typedef _GetDimensionsN = Pointer<Void> Function(
-    Pointer<Void> info, Pointer<Int64> dimValues, Size len);
-typedef _GetDimensionsD = Pointer<Void> Function(
-    Pointer<Void> info, Pointer<Int64> dimValues, int len);
-typedef _RunN = Pointer<Void> Function(
-  Pointer<Void> sess,
-  Pointer<Void> runOpts,
-  Pointer<Pointer<Utf8>> inputNames,
-  Pointer<Pointer<Void>> inputs,
-  Size inputLen,
-  Pointer<Pointer<Utf8>> outputNames,
-  Size outputNamesLen,
-  Pointer<Pointer<Void>> outputs,
-);
-typedef _RunD = Pointer<Void> Function(
-  Pointer<Void> sess,
-  Pointer<Void> runOpts,
-  Pointer<Pointer<Utf8>> inputNames,
-  Pointer<Pointer<Void>> inputs,
-  int inputLen,
-  Pointer<Pointer<Utf8>> outputNames,
-  int outputNamesLen,
-  Pointer<Pointer<Void>> outputs,
-);
+typedef _AllocatorFreeN =
+    Pointer<Void> Function(Pointer<Void> alloc, Pointer<Void> ptr);
+typedef _AllocatorFreeD =
+    Pointer<Void> Function(Pointer<Void> alloc, Pointer<Void> ptr);
+typedef _SessionGetCountN =
+    Pointer<Void> Function(Pointer<Void> sess, Pointer<Size> out);
+typedef _SessionGetCountD =
+    Pointer<Void> Function(Pointer<Void> sess, Pointer<Size> out);
+typedef _SessionGetNameN =
+    Pointer<Void> Function(
+      Pointer<Void> sess,
+      Size index,
+      Pointer<Void> alloc,
+      Pointer<Pointer<Utf8>> out,
+    );
+typedef _SessionGetNameD =
+    Pointer<Void> Function(
+      Pointer<Void> sess,
+      int index,
+      Pointer<Void> alloc,
+      Pointer<Pointer<Utf8>> out,
+    );
+typedef _CreateTensorAsOrtValueN =
+    Pointer<Void> Function(
+      Pointer<Void> alloc,
+      Pointer<Int64> shape,
+      Size shapeLen,
+      Uint32 elemType,
+      Pointer<Pointer<Void>> out,
+    );
+typedef _CreateTensorAsOrtValueD =
+    Pointer<Void> Function(
+      Pointer<Void> alloc,
+      Pointer<Int64> shape,
+      int shapeLen,
+      int elemType,
+      Pointer<Pointer<Void>> out,
+    );
+typedef _GetTensorMutableDataN =
+    Pointer<Void> Function(Pointer<Void> val, Pointer<Pointer<Void>> out);
+typedef _GetTensorMutableDataD =
+    Pointer<Void> Function(Pointer<Void> val, Pointer<Pointer<Void>> out);
+typedef _GetTensorTypeAndShapeInfoN =
+    Pointer<Void> Function(Pointer<Void> val, Pointer<Pointer<Void>> out);
+typedef _GetTensorTypeAndShapeInfoD =
+    Pointer<Void> Function(Pointer<Void> val, Pointer<Pointer<Void>> out);
+typedef _GetDimensionsCountN =
+    Pointer<Void> Function(Pointer<Void> info, Pointer<Size> out);
+typedef _GetDimensionsCountD =
+    Pointer<Void> Function(Pointer<Void> info, Pointer<Size> out);
+typedef _GetDimensionsN =
+    Pointer<Void> Function(
+      Pointer<Void> info,
+      Pointer<Int64> dimValues,
+      Size len,
+    );
+typedef _GetDimensionsD =
+    Pointer<Void> Function(
+      Pointer<Void> info,
+      Pointer<Int64> dimValues,
+      int len,
+    );
+typedef _RunN =
+    Pointer<Void> Function(
+      Pointer<Void> sess,
+      Pointer<Void> runOpts,
+      Pointer<Pointer<Utf8>> inputNames,
+      Pointer<Pointer<Void>> inputs,
+      Size inputLen,
+      Pointer<Pointer<Utf8>> outputNames,
+      Size outputNamesLen,
+      Pointer<Pointer<Void>> outputs,
+    );
+typedef _RunD =
+    Pointer<Void> Function(
+      Pointer<Void> sess,
+      Pointer<Void> runOpts,
+      Pointer<Pointer<Utf8>> inputNames,
+      Pointer<Pointer<Void>> inputs,
+      int inputLen,
+      Pointer<Pointer<Utf8>> outputNames,
+      int outputNamesLen,
+      Pointer<Pointer<Void>> outputs,
+    );
 
 /// Result of running a float32 tensor through an [OrtDynamicSession].
 class OrtFloatTensorResult {
   final List<int> shape;
   final Float32List data;
 
-  const OrtFloatTensorResult({
-    required this.shape,
-    required this.data,
-  });
+  const OrtFloatTensorResult({required this.shape, required this.data});
 }
 
 typedef _SetDllDirectoryWN = Int32 Function(Pointer<Utf16> lpPathName);
@@ -123,9 +177,10 @@ class OrtRuntimeLoader {
       if (ortDll.existsSync()) {
         try {
           final kernel32 = DynamicLibrary.open('kernel32.dll');
-          final setDllDir = kernel32.lookupFunction<_SetDllDirectoryWN, _SetDllDirectoryWD>(
-            'SetDllDirectoryW',
-          );
+          final setDllDir = kernel32
+              .lookupFunction<_SetDllDirectoryWN, _SetDllDirectoryWD>(
+                'SetDllDirectoryW',
+              );
           final dirPtr = dir.toNativeUtf16();
           try {
             setDllDir(dirPtr);
@@ -162,7 +217,9 @@ class OrtRuntimeLoader {
     } else if (Platform.isMacOS || Platform.isIOS) {
       _ortLib = DynamicLibrary.process();
     } else {
-      throw UnsupportedError('Unsupported platform for ONNX Runtime FFI: ${Platform.operatingSystem}');
+      throw UnsupportedError(
+        'Unsupported platform for ONNX Runtime FFI: ${Platform.operatingSystem}',
+      );
     }
     return _ortLib!;
   }
@@ -223,25 +280,25 @@ class OrtDynamicSession {
     required this.inputName,
     required this.outputName,
     required this.runtimeVersion,
-  })  : _env = env,
-        _opts = opts,
-        _sess = sess,
-        _alloc = alloc,
-        _inNamesPtr = inNamesPtr,
-        _outNamesPtr = outNamesPtr,
-        _getErr = getErr,
-        _relStatus = relStatus,
-        _createTensor = createTensor,
-        _getTensorData = getTensorData,
-        _getShapeInfo = getShapeInfo,
-        _getDimsCount = getDimsCount,
-        _getDims = getDims,
-        _run = run,
-        _relSess = relSess,
-        _relVal = relVal,
-        _relInfo = relInfo,
-        _relOpts = relOpts,
-        _relEnv = relEnv;
+  }) : _env = env,
+       _opts = opts,
+       _sess = sess,
+       _alloc = alloc,
+       _inNamesPtr = inNamesPtr,
+       _outNamesPtr = outNamesPtr,
+       _getErr = getErr,
+       _relStatus = relStatus,
+       _createTensor = createTensor,
+       _getTensorData = getTensorData,
+       _getShapeInfo = getShapeInfo,
+       _getDimsCount = getDimsCount,
+       _getDims = getDims,
+       _run = run,
+       _relSess = relSess,
+       _relVal = relVal,
+       _relInfo = relInfo,
+       _relOpts = relOpts,
+       _relEnv = relEnv;
 
   static void _check(
     Pointer<Void> status,
@@ -262,47 +319,102 @@ class OrtDynamicSession {
     int graphOptimizationLevel = 99,
   }) {
     if (!const [0, 1, 2, 99].contains(graphOptimizationLevel)) {
-      throw ArgumentError.value(graphOptimizationLevel, 'graphOptimizationLevel');
+      throw ArgumentError.value(
+        graphOptimizationLevel,
+        'graphOptimizationLevel',
+      );
     }
     if (!File(modelPath).existsSync()) {
       throw FileSystemException('ONNX model file does not exist', modelPath);
     }
 
     final ort = OrtRuntimeLoader.openOnnxRuntime();
-    final base = ort.lookupFunction<_OrtGetApiBaseN, _OrtGetApiBaseD>('OrtGetApiBase')();
-    final version = base.ref.getVersionString.asFunction<_GetVersionD>()().toDartString();
+    final base = ort.lookupFunction<_OrtGetApiBaseN, _OrtGetApiBaseD>(
+      'OrtGetApiBase',
+    )();
+    final version = base.ref.getVersionString
+        .asFunction<_GetVersionD>()()
+        .toDartString();
     OrtRuntimeLoader._resolvedVersion = version;
 
     final table = base.ref.getApi.asFunction<_GetApiD>()(_ortApiVersion);
     if (table == nullptr) {
-      throw StateError('OrtGetApiBase->GetApi($_ortApiVersion) returned null (ORT v$version)');
+      throw StateError(
+        'OrtGetApiBase->GetApi($_ortApiVersion) returned null (ORT v$version)',
+      );
     }
 
     // Verified vtable indices against ORT 1.28.2 / 1.29 headers
-    final getErr = table[2].cast<NativeFunction<_GetErrorMessageN>>().asFunction<_GetErrorMessageD>();
-    final relStatus = table[93].cast<NativeFunction<_ReleaseStatusN>>().asFunction<_ReleaseStatusD>();
-    final createEnv = table[3].cast<NativeFunction<_CreateEnvN>>().asFunction<_CreateEnvD>();
-    final createOpts = table[10].cast<NativeFunction<_CreateSessionOptsN>>().asFunction<_CreateSessionOptsD>();
-    final setGraphOpt = table[23].cast<NativeFunction<_SetGraphOptN>>().asFunction<_SetGraphOptD>();
-    final setIntra = table[24].cast<NativeFunction<_SetIntraOpN>>().asFunction<_SetIntraOpD>();
-    final createSess = table[7].cast<NativeFunction<_CreateSessionN>>().asFunction<_CreateSessionD>();
-    final getAlloc = table[78].cast<NativeFunction<_GetAllocatorN>>().asFunction<_GetAllocatorD>();
-    final allocFree = table[76].cast<NativeFunction<_AllocatorFreeN>>().asFunction<_AllocatorFreeD>();
-    final getInCount = table[30].cast<NativeFunction<_SessionGetCountN>>().asFunction<_SessionGetCountD>();
-    final getOutCount = table[31].cast<NativeFunction<_SessionGetCountN>>().asFunction<_SessionGetCountD>();
-    final getInName = table[36].cast<NativeFunction<_SessionGetNameN>>().asFunction<_SessionGetNameD>();
-    final getOutName = table[37].cast<NativeFunction<_SessionGetNameN>>().asFunction<_SessionGetNameD>();
-    final createTensor = table[48].cast<NativeFunction<_CreateTensorAsOrtValueN>>().asFunction<_CreateTensorAsOrtValueD>();
-    final getTensorData = table[51].cast<NativeFunction<_GetTensorMutableDataN>>().asFunction<_GetTensorMutableDataD>();
-    final getShapeInfo = table[65].cast<NativeFunction<_GetTensorTypeAndShapeInfoN>>().asFunction<_GetTensorTypeAndShapeInfoD>();
-    final getDimsCount = table[61].cast<NativeFunction<_GetDimensionsCountN>>().asFunction<_GetDimensionsCountD>();
-    final getDims = table[62].cast<NativeFunction<_GetDimensionsN>>().asFunction<_GetDimensionsD>();
+    final getErr = table[2]
+        .cast<NativeFunction<_GetErrorMessageN>>()
+        .asFunction<_GetErrorMessageD>();
+    final relStatus = table[93]
+        .cast<NativeFunction<_ReleaseStatusN>>()
+        .asFunction<_ReleaseStatusD>();
+    final createEnv = table[3]
+        .cast<NativeFunction<_CreateEnvN>>()
+        .asFunction<_CreateEnvD>();
+    final createOpts = table[10]
+        .cast<NativeFunction<_CreateSessionOptsN>>()
+        .asFunction<_CreateSessionOptsD>();
+    final setGraphOpt = table[23]
+        .cast<NativeFunction<_SetGraphOptN>>()
+        .asFunction<_SetGraphOptD>();
+    final setIntra = table[24]
+        .cast<NativeFunction<_SetIntraOpN>>()
+        .asFunction<_SetIntraOpD>();
+    final createSess = table[7]
+        .cast<NativeFunction<_CreateSessionN>>()
+        .asFunction<_CreateSessionD>();
+    final getAlloc = table[78]
+        .cast<NativeFunction<_GetAllocatorN>>()
+        .asFunction<_GetAllocatorD>();
+    final allocFree = table[76]
+        .cast<NativeFunction<_AllocatorFreeN>>()
+        .asFunction<_AllocatorFreeD>();
+    final getInCount = table[30]
+        .cast<NativeFunction<_SessionGetCountN>>()
+        .asFunction<_SessionGetCountD>();
+    final getOutCount = table[31]
+        .cast<NativeFunction<_SessionGetCountN>>()
+        .asFunction<_SessionGetCountD>();
+    final getInName = table[36]
+        .cast<NativeFunction<_SessionGetNameN>>()
+        .asFunction<_SessionGetNameD>();
+    final getOutName = table[37]
+        .cast<NativeFunction<_SessionGetNameN>>()
+        .asFunction<_SessionGetNameD>();
+    final createTensor = table[48]
+        .cast<NativeFunction<_CreateTensorAsOrtValueN>>()
+        .asFunction<_CreateTensorAsOrtValueD>();
+    final getTensorData = table[51]
+        .cast<NativeFunction<_GetTensorMutableDataN>>()
+        .asFunction<_GetTensorMutableDataD>();
+    final getShapeInfo = table[65]
+        .cast<NativeFunction<_GetTensorTypeAndShapeInfoN>>()
+        .asFunction<_GetTensorTypeAndShapeInfoD>();
+    final getDimsCount = table[61]
+        .cast<NativeFunction<_GetDimensionsCountN>>()
+        .asFunction<_GetDimensionsCountD>();
+    final getDims = table[62]
+        .cast<NativeFunction<_GetDimensionsN>>()
+        .asFunction<_GetDimensionsD>();
     final run = table[9].cast<NativeFunction<_RunN>>().asFunction<_RunD>();
-    final relEnv = table[92].cast<NativeFunction<_ReleasePtrN>>().asFunction<_ReleasePtrD>();
-    final relSess = table[95].cast<NativeFunction<_ReleasePtrN>>().asFunction<_ReleasePtrD>();
-    final relVal = table[96].cast<NativeFunction<_ReleasePtrN>>().asFunction<_ReleasePtrD>();
-    final relInfo = table[99].cast<NativeFunction<_ReleasePtrN>>().asFunction<_ReleasePtrD>();
-    final relOpts = table[100].cast<NativeFunction<_ReleasePtrN>>().asFunction<_ReleasePtrD>();
+    final relEnv = table[92]
+        .cast<NativeFunction<_ReleasePtrN>>()
+        .asFunction<_ReleasePtrD>();
+    final relSess = table[95]
+        .cast<NativeFunction<_ReleasePtrN>>()
+        .asFunction<_ReleasePtrD>();
+    final relVal = table[96]
+        .cast<NativeFunction<_ReleasePtrN>>()
+        .asFunction<_ReleasePtrD>();
+    final relInfo = table[99]
+        .cast<NativeFunction<_ReleasePtrN>>()
+        .asFunction<_ReleasePtrD>();
+    final relOpts = table[100]
+        .cast<NativeFunction<_ReleasePtrN>>()
+        .asFunction<_ReleasePtrD>();
 
     final pEnv = calloc<Pointer<Void>>();
     final pOpts = calloc<Pointer<Void>>();
@@ -316,7 +428,11 @@ class OrtDynamicSession {
     try {
       final logId = 'liqaa_ort'.toNativeUtf8();
       try {
-        _check(createEnv(3 /* ORT_LOGGING_LEVEL_ERROR */, logId, pEnv), getErr, relStatus);
+        _check(
+          createEnv(3 /* ORT_LOGGING_LEVEL_ERROR */, logId, pEnv),
+          getErr,
+          relStatus,
+        );
         envPtr = pEnv.value;
       } finally {
         calloc.free(logId);
@@ -366,7 +482,8 @@ class OrtDynamicSession {
       }
 
       final inNamesPtr = calloc<Pointer<Utf8>>(1)..[0] = inName.toNativeUtf8();
-      final outNamesPtr = calloc<Pointer<Utf8>>(1)..[0] = outName.toNativeUtf8();
+      final outNamesPtr = calloc<Pointer<Utf8>>(1)
+        ..[0] = outName.toNativeUtf8();
 
       return OrtDynamicSession._(
         env: envPtr,
@@ -411,7 +528,8 @@ class OrtDynamicSession {
       throw StateError('OrtDynamicSession has already been disposed.');
     }
 
-    if (inputShape.isEmpty || inputShape.any((d) => d <= 0) ||
+    if (inputShape.isEmpty ||
+        inputShape.any((d) => d <= 0) ||
         inputShape.fold<int>(1, (a, b) => a * b) != inputData.length) {
       throw ArgumentError('Input tensor shape does not match input data.');
     }
@@ -436,14 +554,23 @@ class OrtDynamicSession {
 
     try {
       _check(
-        _createTensor(_alloc, shapePtr, inputShape.length, _onnxTensorFloat, pInVal),
+        _createTensor(
+          _alloc,
+          shapePtr,
+          inputShape.length,
+          _onnxTensorFloat,
+          pInVal,
+        ),
         _getErr,
         _relStatus,
       );
       inValPtr = pInVal.value;
 
       _check(_getTensorData(inValPtr, pData), _getErr, _relStatus);
-      pData.value.cast<Float>().asTypedList(inputData.length).setAll(0, inputData);
+      pData.value
+          .cast<Float>()
+          .asTypedList(inputData.length)
+          .setAll(0, inputData);
 
       inArr[0] = inValPtr;
       _check(

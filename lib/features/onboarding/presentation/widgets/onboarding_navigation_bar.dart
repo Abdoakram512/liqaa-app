@@ -1,12 +1,18 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/localization/locale_keys.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/yasser_buttons.dart';
 import 'onboarding_indicator.dart';
 
+/// Unified onboarding bottom bar.
+///
+/// Enforces consistent brand-orange primary CTA styling across all pages (fixing
+/// the legacy page-dependent purple/coral button switch) while letting
+/// supporting accents highlight only the progress pill indicator.
 class OnboardingNavigationBar extends StatelessWidget {
   final int currentIndex;
   final int totalPages;
@@ -24,60 +30,49 @@ class OnboardingNavigationBar extends StatelessWidget {
     required this.isFirstPage,
     required this.onNext,
     required this.onPrevious,
-    required this.activeColor,
+    this.activeColor = AppColors.primary,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+      padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 18.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Indicator in Center
           OnboardingIndicator(
             count: totalPages,
             currentIndex: currentIndex,
-            activeColor: activeColor,
+            activeColor: AppColors.primary,
           ),
-
-          SizedBox(height: 20.h),
-
-          // Navigation buttons row
+          SizedBox(height: 18.h),
           Row(
             children: [
-              // Back Button (shown if not first page)
               if (!isFirstPage) ...[
-                IconButton(
+                YasserIconButton(
+                  icon: isRtl
+                      ? Icons.arrow_back_rounded
+                      : Icons.arrow_back_ios_new_rounded,
+                  tooltip: LocaleKeys.onboardingBack.tr(),
+                  size: 56,
                   onPressed: onPrevious,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: AppColors.borderSoft),
-                    padding: const EdgeInsets.all(14),
-                  ),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    size: 20,
-                    color: AppColors.textPrimary,
-                  ),
                 ),
                 SizedBox(width: 12.w),
               ],
-
-              // Next or "يلا نبدأ" CTA Button
               Expanded(
                 child: PrimaryButton(
                   label: isLastPage
                       ? LocaleKeys.onboardingStart.tr()
                       : LocaleKeys.onboardingNext.tr(),
-                  backgroundColor: isLastPage
-                      ? AppColors.accentCoral
-                      : activeColor,
+                  // Strictly preserve consistent brand-orange primary CTA across every step
+                  backgroundColor: AppColors.primary,
                   icon: Icon(
                     isLastPage
-                        ? Icons.rocket_launch_rounded
+                        ? Icons.play_arrow_rounded
                         : Icons.arrow_forward_rounded,
-                    size: 20,
+                    size: 22,
                     color: Colors.white,
                   ),
                   onPressed: onNext,

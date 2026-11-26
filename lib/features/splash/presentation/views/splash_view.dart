@@ -18,14 +18,24 @@ class SplashView extends StatelessWidget {
       create: (_) => sl<SplashCubit>()..initApp(),
       child: BlocListener<SplashCubit, SplashState>(
         listener: (context, state) {
-          if (state is SplashNavigateToOnboarding) {
-            context.go(AppRoutes.onboarding);
-          } else if (state is SplashNavigateToAuth) {
-            context.go(AppRoutes.auth);
+          switch (state) {
+            case SplashNavigateToOnboarding():
+              context.go(AppRoutes.onboarding);
+            case SplashNavigateToAuth():
+              context.go(AppRoutes.auth);
+            case SplashNavigateToChildHome():
+              context.go(AppRoutes.home);
+            case SplashNavigateToSpecialist():
+              context.go(AppRoutes.specialistDashboard);
+            case SplashInitial() || SplashAnimating():
+              break;
           }
         },
         child: const Scaffold(
-          body: PhonologicalBackground(child: SafeArea(child: SplashContent())),
+          body: PhonologicalBackground(
+            variant: PhonologicalSceneVariant.sunriseArch,
+            child: SafeArea(child: SplashContent()),
+          ),
         ),
       ),
     );

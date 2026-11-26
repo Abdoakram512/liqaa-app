@@ -6,34 +6,52 @@ import '../../../../core/animation/yasser/yasser_animation_state.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/yasser_design_tokens.dart';
 import '../../../../core/widgets/yasser_avatar.dart';
 import '../../../../core/widgets/yasser_character.dart';
+import '../../../../core/widgets/yasser_speech_bubble.dart';
 import '../../data/models/onboarding_item_model.dart';
 
+/// Expressive organic character stage for each chapter of Yasser's onboarding story.
 class OnboardingCharacterScene extends StatelessWidget {
   final OnboardingItemModel item;
   final bool isActive;
+  final double parallaxOffset;
 
   const OnboardingCharacterScene({
     super.key,
     required this.item,
     this.isActive = true,
+    this.parallaxOffset = 0.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    switch (item.environment) {
-      case OnboardingEnvironment.welcomeSound:
-        return _buildWelcomeScene();
-      case OnboardingEnvironment.soundPuzzle:
-        return _buildSoundPuzzleScene();
-      case OnboardingEnvironment.celebrationLaunch:
-        return _buildCelebrationScene();
-    }
+    final bool reduced = YasserMotion.isReducedMotion(context);
+    final double px = reduced ? 0.0 : parallaxOffset * 26.0;
+
+    return switch (item.environment) {
+      OnboardingEnvironment.welcomeSound => _buildWelcomeScene(
+        context,
+        px,
+        reduced,
+      ),
+      OnboardingEnvironment.soundPuzzle => _buildSoundPuzzleScene(
+        context,
+        px,
+        reduced,
+      ),
+      OnboardingEnvironment.celebrationLaunch => _buildCelebrationScene(
+        context,
+        px,
+        reduced,
+      ),
+    };
   }
 
-  /// Screen 1: Welcome Companion Scene
-  Widget _buildWelcomeScene() {
+  /// Chapter 1: Warm Companion Stage
+  Widget _buildWelcomeScene(BuildContext context, double px, bool reduced) {
     return SizedBox(
       height: 360.h,
       width: double.infinity,
@@ -41,87 +59,61 @@ class OnboardingCharacterScene extends StatelessWidget {
         alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          // Background soft warm circle
-          Positioned(
-            bottom: 20.h,
-            child: Container(
-              width: 280.r,
-              height: 280.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryContainer.withAlpha(110),
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _OnboardingStagePainter(
+                  primaryTint: AppColors.primaryContainer,
+                  accentBorder: AppColors.primary,
+                  styleIndex: 0,
+                ),
               ),
             ),
           ),
-
-          // Floating letter card 1 (أ)
           Positioned(
-            top: 25.h,
-            right: 32.w,
-            child: _buildFloatingCard('أ', AppColors.primary, 1),
+            top: 22.h,
+            right: 26.w - px * 0.7,
+            child: _buildPhonemeTile('أ', AppColors.primary, 1, reduced),
           ),
-
-          // Floating letter card 2 (ب)
           Positioned(
-            top: 80.h,
-            left: 28.w,
-            child: _buildFloatingCard('ب', AppColors.secondary, 2),
+            top: 74.h,
+            left: 24.w + px * 0.7,
+            child: _buildPhonemeTile('ب', AppColors.secondary, 2, reduced),
           ),
-
-          // Floating audio badge
           Positioned(
-            bottom: 50.h,
-            right: 30.w,
+            bottom: 42.h,
+            right: 20.w - px * 0.4,
             child:
-                Container(
+                YasserSpeechBubble(
+                      tailDirection: SpeechBubbleTailDirection.start,
                       padding: EdgeInsets.symmetric(
                         horizontal: 12.w,
-                        vertical: 6.h,
+                        vertical: 7.h,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusPill,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppColors.shadowWarm,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.waving_hand_rounded,
                             size: 16,
-                            color: Colors.amber,
+                            color: AppColors.primary,
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: 5.w),
                           Text(
-                            'مرحباً!',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                            'أهلاً يا بطل!',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
                       ),
                     )
-                    .animate(target: isActive ? 1 : 0)
-                    .fadeIn(delay: 400.ms)
-                    .scale(
-                      begin: const Offset(0.5, 0.5),
-                      end: const Offset(1, 1),
-                      curve: Curves.easeOutBack,
-                    ),
+                    .animate(target: (!reduced && isActive) ? 1 : 0)
+                    .fadeIn(delay: 260.ms),
           ),
-
-          // Yasser Avatar (Waving)
           Positioned(
-            bottom: 0,
+            bottom: 4,
             child: _character(YasserAnimationState.greeting),
           ),
         ],
@@ -129,8 +121,8 @@ class OnboardingCharacterScene extends StatelessWidget {
     );
   }
 
-  /// Screen 2: Interactive Sound & 103 Cards Scene
-  Widget _buildSoundPuzzleScene() {
+  /// Chapter 2: Interactive Sound Discovery & 103 Illustrated Cards
+  Widget _buildSoundPuzzleScene(BuildContext context, double px, bool reduced) {
     return SizedBox(
       height: 360.h,
       width: double.infinity,
@@ -138,32 +130,29 @@ class OnboardingCharacterScene extends StatelessWidget {
         alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          // Background soft purple/lavender circle
-          Positioned(
-            bottom: 20.h,
-            child: Container(
-              width: 280.r,
-              height: 280.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.secondaryContainer.withAlpha(120),
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _OnboardingStagePainter(
+                  primaryTint: AppColors.secondaryContainer,
+                  accentBorder: AppColors.secondary,
+                  styleIndex: 1,
+                ),
               ),
             ),
           ),
-
-          // Sound wave banner at top
           Positioned(
-            top: 15.h,
-            left: 30.w,
+            top: 18.h,
+            left: 22.w + px * 0.6,
             child: Builder(
               builder: (context) {
-                final wave = Image.asset(AssetPaths.soundWave, width: 110.w);
-                if (YasserAvatar.enableRepeatingAnimations) {
+                final wave = Image.asset(AssetPaths.soundWave, width: 106.w);
+                if (YasserAvatar.enableRepeatingAnimations && !reduced) {
                   return wave
                       .animate(onPlay: (c) => c.repeat(reverse: true))
                       .scale(
-                        begin: const Offset(0.95, 0.95),
-                        end: const Offset(1.05, 1.05),
+                        begin: const Offset(0.96, 0.96),
+                        end: const Offset(1.04, 1.04),
                         duration: 1500.ms,
                       );
                 }
@@ -171,60 +160,58 @@ class OnboardingCharacterScene extends StatelessWidget {
               },
             ),
           ),
-
-          // 103 Cards Badge
           Positioned(
-            top: 30.h,
-            right: 28.w,
-            child:
-                Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 8.h,
+            top: 26.h,
+            right: 22.w - px * 0.8,
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                color: AppColors.surface,
+                shape: YasserShapes.squircle(
+                  AppSpacing.radiusM,
+                  side: BorderSide(
+                    color: AppColors.secondary.withValues(alpha: 0.35),
+                    width: 1.5,
+                  ),
+                ),
+                shadows: const [
+                  BoxShadow(
+                    color: AppColors.shadowWarm,
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '103',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.secondary,
+                        fontWeight: FontWeight.w900,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusM),
-                        border: Border.all(
-                          color: AppColors.secondary.withAlpha(60),
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppColors.shadowWarm,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                    ),
+                    Text(
+                      'بطاقة صوتية',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
                       ),
-                      child: const Column(
-                        children: [
-                          Text(
-                            '103',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.secondary,
-                            ),
-                          ),
-                          Text(
-                            'بطاقة مصورة',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    .animate(target: isActive ? 1 : 0)
-                    .fadeIn(delay: 350.ms)
-                    .slideX(begin: 0.3, end: 0, curve: Curves.easeOutBack),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-
-          // Listening expression matches the sound discovery scene without the chest gesture
           Positioned(
-            bottom: 0,
+            bottom: 46.h,
+            left: 22.w + px * 0.5,
+            child: _buildPhonemeTile('س', AppColors.accentMint, 2, reduced),
+          ),
+          Positioned(
+            bottom: 4,
             child: _character(YasserAnimationState.listening),
           ),
         ],
@@ -232,8 +219,8 @@ class OnboardingCharacterScene extends StatelessWidget {
     );
   }
 
-  /// Screen 3: Celebration & Hero's Launch Scene
-  Widget _buildCelebrationScene() {
+  /// Chapter 3: Celebration & Launchpad (Vector badge kept clear of Yasser's feet)
+  Widget _buildCelebrationScene(BuildContext context, double px, bool reduced) {
     return SizedBox(
       height: 360.h,
       width: double.infinity,
@@ -241,93 +228,81 @@ class OnboardingCharacterScene extends StatelessWidget {
         alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          // Background soft radiant coral circle
-          Positioned(
-            bottom: 20.h,
-            child: Container(
-              width: 290.r,
-              height: 290.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFFFE0D4).withAlpha(140),
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _OnboardingStagePainter(
+                  primaryTint: AppColors.accentGoldSoft,
+                  accentBorder: AppColors.primary,
+                  styleIndex: 2,
+                ),
               ),
             ),
           ),
-
-          // Floating Sparkle 1
           Positioned(
-            top: 20.h,
-            right: 40.w,
-            child:
-                Image.asset(AssetPaths.phonemeStar, width: 36.r, height: 36.r)
-                    .animate(target: isActive ? 1 : 0)
-                    .fadeIn(delay: 300.ms)
-                    .scale(
-                      begin: const Offset(0.2, 0.2),
-                      end: const Offset(1, 1),
-                      curve: Curves.easeOutBack,
-                    ),
+            top: 26.h,
+            right: 34.w - px * 0.7,
+            child: Image.asset(
+              AssetPaths.phonemeStar,
+              width: 34.r,
+              height: 34.r,
+            ),
           ),
-
-          // Floating Sparkle 2
           Positioned(
-            top: 60.h,
-            left: 35.w,
-            child:
-                Image.asset(AssetPaths.phonemeStar, width: 28.r, height: 28.r)
-                    .animate(target: isActive ? 1 : 0)
-                    .fadeIn(delay: 450.ms)
-                    .scale(
-                      begin: const Offset(0.2, 0.2),
-                      end: const Offset(1, 1),
-                      curve: Curves.easeOutBack,
-                    ),
+            top: 64.h,
+            left: 30.w + px * 0.7,
+            child: Image.asset(
+              AssetPaths.phonemeStar,
+              width: 26.r,
+              height: 26.r,
+            ),
           ),
-
-          // Keep the hero badge above the character, away from the feet.
+          // Vector Hero Badge above Yasser (no emoji, zero overlap with feet)
           Positioned(
             top: 0,
-            child:
-                Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 8.h,
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                color: AppColors.surface,
+                shape: YasserShapes.squircle(
+                  AppSpacing.radiusM,
+                  side: const BorderSide(
+                    color: AppColors.borderSoft,
+                    width: 1.5,
+                  ),
+                ),
+                shadows: const [
+                  BoxShadow(
+                    color: AppColors.shadowWarm,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.workspace_premium_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'بطل الوعي الصوتي',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.primaryDeep,
+                        fontWeight: FontWeight.w900,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusPill,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppColors.shadowWarm,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '⭐ بطل الوعي الصوتي',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.accentCoral,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    .animate(target: isActive ? 1 : 0)
-                    .fadeIn(delay: 500.ms)
-                    .slideY(begin: 0.3, end: 0, curve: Curves.easeOutBack),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-
-          // Yasser raises both hands to celebrate
           Positioned(
-            bottom: 0,
+            bottom: 4,
             child: _character(YasserAnimationState.celebrating),
           ),
         ],
@@ -338,41 +313,152 @@ class OnboardingCharacterScene extends StatelessWidget {
   Widget _character(YasserAnimationState pose) => YasserCharacter(
     state: isActive ? pose : YasserAnimationState.idle,
     poseStartDelay: const Duration(milliseconds: 160),
-    height: 330.h,
-    width: 232.w,
-    showShadow: false,
+    height: 326.h,
+    width: 230.w,
+    showShadow: true,
     enableTapReaction: false,
   );
 
-  Widget _buildFloatingCard(String letter, Color color, int delayIndex) {
-    return Container(
-          width: 44.r,
-          height: 48.r,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusM),
-            border: Border.all(color: color.withAlpha(50)),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.shadowWarm,
-                blurRadius: 8,
-                offset: Offset(0, 3),
-              ),
-            ],
+  Widget _buildPhonemeTile(
+    String letter,
+    Color color,
+    int delayIndex,
+    bool reduced,
+  ) {
+    final tile = DecoratedBox(
+      decoration: ShapeDecoration(
+        color: AppColors.surface,
+        shape: YasserShapes.squircle(
+          15,
+          side: BorderSide(color: color.withValues(alpha: 0.35), width: 1.6),
+        ),
+        shadows: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.22),
+            blurRadius: 0,
+            offset: const Offset(0, 3),
           ),
-          child: Center(
-            child: Text(
-              letter,
-              style: TextStyle(
-                fontSize: 22.sp,
-                fontWeight: FontWeight.w900,
-                color: color,
-              ),
+          const BoxShadow(
+            color: AppColors.shadowWarm,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: 48.r,
+        height: 50.r,
+        child: Center(
+          child: Text(
+            letter,
+            style: AppTextStyles.headlineSmall.copyWith(
+              fontWeight: FontWeight.w900,
+              color: color,
             ),
           ),
-        )
+        ),
+      ),
+    );
+
+    if (reduced) return tile;
+    return tile
         .animate(target: isActive ? 1 : 0)
-        .fadeIn(delay: (200 * delayIndex).ms)
-        .slideY(begin: -0.3, end: 0, curve: Curves.easeOutBack);
+        .fadeIn(delay: (160 * delayIndex).ms)
+        .slideY(begin: -0.22, end: 0, curve: YasserMotion.springOut);
+  }
+}
+
+class _OnboardingStagePainter extends CustomPainter {
+  final Color primaryTint;
+  final Color accentBorder;
+  final int styleIndex;
+
+  const _OnboardingStagePainter({
+    required this.primaryTint,
+    required this.accentBorder,
+    required this.styleIndex,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+    final Offset center = Offset(w * 0.5, h * 0.54);
+
+    if (styleIndex == 0) {
+      // Warm Sunrise Portal Arch
+      final Rect rect = Rect.fromCenter(
+        center: center,
+        width: w * 0.76,
+        height: h * 0.76,
+      );
+      final RRect arch = RRect.fromRectAndCorners(
+        rect,
+        topLeft: Radius.circular(w * 0.4),
+        topRight: Radius.circular(w * 0.4),
+        bottomLeft: const Radius.circular(34),
+        bottomRight: const Radius.circular(34),
+      );
+      canvas.drawRRect(
+        arch,
+        Paint()..color = primaryTint.withValues(alpha: 0.65),
+      );
+      canvas.drawRRect(
+        arch,
+        Paint()
+          ..color = accentBorder.withValues(alpha: 0.18)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0,
+      );
+    } else if (styleIndex == 1) {
+      // Organic Tilted Squircle Sound Stage
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(-0.045);
+      final RRect stage = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: w * 0.78, height: h * 0.72),
+        const Radius.circular(56),
+      );
+      canvas.drawRRect(
+        stage,
+        Paint()..color = primaryTint.withValues(alpha: 0.72),
+      );
+      canvas.drawRRect(
+        stage,
+        Paint()
+          ..color = accentBorder.withValues(alpha: 0.20)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0,
+      );
+      canvas.restore();
+    } else {
+      // Radiant Celebration Crest
+      final Rect crest = Rect.fromCenter(
+        center: Offset(w * 0.5, h * 0.56),
+        width: w * 0.80,
+        height: h * 0.74,
+      );
+      final RRect outer = RRect.fromRectAndRadius(
+        crest,
+        const Radius.circular(64),
+      );
+      canvas.drawRRect(
+        outer,
+        Paint()..color = primaryTint.withValues(alpha: 0.68),
+      );
+      canvas.drawRRect(
+        outer.deflate(14),
+        Paint()
+          ..color = accentBorder.withValues(alpha: 0.16)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.8,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OnboardingStagePainter oldDelegate) {
+    return oldDelegate.styleIndex != styleIndex ||
+        oldDelegate.primaryTint != primaryTint;
   }
 }

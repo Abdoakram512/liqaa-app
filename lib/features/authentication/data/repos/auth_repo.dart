@@ -8,19 +8,16 @@ class AuthResult<T> {
   final String? error;
   final bool isSuccess;
 
-  const AuthResult.success(this.data)
-      : error = null,
-        isSuccess = true;
+  const AuthResult.success(this.data) : error = null, isSuccess = true;
 
-  const AuthResult.failure(this.error)
-      : data = null,
-        isSuccess = false;
+  const AuthResult.failure(this.error) : data = null, isSuccess = false;
 }
 
 abstract class AuthRepo {
   Future<AuthResult<UserModel>> login({
     required String identity,
     required String password,
+    UserRole? preferredRole,
   });
 
   Future<AuthResult<UserModel>> register({
@@ -28,6 +25,7 @@ abstract class AuthRepo {
     required String email,
     required String password,
     UserRole role = UserRole.child,
+    String? organization,
   });
 
   Future<AuthResult<bool>> sendPasswordReset({required String email});
@@ -47,10 +45,10 @@ abstract class AuthRepo {
   Future<UserModel?> getCurrentUser();
 }
 
-/// Explicit Mock Authentication Repository for the MVP phase.
+/// Local Offline Authentication Repository.
 ///
-/// Simulates realistic network round-trips and predictable authentication
-/// outcomes without requiring a live cloud backend.
+/// Clearly scoped as an offline-capable local account store (not cloud backend
+/// cryptographic authentication) with an interface ready for future API swap.
 class MockAuthRepo implements AuthRepo {
   final AuthLocalDataSource _localDataSource;
 
@@ -60,33 +58,67 @@ class MockAuthRepo implements AuthRepo {
   Future<AuthResult<UserModel>> login({
     required String identity,
     required String password,
+    UserRole? preferredRole,
   }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 550));
 
     final trimmedIdentity = identity.trim();
     if (trimmedIdentity.isEmpty) {
-      return const AuthResult.failure('يرجى إدخال اسم المستخدم أو البريد الإلكتروني');
+      return const AuthResult.failure(
+        'يرجى إدخال اسم المستخدم أو البريد الإلكتروني',
+      );
     }
 
     if (password.length < 6) {
-      return const AuthResult.failure('كلمة المرور يجب أن تتكون من 6 أحرف أو أرقام على الأقل');
+      return const AuthResult.failure(
+        'كلمة المرور يجب أن تتكون من 6 أحرف أو أرقام على الأقل',
+      );
     }
 
-    // Predictable failure trigger for testing error feedback
-    if (trimmedIdentity.toLowerCase() == 'error@liqaa.com' || password == 'wrongpass') {
-      return const AuthResult.failure('بيانات الدخول غير صحيحة، يرجى المحاولة مرة أخرى');
+    if (trimmedIdentity.toLowerCase() == 'error@liqaa.com' ||
+        password == 'wrongpass') {
+      return const AuthResult.failure(
+        'بيانات الدخول غير صحيحة، يرجى المحاولة مرة أخرى',
+      );
     }
+
+    // Restore previously registered role/profile if stored locally
+    UserModel? registered;
+    try {
+      registered = await _localDataSource.findRegisteredAccount(
+        trimmedIdentity,
+      );
+    } catch (_) {
+      registered = null;
+    }
+
+    final lower = trimmedIdentity.toLowerCase();
+    final inferredRole =
+        preferredRole ??
+        registered?.role ??
+        ((lower.contains('specialist') ||
+                lower.contains('doctor') ||
+                lower.startsWith('dr.') ||
+                lower.contains('أخصائي'))
+            ? UserRole.specialist
+            : UserRole.child);
 
     final user = UserModel(
-      id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-      name: trimmedIdentity.contains('@')
-          ? trimmedIdentity.split('@').first
-          : trimmedIdentity,
-      email: trimmedIdentity.contains('@') ? trimmedIdentity : '$trimmedIdentity@liqaa.com',
-      role: UserRole.child,
-      token: 'mock_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
-      createdAt: DateTime.now(),
+      id: registered?.id ?? 'usr_${DateTime.now().millisecondsSinceEpoch}',
+      name:
+          registered?.name ??
+          (trimmedIdentity.contains('@')
+              ? trimmedIdentity.split('@').first
+              : trimmedIdentity),
+      email:
+          registered?.email ??
+          (trimmedIdentity.contains('@')
+              ? trimmedIdentity
+              : '$trimmedIdentity@liqaa.local'),
+      organization: registered?.organization,
+      role: inferredRole,
+      token: 'local_session_${DateTime.now().millisecondsSinceEpoch}',
+      createdAt: registered?.createdAt ?? DateTime.now(),
     );
 
     await _localDataSource.saveUser(user);
@@ -103,14 +135,15 @@ class MockAuthRepo implements AuthRepo {
     required String email,
     required String password,
     UserRole role = UserRole.child,
+    String? organization,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 650));
 
     final trimmedName = name.trim();
     final trimmedEmail = email.trim();
 
     if (trimmedName.isEmpty) {
-      return const AuthResult.failure('يرجى إدخال اسم البطل أو ولي الأمر');
+      return const AuthResult.failure('يرجى إدخال الاسم الكامل');
     }
 
     if (!trimmedEmail.contains('@') || !trimmedEmail.contains('.')) {
@@ -129,8 +162,11 @@ class MockAuthRepo implements AuthRepo {
       id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
       name: trimmedName,
       email: trimmedEmail,
+      organization: organization?.trim().isNotEmpty == true
+          ? organization!.trim()
+          : null,
       role: role,
-      token: 'mock_jwt_registered_${DateTime.now().millisecondsSinceEpoch}',
+      token: 'local_registered_${DateTime.now().millisecondsSinceEpoch}',
       createdAt: DateTime.now(),
     );
 
@@ -144,7 +180,7 @@ class MockAuthRepo implements AuthRepo {
 
   @override
   Future<AuthResult<bool>> sendPasswordReset({required String email}) async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 500));
     final trimmed = email.trim();
     if (!trimmed.contains('@')) {
       return const AuthResult.failure('يرجى إدخال بريد إلكتروني صالح');
@@ -157,12 +193,14 @@ class MockAuthRepo implements AuthRepo {
     required String email,
     required String otp,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 700));
+    await Future.delayed(const Duration(milliseconds: 450));
     if (otp.length != 4) {
       return const AuthResult.failure('رمز التحقق يجب أن يتكون من 4 أرقام');
     }
     if (otp == '0000') {
-      return const AuthResult.failure('رمز التحقق غير صحيح، يرجى إعادة المحاولة');
+      return const AuthResult.failure(
+        'رمز التحقق غير صحيح، يرجى إعادة المحاولة',
+      );
     }
     return const AuthResult.success(true);
   }
@@ -172,9 +210,11 @@ class MockAuthRepo implements AuthRepo {
     required String email,
     required String newPassword,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 500));
     if (newPassword.length < 6) {
-      return const AuthResult.failure('كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف');
+      return const AuthResult.failure(
+        'كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف',
+      );
     }
     return const AuthResult.success(true);
   }

@@ -1,23 +1,20 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/animation/yasser/yasser_controller.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/confetti_overlay.dart';
-import '../../../../core/widgets/phonological_background.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/widgets/yasser_character.dart';
+import '../../../../core/widgets/yasser_surface_card.dart';
 import '../../../../core/widgets/yasser_text_field.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
+import '../widgets/auth_stage_shell.dart';
 
-/// Interactive Reset Password view with privacy eye-covering.
+/// Reset Password screen preserving Yasser's eye-covering privacy reactions.
 class ResetPasswordView extends StatefulWidget {
   final String email;
 
@@ -28,8 +25,8 @@ class ResetPasswordView extends StatefulWidget {
 }
 
 class _ResetPasswordViewState extends State<ResetPasswordView> {
-  late YasserController _yasserController;
-  late ConfettiController _confettiController;
+  late final YasserController _yasserController;
+  late final ConfettiController _confettiController;
   final _formKey = GlobalKey<FormState>();
 
   final _passwordController = TextEditingController();
@@ -43,7 +40,9 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
   void initState() {
     super.initState();
     _yasserController = YasserController();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
 
     _passwordFocusNode.addListener(_handlePasswordFocus);
     _confirmPasswordFocusNode.addListener(_handlePasswordFocus);
@@ -73,6 +72,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
     } else {
       _yasserController.uncoverEyes();
     }
+    setState(() {});
   }
 
   void _handleVisibility(FocusNode field, bool visible) {
@@ -88,20 +88,18 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
     if (_passwordController.text != _confirmPasswordController.text) {
       _yasserController.reactToValidation(false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('كلمتا المرور غير متطابقتين'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      showYasserSnackBar(
+        context,
+        message: 'كلمتا المرور غير متطابقتين',
+        tone: YasserBannerTone.error,
       );
       return;
     }
 
     context.read<AuthCubit>().resetPassword(
-          email: widget.email,
-          newPassword: _passwordController.text,
-        );
+      email: widget.email,
+      newPassword: _passwordController.text,
+    );
   }
 
   @override
@@ -115,27 +113,23 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
             if (mounted) _yasserController.celebrate();
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.success,
           );
 
-          Future.delayed(const Duration(milliseconds: 1500), () {
+          Future.delayed(const Duration(milliseconds: 1100), () {
             if (context.mounted) {
               context.go(AppRoutes.login);
             }
           });
         } else if (state is AuthFailure) {
           _yasserController.reactToValidation(false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.error,
           );
         }
       },
@@ -145,93 +139,66 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
         return Scaffold(
           body: ConfettiCelebrationOverlay(
             confettiController: _confettiController,
-            child: PhonologicalBackground(
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => context.pop(),
-                              icon: const Icon(Icons.arrow_back_ios, color: AppColors.primary),
-                            ),
-                            const Spacer(),
-                            Text(
-                              'كلمة مرور جديدة',
-                              style: AppTextStyles.titleMedium.copyWith(
-                                color: AppColors.primaryDark,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Spacer(),
-                            const SizedBox(width: 48),
-                          ],
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        YasserCharacter(
-                          controller: _yasserController,
-                          width: 200.w,
-                          height: 230.h,
-                          heroTag: 'yasser_reset_character',
-                        ).animate().fadeIn(duration: 500.ms),
-
-                        SizedBox(height: 16.h),
-
-                        YasserTextField(
-                          label: 'كلمة المرور الجديدة',
-                          hint: '6 خانات على الأقل',
-                          controller: _passwordController,
-                          focusNode: _passwordFocusNode,
-                          isPassword: true,
-                          prefixIcon: const Icon(Icons.lock_reset_rounded),
-                          onPasswordVisibilityChanged: (visible) =>
-                              _handleVisibility(_passwordFocusNode, visible),
-                          validator: (v) {
-                            if (v == null || v.length < 6) {
-                              return 'يجب أن تتكون من 6 خانات على الأقل';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 16.h),
-
-                        YasserTextField(
-                          label: 'تأكيد كلمة المرور الجديدة',
-                          hint: 'أعد كتابة كلمة المرور',
-                          controller: _confirmPasswordController,
-                          focusNode: _confirmPasswordFocusNode,
-                          isPassword: true,
-                          textInputAction: TextInputAction.done,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          onPasswordVisibilityChanged: (visible) =>
-                              _handleVisibility(_confirmPasswordFocusNode, visible),
-                          onFieldSubmitted: _submit,
-                          validator: (v) {
-                            if (v != _passwordController.text) {
-                              return 'كلمتا المرور غير متطابقتين';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 28.h),
-
-                        PrimaryButton(
-                          label: 'حفظ كلمة المرور والدخول 🔒',
-                          isLoading: isLoading,
-                          onPressed: isLoading ? null : _submit,
-                        ),
-                      ],
+            child: AuthStageShell(
+              title: 'كلمة مرور جديدة',
+              speechTitle:
+                  (_passwordFocusNode.hasFocus ||
+                      _confirmPasswordFocusNode.hasFocus)
+                  ? 'مغمّض عيوني.. اختار كلمة مرور قوية!'
+                  : 'اكتب كلمة المرور الجديدة واحفظها بأمان',
+              yasserController: _yasserController,
+              heroTag: 'yasser_reset_character',
+              formChild: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    YasserTextField(
+                      label: 'كلمة المرور الجديدة',
+                      hint: '6 خانات على الأقل',
+                      variant: YasserFieldVariant.password,
+                      isPassword: true,
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      onPasswordVisibilityChanged: (visible) =>
+                          _handleVisibility(_passwordFocusNode, visible),
+                      validator: (v) {
+                        if (v == null || v.length < 6) {
+                          return 'يجب أن تتكون من 6 خانات على الأقل';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
+                    SizedBox(height: 14.h),
+                    YasserTextField(
+                      label: 'تأكيد كلمة المرور الجديدة',
+                      hint: 'أعد كتابة كلمة المرور',
+                      variant: YasserFieldVariant.confirmPassword,
+                      isPassword: true,
+                      textInputAction: TextInputAction.done,
+                      controller: _confirmPasswordController,
+                      focusNode: _confirmPasswordFocusNode,
+                      onPasswordVisibilityChanged: (visible) =>
+                          _handleVisibility(_confirmPasswordFocusNode, visible),
+                      onFieldSubmitted: _submit,
+                      validator: (v) {
+                        if (v != _passwordController.text) {
+                          return 'كلمتا المرور غير متطابقتين';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 22.h),
+                    PrimaryButton(
+                      label: 'حفظ كلمة المرور والدخول',
+                      icon: const Icon(
+                        Icons.lock_open_rounded,
+                        color: Colors.white,
+                      ),
+                      isLoading: isLoading,
+                      onPressed: isLoading ? null : _submit,
+                    ),
+                  ],
                 ),
               ),
             ),

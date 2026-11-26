@@ -6,6 +6,7 @@ import '../../../../core/localization/locale_keys.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/yasser_design_tokens.dart';
 
 class OnboardingHeader extends StatelessWidget {
   final VoidCallback onSkip;
@@ -28,46 +29,57 @@ class OnboardingHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Step pill badge
           Flexible(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                border: Border.all(color: AppColors.borderSoft),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.auto_stories_rounded,
-                    size: 14,
-                    color: AppColors.primary,
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                color: AppColors.surface,
+                shape: YasserShapes.squircle(
+                  AppSpacing.radiusM,
+                  side: const BorderSide(
+                    color: AppColors.borderSoft,
+                    width: 1.4,
                   ),
-                  SizedBox(width: 6.w),
-                  Flexible(
-                    child: Text(
-                      LocaleKeys.onboardingStepOf.tr(
-                        namedArgs: {
-                          'current': '$currentStep',
-                          'total': '$totalSteps',
-                        },
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
+                ),
+                shadows: const [
+                  BoxShadow(
+                    color: AppColors.shadowWarm,
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.auto_stories_rounded,
+                      size: 15,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: Text(
+                        LocaleKeys.onboardingStepOf.tr(
+                          namedArgs: {
+                            'current': '$currentStep',
+                            'total': '$totalSteps',
+                          },
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-
-          // Skip button
           if (showSkip)
             TextButton(
               onPressed: onSkip,
@@ -77,8 +89,7 @@ class OnboardingHeader extends StatelessWidget {
               ),
               child: Text(
                 LocaleKeys.onboardingSkip.tr(),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w700,
+                style: AppTextStyles.labelLarge.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),

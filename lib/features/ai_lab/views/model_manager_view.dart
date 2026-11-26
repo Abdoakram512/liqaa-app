@@ -50,12 +50,18 @@ class ModelManagerView extends StatelessWidget {
                           '${state.totalRamUsageMb} MB / 250 MB (الحد الآمن)',
                           style: AppTextStyles.titleMedium.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: state.totalRamUsageMb > 180 ? Colors.red : AppColors.textPrimary,
+                            color: state.totalRamUsageMb > 180
+                                ? Colors.red
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ],
                     ),
-                    const Icon(Icons.pie_chart_rounded, color: AppColors.primary, size: 36),
+                    const Icon(
+                      Icons.pie_chart_rounded,
+                      color: AppColors.primary,
+                      size: 36,
+                    ),
                   ],
                 ),
               ),
@@ -97,7 +103,10 @@ class ModelManagerView extends StatelessWidget {
                               ),
                             ),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 2.h,
+                              ),
                               decoration: BoxDecoration(
                                 color: model.status == 'ready'
                                     ? Colors.green.withOpacity(0.12)
@@ -107,7 +116,9 @@ class ModelManagerView extends StatelessWidget {
                               child: Text(
                                 model.status.toUpperCase(),
                                 style: AppTextStyles.bodySmall.copyWith(
-                                  color: model.status == 'ready' ? Colors.green.shade800 : Colors.orange.shade800,
+                                  color: model.status == 'ready'
+                                      ? Colors.green.shade800
+                                      : Colors.orange.shade800,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 10.sp,
                                 ),
@@ -130,7 +141,9 @@ class ModelManagerView extends StatelessWidget {
                             _buildInfoPill('الحجم: ${model.sizeMb} MB'),
                             _buildInfoPill('التردد: ${model.sampleRate} Hz'),
                             _buildInfoPill('الترخيص: ${model.license}'),
-                            _buildInfoPill('في الذاكرة: ${model.isLoadedInMemory ? "نعم" : "لا"}'),
+                            _buildInfoPill(
+                              'في الذاكرة: ${model.isLoadedInMemory ? "نعم" : "لا"}',
+                            ),
                           ],
                         ),
                         if (model.error != null && model.error!.isNotEmpty) ...[
@@ -145,7 +158,10 @@ class ModelManagerView extends StatelessWidget {
                             ),
                             child: Text(
                               'خطأ التهيئة: ${model.error}',
-                              style: TextStyle(fontSize: 11.sp, color: Colors.red.shade900),
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: Colors.red.shade900,
+                              ),
                             ),
                           ),
                         ],
@@ -156,28 +172,51 @@ class ModelManagerView extends StatelessWidget {
                           children: [
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: model.isLoadedInMemory ? Colors.red.shade50 : AppColors.primaryLight,
-                                foregroundColor: model.isLoadedInMemory ? Colors.red.shade800 : AppColors.primaryDark,
+                                backgroundColor: model.isLoadedInMemory
+                                    ? Colors.red.shade50
+                                    : AppColors.primaryLight,
+                                foregroundColor: model.isLoadedInMemory
+                                    ? Colors.red.shade800
+                                    : AppColors.primaryDark,
                                 elevation: 0,
                                 minimumSize: Size(0, 36.h),
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 8.h,
+                                ),
                               ),
                               icon: Icon(
-                                model.isLoadedInMemory ? Icons.eject_rounded : Icons.play_arrow_rounded,
+                                model.isLoadedInMemory
+                                    ? Icons.eject_rounded
+                                    : Icons.play_arrow_rounded,
                                 size: 16,
                               ),
-                              label: Text(model.isLoadedInMemory ? 'تفريغ من RAM' : 'تحميل إلى RAM'),
-                              onPressed: () => context.read<AiLabCubit>().toggleModelMemory(model.key),
+                              label: Text(
+                                model.isLoadedInMemory
+                                    ? 'تفريغ من RAM'
+                                    : 'تحميل إلى RAM',
+                              ),
+                              onPressed: () => context
+                                  .read<AiLabCubit>()
+                                  .toggleModelMemory(model.key),
                             ),
                             OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
                                 minimumSize: Size(0, 36.h),
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 8.h,
+                                ),
                               ),
-                              icon: const Icon(Icons.verified_rounded, size: 16),
+                              icon: const Icon(
+                                Icons.verified_rounded,
+                                size: 16,
+                              ),
                               label: const Text('فحص Smoke Test'),
                               onPressed: () async {
-                                final passed = await context.read<AiLabCubit>().smokeTestModel(model.key);
+                                final passed = await context
+                                    .read<AiLabCubit>()
+                                    .smokeTestModel(model.key);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -186,7 +225,9 @@ class ModelManagerView extends StatelessWidget {
                                             ? 'اجتاز ${model.name} اختبار الاستدلال الحقيقي بنجاح!'
                                             : 'فشل ${model.name} في اختبار Smoke Test!',
                                       ),
-                                      backgroundColor: passed ? Colors.green.shade800 : Colors.red.shade800,
+                                      backgroundColor: passed
+                                          ? Colors.green.shade800
+                                          : Colors.red.shade800,
                                     ),
                                   );
                                 }

@@ -96,9 +96,12 @@ class VocabularyWord extends Equatable {
       phonemeCategory: json['phoneme_category'] as String? ?? '',
       difficultyLevel: json['difficulty_level'] as int? ?? 1,
       expectedPhonemes: List<String>.from(json['expected_phonemes'] ?? []),
-      expectedArabicPhonemes: List<String>.from(json['expected_arabic_phonemes'] ?? []),
+      expectedArabicPhonemes: List<String>.from(
+        json['expected_arabic_phonemes'] ?? [],
+      ),
       yasserTip: json['yasser_tip'] as String? ?? '',
-      commonChildErrors: (json['common_child_errors'] as List<dynamic>?)
+      commonChildErrors:
+          (json['common_child_errors'] as List<dynamic>?)
               ?.map((e) => ChildErrorRule.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
@@ -121,10 +124,5 @@ class VocabularyWord extends Equatable {
   };
 
   @override
-  List<Object?> get props => [
-    id,
-    wordArabic,
-    targetPhoneme,
-    expectedPhonemes,
-  ];
+  List<Object?> get props => [id, wordArabic, targetPhoneme, expectedPhonemes];
 }

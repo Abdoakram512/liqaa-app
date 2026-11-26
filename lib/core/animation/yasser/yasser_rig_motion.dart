@@ -76,8 +76,18 @@ final class YasserRigMotion {
     }
 
     if (state == YasserAnimationState.waving) {
-      _gaze = Offset.zero;
-      return false;
+      final blend = reducedMotion ? 1.0 : 1 - math.exp(-16 * elapsed);
+      _gaze = _gaze.distance < .005
+          ? Offset.zero
+          : Offset.lerp(_gaze, Offset.zero, blend)!;
+      for (final side in ['L', 'R']) {
+        _slide(
+          'P1_Neck_Head_Face_Eye$side',
+          dx: -4 * _gaze.dy,
+          dy: 4 * _gaze.dx,
+        );
+      }
+      return _gaze != Offset.zero;
     }
 
     final gazeTarget = mapping.gazeTarget;

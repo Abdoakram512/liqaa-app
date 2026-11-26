@@ -7,11 +7,7 @@ import 'ai_asset_helper.dart';
 import 'audio_preprocessor.dart';
 import 'ort_dynamic_session.dart';
 
-enum DenoiserMode {
-  neuralGtcrn,
-  dspWienerFallback,
-  bypass,
-}
+enum DenoiserMode { neuralGtcrn, dspWienerFallback, bypass }
 
 class DenoiseResult {
   final Float32List processedSamples;
@@ -70,8 +66,8 @@ class RnnoiseDenoiserEngine {
     AudioPreprocessor? preprocessor,
     bool initialEnabled = true,
     this.modelPathOverride,
-  })  : _preprocessor = preprocessor ?? const AudioPreprocessor(),
-        enabled = initialEnabled;
+  }) : _preprocessor = preprocessor ?? const AudioPreprocessor(),
+       enabled = initialEnabled;
 
   bool get isInitialized => _isInitialized;
   bool get isNativeAvailable => _isNativeAvailable;
@@ -91,8 +87,11 @@ class RnnoiseDenoiserEngine {
     }
 
     try {
-      _modelPath = modelPathOverride ??
-          await AiAssetHelper.getLocalAssetPath('assets/ai_models/gtcrn/gtcrn_simple.onnx');
+      _modelPath =
+          modelPathOverride ??
+          await AiAssetHelper.getLocalAssetPath(
+            'assets/ai_models/gtcrn/gtcrn_simple.onnx',
+          );
 
       if (_modelPath == null || !File(_modelPath!).existsSync()) {
         _isNativeAvailable = false;
@@ -124,7 +123,9 @@ class RnnoiseDenoiserEngine {
       _gtcrn = sherpa_onnx.OfflineSpeechDenoiser(config);
       _isNativeAvailable = true;
       _lastError = null;
-      debugPrint('[RnnoiseDenoiserEngine] Initialized real GTCRN ONNX denoiser at $_modelPath ($fileSize bytes)');
+      debugPrint(
+        '[RnnoiseDenoiserEngine] Initialized real GTCRN ONNX denoiser at $_modelPath ($fileSize bytes)',
+      );
     } catch (e) {
       _isNativeAvailable = false;
       _lastError = 'GTCRN ONNX initialization failed: $e';
@@ -173,7 +174,8 @@ class RnnoiseDenoiserEngine {
 
     if (mode == DenoiserMode.neuralGtcrn) {
       if (_gtcrn == null || !_isNativeAvailable) {
-        final String err = _lastError ?? 'GTCRN neural denoiser is not initialized.';
+        final String err =
+            _lastError ?? 'GTCRN neural denoiser is not initialized.';
         return DenoiseResult(
           processedSamples: Float32List(0),
           sampleRate: sampleRate,
@@ -192,7 +194,10 @@ class RnnoiseDenoiserEngine {
       }
 
       try {
-        final denoised = _gtcrn!.run(samples: inputSamples, sampleRate: sampleRate);
+        final denoised = _gtcrn!.run(
+          samples: inputSamples,
+          sampleRate: sampleRate,
+        );
         Float32List outSamples = denoised.samples;
         if (denoised.sampleRate != sampleRate && denoised.sampleRate > 0) {
           outSamples = _preprocessor.resampleLinear(
@@ -236,7 +241,8 @@ class RnnoiseDenoiserEngine {
               wasSuppressionApplied: false,
               isNeuralModel: true,
               filterType: 'gtcrn_error',
-              errorMessage: 'GTCRN output contained non-finite float values (NaN/Inf).',
+              errorMessage:
+                  'GTCRN output contained non-finite float values (NaN/Inf).',
             );
           }
         }
@@ -259,7 +265,8 @@ class RnnoiseDenoiserEngine {
             wasSuppressionApplied: false,
             isNeuralModel: true,
             filterType: 'gtcrn_error',
-            errorMessage: 'GTCRN denoiser collapsed audible input ($rmsBefore) to near-zero output ($peakAfter).',
+            errorMessage:
+                'GTCRN denoiser collapsed audible input ($rmsBefore) to near-zero output ($peakAfter).',
           );
         }
 
@@ -301,7 +308,13 @@ class RnnoiseDenoiserEngine {
     }
 
     // Explicit DSP Wiener mode (only when user/lab explicitly selects DenoiserMode.dspWienerFallback)
-    return _dspWienerProcess(inputSamples, sampleRate, rmsBefore, peakBefore, snrBefore);
+    return _dspWienerProcess(
+      inputSamples,
+      sampleRate,
+      rmsBefore,
+      peakBefore,
+      snrBefore,
+    );
   }
 
   DenoiseResult _dspWienerProcess(
@@ -326,14 +339,20 @@ class RnnoiseDenoiserEngine {
       frameEnergy /= frameSize;
 
       if (f < 5 || frameEnergy < runningNoiseEnergy * 1.5) {
-        runningNoiseEnergy = 0.9 * runningNoiseEnergy + 0.1 * math.max(1e-6, frameEnergy);
+        runningNoiseEnergy =
+            0.9 * runningNoiseEnergy + 0.1 * math.max(1e-6, frameEnergy);
       }
 
       final double snrLinear = frameEnergy / math.max(1e-6, runningNoiseEnergy);
-      final double gain = snrLinear < 3.0 ? (snrLinear / 3.0).clamp(0.15, 1.0) : 1.0;
+      final double gain = snrLinear < 3.0
+          ? (snrLinear / 3.0).clamp(0.15, 1.0)
+          : 1.0;
 
       for (int i = 0; i < frameSize; i++) {
-        outputSamples[offset + i] = (inputSamples[offset + i] * gain).clamp(-1.0, 1.0);
+        outputSamples[offset + i] = (inputSamples[offset + i] * gain).clamp(
+          -1.0,
+          1.0,
+        );
       }
     }
 

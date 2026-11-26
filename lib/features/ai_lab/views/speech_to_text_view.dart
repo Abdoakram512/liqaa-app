@@ -51,16 +51,29 @@ class SpeechToTextView extends StatelessWidget {
                       children: [
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: state.isRecording ? Colors.red : AppColors.primary,
+                            backgroundColor: state.isRecording
+                                ? Colors.red
+                                : AppColors.primary,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
                             minimumSize: Size(0, 44.h),
                           ),
-                          icon: Icon(state.isRecording ? Icons.stop_rounded : Icons.mic_rounded),
-                          label: Text(state.isRecording ? 'إيقاف التسجيل' : 'بدء التسجيل'),
+                          icon: Icon(
+                            state.isRecording
+                                ? Icons.stop_rounded
+                                : Icons.mic_rounded,
+                          ),
+                          label: Text(
+                            state.isRecording ? 'إيقاف التسجيل' : 'بدء التسجيل',
+                          ),
                           onPressed: () {
                             if (state.isRecording) {
-                              context.read<AiLabCubit>().stopRecordingAndAnalyze();
+                              context
+                                  .read<AiLabCubit>()
+                                  .stopRecordingAndAnalyze();
                             } else {
                               context.read<AiLabCubit>().startRecording();
                             }
@@ -68,7 +81,10 @@ class SpeechToTextView extends StatelessWidget {
                         ),
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
                             minimumSize: Size(0, 44.h),
                           ),
                           icon: const Icon(Icons.transcribe_rounded, size: 18),
@@ -106,7 +122,9 @@ class SpeechToTextView extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Text(
                     'قم بالتسجيل والضغط على "تشغيل STT" لعرض النص المحول ومعدل RTF',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 )
               else
@@ -118,15 +136,24 @@ class SpeechToTextView extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.4),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('النص المكتوب (Transcription):', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                          Text(
+                            'النص المكتوب (Transcription):',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           SizedBox(height: 8.h),
                           Text(
-                            stt.text.isNotEmpty ? stt.text : '(لم يتم التقاط نص)',
+                            stt.text.isNotEmpty
+                                ? stt.text
+                                : '(لم يتم التقاط نص)',
                             style: AppTextStyles.headlineSmall.copyWith(
                               fontWeight: FontWeight.bold,
                               color: AppColors.primaryDark,
@@ -140,10 +167,18 @@ class SpeechToTextView extends StatelessWidget {
 
                     _buildMetricRow(
                       'نسبة الثقة (Confidence):',
-                      stt.confidence != null ? '${(stt.confidence! * 100).toInt()}%' : 'غير معيرة (Uncalibrated)',
+                      stt.confidence != null
+                          ? '${(stt.confidence! * 100).toInt()}%'
+                          : 'غير معيرة (Uncalibrated)',
                     ),
-                    _buildMetricRow('زمن المعالجة (Latency):', '${stt.latencyMs} ms'),
-                    _buildMetricRow('معدل الوقت الحقيقي (RTF):', '${stt.realTimeFactor}x (${stt.realTimeFactor < 1.0 ? "أسرع من الوقت الفعلي" : "أبطأ"})'),
+                    _buildMetricRow(
+                      'زمن المعالجة (Latency):',
+                      '${stt.latencyMs} ms',
+                    ),
+                    _buildMetricRow(
+                      'معدل الوقت الحقيقي (RTF):',
+                      '${stt.realTimeFactor}x (${stt.realTimeFactor < 1.0 ? "أسرع من الوقت الفعلي" : "أبطأ"})',
+                    ),
                   ],
                 ),
             ],
@@ -165,8 +200,19 @@ class SpeechToTextView extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-          Text(value, style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            value,
+            style: AppTextStyles.titleSmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );

@@ -33,9 +33,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
       await _audioPlayer.play(BytesSource(bytes, mimeType: 'audio/wav'));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذّر تشغيل ملف WAV: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('تعذّر تشغيل ملف WAV: $e')));
     } finally {
       _startingPlayback = false;
     }
@@ -84,9 +84,18 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                     SizedBox(height: 8.h),
                     SegmentedButton<DenoiserMode>(
                       segments: const [
-                        ButtonSegment(value: DenoiserMode.neuralGtcrn, label: Text('GTCRN عصبي')),
-                        ButtonSegment(value: DenoiserMode.dspWienerFallback, label: Text('DSP احتياطي')),
-                        ButtonSegment(value: DenoiserMode.bypass, label: Text('تخطي خام')),
+                        ButtonSegment(
+                          value: DenoiserMode.neuralGtcrn,
+                          label: Text('GTCRN عصبي'),
+                        ),
+                        ButtonSegment(
+                          value: DenoiserMode.dspWienerFallback,
+                          label: Text('DSP احتياطي'),
+                        ),
+                        ButtonSegment(
+                          value: DenoiserMode.bypass,
+                          label: Text('تخطي خام'),
+                        ),
                       ],
                       selected: {state.denoiserMode},
                       onSelectionChanged: (s) {
@@ -96,7 +105,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                     SizedBox(height: 6.h),
                     Text(
                       'GTCRN Simple (ONNX 16kHz) يحفظ أصوات الاحتكاك (س، ش، ف) بخلاف rnnoise 48kHz غير المتوافق.',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -124,12 +135,25 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                     SizedBox(height: 12.h),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: state.isRecording ? Colors.red : AppColors.primary,
+                        backgroundColor: state.isRecording
+                            ? Colors.red
+                            : AppColors.primary,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.w,
+                          vertical: 12.h,
+                        ),
                       ),
-                      icon: Icon(state.isRecording ? Icons.stop_rounded : Icons.mic_rounded),
-                      label: Text(state.isRecording ? 'إيقاف التسجيل والتحليل' : 'بدء تسجيل تجريبي'),
+                      icon: Icon(
+                        state.isRecording
+                            ? Icons.stop_rounded
+                            : Icons.mic_rounded,
+                      ),
+                      label: Text(
+                        state.isRecording
+                            ? 'إيقاف التسجيل والتحليل'
+                            : 'بدء تسجيل تجريبي',
+                      ),
                       onPressed: () async {
                         await _audioPlayer.stop();
                         if (!context.mounted) return;
@@ -167,7 +191,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                   alignment: Alignment.center,
                   child: Text(
                     'قم بالتسجيل للاستماع إلى الصوت قبل وبعد عزل الضوضاء',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 )
               else
@@ -186,7 +212,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                         ),
                         child: Text(
                           'خطأ المعالجة: ${audio.errorMessage}',
-                          style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade900),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.red.shade900,
+                          ),
                         ),
                       ),
                     Row(
@@ -201,14 +229,31 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                             ),
                             child: Column(
                               children: [
-                                const Icon(Icons.mic_none_rounded, color: Colors.orange, size: 28),
+                                const Icon(
+                                  Icons.mic_none_rounded,
+                                  color: Colors.orange,
+                                  size: 28,
+                                ),
                                 SizedBox(height: 6.h),
-                                Text('الأصلي (${audio.sampleRate} Hz)', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                                Text(
+                                  'الأصلي (${audio.sampleRate} Hz)',
+                                  style: AppTextStyles.titleSmall.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 SizedBox(height: 4.h),
-                                Text('RMS: ${audio.averageRms}\nPeak: ${audio.peakAmplitude}\nSNR: ${audio.snrDb} dB', textAlign: TextAlign.center, style: AppTextStyles.bodySmall),
+                                Text(
+                                  'RMS: ${audio.averageRms}\nPeak: ${audio.peakAmplitude}\nSNR: ${audio.snrDb} dB',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.bodySmall,
+                                ),
                                 SizedBox(height: 10.h),
                                 IconButton(
-                                  icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.orange, size: 40),
+                                  icon: const Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: Colors.orange,
+                                    size: 40,
+                                  ),
                                   onPressed: audio.rawAudioBytes.isEmpty
                                       ? null
                                       : () async {
@@ -226,13 +271,24 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.deepPurpleAccent.withOpacity(0.3)),
+                              border: Border.all(
+                                color: Colors.deepPurpleAccent.withOpacity(0.3),
+                              ),
                             ),
                             child: Column(
                               children: [
-                                const Icon(Icons.auto_fix_high_rounded, color: Colors.deepPurpleAccent, size: 28),
+                                const Icon(
+                                  Icons.auto_fix_high_rounded,
+                                  color: Colors.deepPurpleAccent,
+                                  size: 28,
+                                ),
                                 SizedBox(height: 6.h),
-                                Text('المعالج (${audio.denoiserFilterType})', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                                Text(
+                                  'المعالج (${audio.denoiserFilterType})',
+                                  style: AppTextStyles.titleSmall.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 SizedBox(height: 4.h),
                                 Text(
                                   audio.denoisedAudioBytes != null
@@ -240,7 +296,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                                       : 'تعذّر التشغيل (فشل المعالجة)',
                                   textAlign: TextAlign.center,
                                   style: AppTextStyles.bodySmall.copyWith(
-                                    color: audio.denoisedAudioBytes != null ? Colors.green.shade800 : Colors.red.shade700,
+                                    color: audio.denoisedAudioBytes != null
+                                        ? Colors.green.shade800
+                                        : Colors.red.shade700,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -248,13 +306,19 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.play_circle_fill_rounded,
-                                    color: audio.denoisedAudioBytes != null ? Colors.deepPurpleAccent : Colors.grey.shade400,
+                                    color: audio.denoisedAudioBytes != null
+                                        ? Colors.deepPurpleAccent
+                                        : Colors.grey.shade400,
                                     size: 40,
                                   ),
-                                  onPressed: audio.denoisedAudioBytes == null || audio.denoisedAudioBytes!.isEmpty
+                                  onPressed:
+                                      audio.denoisedAudioBytes == null ||
+                                          audio.denoisedAudioBytes!.isEmpty
                                       ? null
                                       : () async {
-                                          await _playWav(audio.denoisedAudioBytes!);
+                                          await _playWav(
+                                            audio.denoisedAudioBytes!,
+                                          );
                                         },
                                 ),
                               ],
@@ -277,7 +341,11 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline_rounded, color: Colors.amber.shade900, size: 20),
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.amber.shade900,
+                            size: 20,
+                          ),
                           SizedBox(width: 10.w),
                           Expanded(
                             child: Text(

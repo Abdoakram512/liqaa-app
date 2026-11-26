@@ -7,6 +7,7 @@ import 'package:liqaa_app/features/onboarding/presentation/cubits/onboarding_sta
 import 'package:mocktail/mocktail.dart';
 
 class MockOnboardingRepo extends Mock implements OnboardingRepo {}
+
 class MockLocalDataSource extends Mock implements OnboardingLocalDataSource {}
 
 void main() {
@@ -14,9 +15,9 @@ void main() {
 
   setUp(() {
     mockRepo = MockOnboardingRepo();
-    when(() => mockRepo.getOnboardingPages()).thenReturn(
-      OnboardingRepo(MockLocalDataSource()).getOnboardingPages(),
-    );
+    when(
+      () => mockRepo.getOnboardingPages(),
+    ).thenReturn(OnboardingRepo(MockLocalDataSource()).getOnboardingPages());
   });
 
   group('OnboardingCubit Tests', () {
@@ -58,7 +59,11 @@ void main() {
       },
       act: (cubit) => cubit.completeOnboarding(),
       expect: () => [
-        isA<OnboardingState>().having((s) => s.isCompleted, 'isCompleted', true),
+        isA<OnboardingState>().having(
+          (s) => s.isCompleted,
+          'isCompleted',
+          true,
+        ),
       ],
       verify: (_) {
         verify(() => mockRepo.completeOnboarding()).called(1);
@@ -73,7 +78,11 @@ void main() {
       },
       act: (cubit) => cubit.skipOnboarding(),
       expect: () => [
-        isA<OnboardingState>().having((s) => s.isCompleted, 'isCompleted', true),
+        isA<OnboardingState>().having(
+          (s) => s.isCompleted,
+          'isCompleted',
+          true,
+        ),
       ],
       verify: (_) {
         verify(() => mockRepo.completeOnboarding()).called(1);

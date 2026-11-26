@@ -5,13 +5,15 @@ class PhonemeToken extends Equatable {
   final String arabicSymbol; // e.g., 'ك', 'و', 'ر', 'ة'
   final int tokenId;
   final double confidence; // 0.0 to 1.0
-  final double? acousticMargin; // margin over second best hypothesis, null if unavailable
+  final double?
+  acousticMargin; // margin over second best hypothesis, null if unavailable
   final int startFrame;
   final int endFrame;
   final int startMs;
   final int endMs;
   final bool isAccurate;
-  final bool isTimestampEstimated; // true if estimated via segmentation/G2P; false if from acoustic alignment
+  final bool
+  isTimestampEstimated; // true if estimated via segmentation/G2P; false if from acoustic alignment
 
   const PhonemeToken({
     required this.symbol,

@@ -38,7 +38,8 @@ void main() {
         substitutedPhoneme: 'ت',
         targetPhoneme: 'ك',
         clinicalName: 'Fronting (إبدال أمامي)',
-        feedbackAr: 'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
+        feedbackAr:
+            'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
         yasserPose: 'thinking',
       ),
     ],
@@ -63,7 +64,8 @@ void main() {
         substitutedPhoneme: 'ث',
         targetPhoneme: 'س',
         clinicalName: 'Interdental Lisp (لدغة بين الأسنان)',
-        feedbackAr: 'ممتاز! بس لسانك طلع برة سنانك.. خلّي لسانك جوة واصفر: سسسـ سمكة!',
+        feedbackAr:
+            'ممتاز! بس لسانك طلع برة سنانك.. خلّي لسانك جوة واصفر: سسسـ سمكة!',
         yasserPose: 'thinking',
       ),
     ],
@@ -88,7 +90,8 @@ void main() {
         substitutedPhoneme: 'ل',
         targetPhoneme: 'ر',
         clinicalName: 'Lateralization (لدغة الراء إلى لام)',
-        feedbackAr: 'برافو يا بطل! بدّلنا الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
+        feedbackAr:
+            'برافو يا بطل! بدّلنا الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
         yasserPose: 'thinking',
       ),
     ],
@@ -148,105 +151,141 @@ void main() {
       expect(assessment.stars, equals(0));
     });
 
-    test('3. Blind Fronting Substitution (كورة -> تورة) triggers Fronting rule and fails', () {
-      // Blind recognition of "تورة"
-      final tokens = phonemeEngine.textToPhonemes('تورة');
-      expect(tokens.first.arabicSymbol, equals('ت'));
-      expect(tokens.first.symbol, equals('t'));
+    test(
+      '3. Blind Fronting Substitution (كورة -> تورة) triggers Fronting rule and fails',
+      () {
+        // Blind recognition of "تورة"
+        final tokens = phonemeEngine.textToPhonemes('تورة');
+        expect(tokens.first.arabicSymbol, equals('ت'));
+        expect(tokens.first.symbol, equals('t'));
 
-      // Evaluate against "كورة"
-      final assessment = evaluator.evaluate(
-        word: koraWord,
-        recognizedTokens: tokens,
-      );
+        // Evaluate against "كورة"
+        final assessment = evaluator.evaluate(
+          word: koraWord,
+          recognizedTokens: tokens,
+        );
 
-      expect(assessment.passed, isFalse);
-      expect(assessment.stars, equals(1));
-      expect(assessment.errorType, equals(AssessmentErrorType.substitution));
-      expect(assessment.clinicalErrorName, contains('Fronting'));
-      expect(assessment.substitutedPhoneme, equals('ت'));
-      expect(assessment.targetPhoneme, equals('ك'));
-      expect(assessment.overallScore, lessThanOrEqualTo(65.0));
-    });
+        expect(assessment.passed, isFalse);
+        expect(assessment.stars, equals(1));
+        expect(assessment.errorType, equals(AssessmentErrorType.substitution));
+        expect(assessment.clinicalErrorName, contains('Fronting'));
+        expect(assessment.substitutedPhoneme, equals('ت'));
+        expect(assessment.targetPhoneme, equals('ك'));
+        expect(assessment.overallScore, lessThanOrEqualTo(65.0));
+      },
+    );
 
-    test('4. Blind Interdental Lisp Substitution (سمكة -> ثمكة) triggers Lisp rule and fails', () {
-      final tokens = phonemeEngine.textToPhonemes('ثمكة');
-      expect(tokens.first.arabicSymbol, equals('ث'));
+    test(
+      '4. Blind Interdental Lisp Substitution (سمكة -> ثمكة) triggers Lisp rule and fails',
+      () {
+        final tokens = phonemeEngine.textToPhonemes('ثمكة');
+        expect(tokens.first.arabicSymbol, equals('ث'));
 
-      final assessment = evaluator.evaluate(
-        word: samakaWord,
-        recognizedTokens: tokens,
-      );
+        final assessment = evaluator.evaluate(
+          word: samakaWord,
+          recognizedTokens: tokens,
+        );
 
-      expect(assessment.passed, isFalse);
-      expect(assessment.stars, equals(1));
-      expect(assessment.errorType, equals(AssessmentErrorType.substitution));
-      expect(assessment.clinicalErrorName, contains('Interdental Lisp'));
-      expect(assessment.substitutedPhoneme, equals('ث'));
-      expect(assessment.targetPhoneme, equals('س'));
-    });
+        expect(assessment.passed, isFalse);
+        expect(assessment.stars, equals(1));
+        expect(assessment.errorType, equals(AssessmentErrorType.substitution));
+        expect(assessment.clinicalErrorName, contains('Interdental Lisp'));
+        expect(assessment.substitutedPhoneme, equals('ث'));
+        expect(assessment.targetPhoneme, equals('س'));
+      },
+    );
 
-    test('5. Blind Lateralization Substitution (أرنب -> أنلب) triggers Lateralization rule and fails', () {
-      final tokens = phonemeEngine.textToPhonemes('أنلب');
+    test(
+      '5. Blind Lateralization Substitution (أرنب -> أنلب) triggers Lateralization rule and fails',
+      () {
+        final tokens = phonemeEngine.textToPhonemes('أنلب');
 
-      final assessment = evaluator.evaluate(
-        word: arnabWord,
-        recognizedTokens: tokens,
-      );
+        final assessment = evaluator.evaluate(
+          word: arnabWord,
+          recognizedTokens: tokens,
+        );
 
-      expect(assessment.passed, isFalse);
-      expect(assessment.stars, equals(1));
-      expect(assessment.errorType, equals(AssessmentErrorType.substitution));
-      expect(assessment.clinicalErrorName, contains('Lateralization'));
-    });
+        expect(assessment.passed, isFalse);
+        expect(assessment.stars, equals(1));
+        expect(assessment.errorType, equals(AssessmentErrorType.substitution));
+        expect(assessment.clinicalErrorName, contains('Lateralization'));
+      },
+    );
 
-    test('6. Completely unrelated word (مدرسة against كورة) fails with low score', () {
-      final tokens = phonemeEngine.textToPhonemes('مدرسة');
+    test(
+      '6. Completely unrelated word (مدرسة against كورة) fails with low score',
+      () {
+        final tokens = phonemeEngine.textToPhonemes('مدرسة');
 
-      final assessment = evaluator.evaluate(
-        word: koraWord,
-        recognizedTokens: tokens,
-      );
+        final assessment = evaluator.evaluate(
+          word: koraWord,
+          recognizedTokens: tokens,
+        );
 
-      expect(assessment.passed, isFalse);
-      expect(assessment.overallScore, lessThan(70.0));
-      expect(assessment.stars, equals(1));
-    });
+        expect(assessment.passed, isFalse);
+        expect(assessment.overallScore, lessThan(70.0));
+        expect(assessment.stars, equals(1));
+      },
+    );
 
-    test('7. Clean, accurate pronunciation (كورة against كورة) passes with 3 stars', () {
-      final tokens = phonemeEngine.textToPhonemes('كورة', baseConfidence: 0.95);
+    test(
+      '7. Clean, accurate pronunciation (كورة against كورة) passes with 3 stars',
+      () {
+        final tokens = phonemeEngine.textToPhonemes(
+          'كورة',
+          baseConfidence: 0.95,
+        );
 
-      final assessment = evaluator.evaluate(
-        word: koraWord,
-        recognizedTokens: tokens,
-      );
+        final assessment = evaluator.evaluate(
+          word: koraWord,
+          recognizedTokens: tokens,
+        );
 
-      expect(assessment.passed, isTrue);
-      expect(assessment.stars, equals(3));
-      expect(assessment.errorType, equals(AssessmentErrorType.correct));
-      expect(assessment.overallScore, greaterThanOrEqualTo(90.0));
-      expect(assessment.yasserPose, equals('celebrating'));
-    });
+        expect(assessment.passed, isTrue);
+        expect(assessment.stars, equals(3));
+        expect(assessment.errorType, equals(AssessmentErrorType.correct));
+        expect(assessment.overallScore, greaterThanOrEqualTo(90.0));
+        expect(assessment.yasserPose, equals('celebrating'));
+      },
+    );
 
-    test('8. Wagner-Fischer DP Alignment correctly aligns phoneme insertions without desync', () {
-      // Child repeats initial stop consonant [k, k, uː, r, a] (stuttering)
-      final tokens = [
-        const PhonemeToken(symbol: 'k', arabicSymbol: 'ك', confidence: 0.92),
-        const PhonemeToken(symbol: 'k', arabicSymbol: 'ك', confidence: 0.90),
-        const PhonemeToken(symbol: 'uː', arabicSymbol: 'و', confidence: 0.93),
-        const PhonemeToken(symbol: 'r', arabicSymbol: 'ر', confidence: 0.89),
-        const PhonemeToken(symbol: 'a', arabicSymbol: 'ة', confidence: 0.91),
-      ];
+    test(
+      '8. Wagner-Fischer DP Alignment correctly aligns phoneme insertions without desync',
+      () {
+        // Child repeats initial stop consonant [k, k, uː, r, a] (stuttering)
+        final tokens = [
+          const PhonemeToken(symbol: 'k', arabicSymbol: 'ك', confidence: 0.92),
+          const PhonemeToken(symbol: 'k', arabicSymbol: 'ك', confidence: 0.90),
+          const PhonemeToken(symbol: 'uː', arabicSymbol: 'و', confidence: 0.93),
+          const PhonemeToken(symbol: 'r', arabicSymbol: 'ر', confidence: 0.89),
+          const PhonemeToken(symbol: 'a', arabicSymbol: 'ة', confidence: 0.91),
+        ];
 
-      final assessment = evaluator.evaluate(
-        word: koraWord,
-        recognizedTokens: tokens,
-      );
+        final assessment = evaluator.evaluate(
+          word: koraWord,
+          recognizedTokens: tokens,
+        );
 
-      // The DP alignment should match the rest of the sequence without cascading desync!
-      expect(assessment.alignments.any((a) => a.isMatch && a.expectedPhoneme == 'uː'), isTrue);
-      expect(assessment.alignments.any((a) => a.isMatch && a.expectedPhoneme == 'r'), isTrue);
-      expect(assessment.alignments.any((a) => a.isMatch && a.expectedPhoneme == 'a'), isTrue);
-    });
+        // The DP alignment should match the rest of the sequence without cascading desync!
+        expect(
+          assessment.alignments.any(
+            (a) => a.isMatch && a.expectedPhoneme == 'uː',
+          ),
+          isTrue,
+        );
+        expect(
+          assessment.alignments.any(
+            (a) => a.isMatch && a.expectedPhoneme == 'r',
+          ),
+          isTrue,
+        );
+        expect(
+          assessment.alignments.any(
+            (a) => a.isMatch && a.expectedPhoneme == 'a',
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 }

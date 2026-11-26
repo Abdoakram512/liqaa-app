@@ -52,7 +52,8 @@ class AiModelManager {
     _models['silero_vad'] = AiModelInfo(
       key: 'silero_vad',
       name: 'Silero VAD v4 (ONNX)',
-      description: 'Neural Voice Activity Detection (16kHz, 512-sample windows)',
+      description:
+          'Neural Voice Activity Detection (16kHz, 512-sample windows)',
       format: 'ONNX',
       sampleRate: 16000,
       sizeMb: double.parse(sileroSizeMb.toStringAsFixed(2)),
@@ -82,7 +83,8 @@ class AiModelManager {
     _models['gtcrn_denoiser'] = AiModelInfo(
       key: 'gtcrn_denoiser',
       name: 'GTCRN Neural Denoiser (ONNX)',
-      description: '16kHz Neural Speech Enhancement (replaces incompatible 48kHz BFCC rnnoise.onnx)',
+      description:
+          '16kHz Neural Speech Enhancement (replaces incompatible 48kHz BFCC rnnoise.onnx)',
       format: 'ONNX',
       sampleRate: 16000,
       sizeMb: double.parse(gtcrnSizeMb.toStringAsFixed(2)),
@@ -103,7 +105,9 @@ class AiModelManager {
     try {
       w2vPath = await AiAssetHelper.getLocalAssetPath(w2vPath);
       w2vVocab = await AiAssetHelper.getLocalAssetPath(w2vVocab);
-      w2vExists = AiAssetHelper.fileExists(w2vPath) && AiAssetHelper.fileExists(w2vVocab);
+      w2vExists =
+          AiAssetHelper.fileExists(w2vPath) &&
+          AiAssetHelper.fileExists(w2vVocab);
       if (AiAssetHelper.fileExists(w2vPath)) {
         w2vSizeMb = File(w2vPath).lengthSync() / (1024 * 1024);
       }
@@ -114,7 +118,8 @@ class AiModelManager {
     _models['wav2vec2_espeak'] = AiModelInfo(
       key: 'wav2vec2_espeak',
       name: 'Wav2Vec2-LV60 eSpeak IPA (Q4F16)',
-      description: 'Blind Acoustic CTC Phoneme Recognizer (392 IPA units, Arabic gutturals/emphatics)',
+      description:
+          'Blind Acoustic CTC Phoneme Recognizer (392 IPA units, Arabic gutturals/emphatics)',
       format: 'ONNX Q4F16',
       sampleRate: 16000,
       sizeMb: double.parse(w2vSizeMb.toStringAsFixed(1)),
@@ -137,11 +142,13 @@ class AiModelManager {
       whisperEnc = await AiAssetHelper.getLocalAssetPath(whisperEnc);
       whisperDec = await AiAssetHelper.getLocalAssetPath(whisperDec);
       whisperTok = await AiAssetHelper.getLocalAssetPath(whisperTok);
-      whisperReady = AiAssetHelper.fileExists(whisperEnc) &&
+      whisperReady =
+          AiAssetHelper.fileExists(whisperEnc) &&
           AiAssetHelper.fileExists(whisperDec) &&
           AiAssetHelper.fileExists(whisperTok);
       if (whisperReady) {
-        final totalBytes = File(whisperEnc).lengthSync() +
+        final totalBytes =
+            File(whisperEnc).lengthSync() +
             File(whisperDec).lengthSync() +
             File(whisperTok).lengthSync();
         whisperSizeMb = totalBytes / (1024 * 1024);
@@ -153,7 +160,8 @@ class AiModelManager {
     _models['whisper_tiny'] = AiModelInfo(
       key: 'whisper_tiny',
       name: 'Whisper Tiny Arabic ASR (INT8)',
-      description: 'Word-level Arabic ASR (diagnostic telemetry only; not phoneme scoring)',
+      description:
+          'Word-level Arabic ASR (diagnostic telemetry only; not phoneme scoring)',
       format: 'ONNX INT8',
       sampleRate: 16000,
       sizeMb: double.parse(whisperSizeMb.toStringAsFixed(1)),
@@ -166,7 +174,9 @@ class AiModelManager {
     );
 
     _isInitialized = true;
-    debugPrint('[AiModelManager] Initialized with ${_models.length} verified ONNX entries');
+    debugPrint(
+      '[AiModelManager] Initialized with ${_models.length} verified ONNX entries',
+    );
   }
 
   /// Reflects live initialization state from shared repository engines without double-loading.
@@ -179,7 +189,9 @@ class AiModelManager {
     if (vad != null && _models.containsKey('silero_vad')) {
       _activeVad = vad;
       _models['silero_vad'] = _models['silero_vad']!.copyWith(
-        status: vad.isNativeAvailable ? 'ready' : (vad.lastError != null ? 'error' : 'missing'),
+        status: vad.isNativeAvailable
+            ? 'ready'
+            : (vad.lastError != null ? 'error' : 'missing'),
         isLoadedInMemory: vad.isNativeAvailable,
         error: vad.lastError,
       );
@@ -207,7 +219,9 @@ class AiModelManager {
     if (stt != null && _models.containsKey('whisper_tiny')) {
       _activeStt = stt;
       _models['whisper_tiny'] = _models['whisper_tiny']!.copyWith(
-        status: stt.isNativeAvailable ? 'ready' : (stt.lastError != null ? 'error' : 'missing'),
+        status: stt.isNativeAvailable
+            ? 'ready'
+            : (stt.lastError != null ? 'error' : 'missing'),
         isLoadedInMemory: stt.isNativeAvailable,
         error: stt.lastError,
       );
@@ -325,7 +339,8 @@ class AiModelManager {
         const int n = 8000;
         final signal = Float32List(n);
         for (int i = 0; i < n; i++) {
-          signal[i] = 0.25 * math.sin(2 * math.pi * 400 * (i / 16000.0)) +
+          signal[i] =
+              0.25 * math.sin(2 * math.pi * 400 * (i / 16000.0)) +
               0.08 * math.sin(2 * math.pi * 3500 * (i / 16000.0));
         }
         final res = denoiser.process(signal);
@@ -340,9 +355,13 @@ class AiModelManager {
           phone.dispose();
           return false;
         }
-        final silenceRes = await phone.recognizePhonemesDetailed(Float32List(8000));
+        final silenceRes = await phone.recognizePhonemesDetailed(
+          Float32List(8000),
+        );
         phone.dispose();
-        return silenceRes.isNativeModel && !silenceRes.hasError && silenceRes.tokens.isEmpty;
+        return silenceRes.isNativeModel &&
+            !silenceRes.hasError &&
+            silenceRes.tokens.isEmpty;
       }
 
       if (resolvedKey == 'whisper_tiny') {

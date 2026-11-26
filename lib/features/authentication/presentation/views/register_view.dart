@@ -1,6 +1,5 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -10,16 +9,16 @@ import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/confetti_overlay.dart';
-import '../../../../core/widgets/phonological_background.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/widgets/yasser_character.dart';
+import '../../../../core/widgets/yasser_surface_card.dart';
 import '../../../../core/widgets/yasser_text_field.dart';
 import '../../data/models/user_model.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
+import '../widgets/auth_stage_shell.dart';
 
-/// Premium Interactive Registration Screen where Yasser greets new children
-/// and parents by name, responds to typing, and maintains privacy during password setup.
+/// Registration Screen exposing distinct Child, Parent, and Speech Specialist
+/// role cards with live Yasser gaze, validation reactions, and password privacy.
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 
@@ -28,17 +27,19 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  late YasserController _yasserController;
-  late ConfettiController _confettiController;
+  late final YasserController _yasserController;
+  late final ConfettiController _confettiController;
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _organizationController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   final _nameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
+  final _organizationFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
   final _visiblePasswords = <FocusNode, bool>{};
@@ -50,12 +51,15 @@ class _RegisterViewState extends State<RegisterView> {
   void initState() {
     super.initState();
     _yasserController = YasserController();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
 
     _nameController.addListener(_updateNameGaze);
     _emailController.addListener(_updateEmailGaze);
     _nameFocusNode.addListener(_handleCharacterFocus);
     _emailFocusNode.addListener(_handleCharacterFocus);
+    _organizationFocusNode.addListener(_handleCharacterFocus);
     _passwordFocusNode.addListener(_handleCharacterFocus);
     _confirmPasswordFocusNode.addListener(_handleCharacterFocus);
   }
@@ -66,10 +70,12 @@ class _RegisterViewState extends State<RegisterView> {
     _emailController.removeListener(_updateEmailGaze);
     _nameFocusNode.dispose();
     _emailFocusNode.dispose();
+    _organizationFocusNode.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
     _nameController.dispose();
     _emailController.dispose();
+    _organizationController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _yasserController.dispose();
@@ -78,7 +84,7 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   void _handleCharacterFocus() {
-    if (_isAnyPasswordFocused()) {
+    if (_passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus) {
       final field = _passwordFocusNode.hasFocus
           ? _passwordFocusNode
           : _confirmPasswordFocusNode;
@@ -87,6 +93,7 @@ class _RegisterViewState extends State<RegisterView> {
       } else {
         _yasserController.coverEyes();
       }
+      setState(() {});
       return;
     }
 
@@ -96,10 +103,10 @@ class _RegisterViewState extends State<RegisterView> {
     } else if (_emailFocusNode.hasFocus) {
       _updateEmailGaze();
     }
+    setState(() {});
   }
 
   void _updateNameGaze() => _updateCaret(_nameFocusNode, _nameController);
-
   void _updateEmailGaze() => _updateCaret(_emailFocusNode, _emailController);
 
   void _updateCaret(FocusNode focus, TextEditingController text) {
@@ -109,10 +116,6 @@ class _RegisterViewState extends State<RegisterView> {
       textLength: text.text.length,
       rightToLeft: Directionality.of(context) == TextDirection.rtl,
     );
-  }
-
-  bool _isAnyPasswordFocused() {
-    return _passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus;
   }
 
   void _handlePasswordVisibility(FocusNode field, bool visible) {
@@ -128,23 +131,41 @@ class _RegisterViewState extends State<RegisterView> {
 
     if (_passwordController.text != _confirmPasswordController.text) {
       _yasserController.reactToValidation(false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('كلمتا المرور غير متطابقتين، يرجى التحقق منهما'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+      showYasserSnackBar(
+        context,
+        message: 'كلمتا المرور غير متطابقتين، يرجى التحقق منهما',
+        tone: YasserBannerTone.error,
       );
       return;
     }
 
     context.read<AuthCubit>().register(
-          name: _nameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-          role: _selectedRole,
-        );
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      role: _selectedRole,
+      organization: _selectedRole == UserRole.specialist
+          ? _organizationController.text
+          : null,
+    );
+  }
+
+  String get _speechGreeting {
+    if (_passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus) {
+      return 'سرّك محفوظ.. لن أنظر إلى كلمة المرور!';
+    }
+    if (_enteredName.isNotEmpty) {
+      return switch (_selectedRole) {
+        UserRole.specialist => 'تشرفت بك يا أ. $_enteredName في منصة لقاء!',
+        UserRole.parent => 'أهلاً بك يا $_enteredName لمتابعة رحلة طفلك!',
+        UserRole.child => 'أهلاً ببطلنا الجديد $_enteredName!',
+      };
+    }
+    return switch (_selectedRole) {
+      UserRole.specialist => 'حساب مهني لإدارة الحالات وجلسات النطق',
+      UserRole.parent => 'حساب أسري لمشاركة طفلك التقدم اليومي',
+      UserRole.child => 'سعيد بلقائك! اختر دورك واكتب اسمك الجميل',
+    };
   }
 
   @override
@@ -158,29 +179,27 @@ class _RegisterViewState extends State<RegisterView> {
             if (mounted) _yasserController.celebrate();
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.success,
           );
 
-          Future.delayed(const Duration(milliseconds: 1600), () {
+          final targetRoute = state.user.role == UserRole.specialist
+              ? AppRoutes.specialistDashboard
+              : AppRoutes.home;
+
+          Future.delayed(const Duration(milliseconds: 1050), () {
             if (context.mounted) {
-              context.go(AppRoutes.game);
+              context.go(targetRoute);
             }
           });
         } else if (state is AuthFailure) {
           _yasserController.reactToValidation(false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+          showYasserSnackBar(
+            context,
+            message: state.message,
+            tone: YasserBannerTone.error,
           );
         }
       },
@@ -190,219 +209,198 @@ class _RegisterViewState extends State<RegisterView> {
         return Scaffold(
           body: ConfettiCelebrationOverlay(
             confettiController: _confettiController,
-            child: PhonologicalBackground(
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        SizedBox(height: 8.h),
+            child: AuthStageShell(
+              title: 'إنشاء حساب جديد',
+              speechTitle: _speechGreeting,
+              yasserController: _yasserController,
+              heroTag: 'yasser_register_character',
+              formChild: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'اختر نوع الحساب',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
 
-                        // Back navigation bar
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => context.pop(),
-                              icon: const Icon(Icons.arrow_back_ios, color: AppColors.primary),
-                              tooltip: 'رجوع',
-                            ),
-                            const Spacer(),
-                            Text(
-                              'حساب بطل جديد',
-                              style: AppTextStyles.titleMedium.copyWith(
-                                color: AppColors.primaryDark,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Spacer(),
-                            const SizedBox(width: 48),
-                          ],
-                        ),
+                    // 3 Distinct Role Selection Cards
+                    YasserSelectionCard(
+                      title: 'بطل صغير',
+                      subtitle:
+                          'تمارين النطق التفاعلية والألعاب الصوتية مع ياسر',
+                      icon: Icons.face_retouching_natural_rounded,
+                      accentColor: AppColors.primary,
+                      isSelected: _selectedRole == UserRole.child,
+                      compact: true,
+                      onTap: () =>
+                          setState(() => _selectedRole = UserRole.child),
+                    ),
+                    SizedBox(height: 8.h),
+                    YasserSelectionCard(
+                      title: 'ولي أمر',
+                      subtitle: 'متابعة جلسات الطفل المنزلية وتشجيعه باستمرار',
+                      icon: Icons.family_restroom_rounded,
+                      accentColor: AppColors.accentMintDark,
+                      isSelected: _selectedRole == UserRole.parent,
+                      compact: true,
+                      onTap: () =>
+                          setState(() => _selectedRole = UserRole.parent),
+                    ),
+                    SizedBox(height: 8.h),
+                    YasserSelectionCard(
+                      title: 'أخصائي تخاطب ونطق',
+                      subtitle:
+                          'إدارة ملفات الحالات، الجلسات، ومؤشرات التقدم الصوتية',
+                      icon: Icons.psychology_rounded,
+                      accentColor: AppColors.secondary,
+                      isSelected: _selectedRole == UserRole.specialist,
+                      compact: true,
+                      onTap: () =>
+                          setState(() => _selectedRole = UserRole.specialist),
+                    ),
 
-                        SizedBox(height: 8.h),
+                    SizedBox(height: 18.h),
 
-                        // Living Yasser Character
-                        YasserCharacter(
-                          controller: _yasserController,
-                          width: 200.w,
-                          height: 230.h,
-                          heroTag: 'yasser_register_character',
-                        ).animate().fadeIn(duration: 500.ms),
+                    YasserTextField(
+                      label: _selectedRole == UserRole.specialist
+                          ? 'اسم الأخصائي الكامل'
+                          : (_selectedRole == UserRole.parent
+                                ? 'اسم ولي الأمر'
+                                : 'اسم البطل'),
+                      hint: _selectedRole == UserRole.specialist
+                          ? 'مثال: د. سارة محمود'
+                          : 'مثال: يوسف، مريم، عمر...',
+                      variant: YasserFieldVariant.name,
+                      controller: _nameController,
+                      focusNode: _nameFocusNode,
+                      showValidationSuccess: true,
+                      onChanged: (val) {
+                        setState(() => _enteredName = val.trim());
+                        if (val.trim().length >= 3) {
+                          _yasserController.reactToValidation(true);
+                        }
+                      },
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'يرجى كتابة الاسم';
+                        }
+                        return null;
+                      },
+                    ),
 
-                        // Personalized Greeting Banner
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                          decoration: BoxDecoration(
-                            color: _enteredName.isNotEmpty
-                                ? AppColors.primaryContainer
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(16.r),
+                    if (_selectedRole == UserRole.specialist) ...[
+                      SizedBox(height: 14.h),
+                      YasserTextField(
+                        label: 'اسم المركز أو العيادة (اختياري)',
+                        hint: 'مثال: مركز لقاء للتخاطب وتنمية المهارات',
+                        variant: YasserFieldVariant.specialistCase,
+                        controller: _organizationController,
+                        focusNode: _organizationFocusNode,
+                      ),
+                    ],
+
+                    SizedBox(height: 14.h),
+
+                    YasserTextField(
+                      label: 'البريد الإلكتروني',
+                      hint: 'name@example.com',
+                      variant: YasserFieldVariant.email,
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      showValidationSuccess: true,
+                      validator: (v) {
+                        if (v == null || !v.contains('@') || !v.contains('.')) {
+                          return 'يرجى إدخال بريد إلكتروني صحيح';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    SizedBox(height: 14.h),
+
+                    YasserTextField(
+                      label: 'كلمة المرور السرية',
+                      hint: '6 خانات على الأقل',
+                      variant: YasserFieldVariant.password,
+                      isPassword: true,
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      onPasswordVisibilityChanged: (visible) =>
+                          _handlePasswordVisibility(
+                            _passwordFocusNode,
+                            visible,
                           ),
-                          child: Text(
-                            _enteredName.isNotEmpty
-                                ? 'أهلاً بك يا بطلنا الجديد: $_enteredName! 🎉'
-                                : 'سعيد جداً بلقائك! ما اسمك الجميل؟',
-                            style: AppTextStyles.labelLarge.copyWith(
-                              color: AppColors.primaryDark,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      validator: (v) {
+                        if (v == null || v.length < 6) {
+                          return 'كلمة المرور يجب ألا تقل عن 6 خانات';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    SizedBox(height: 14.h),
+
+                    YasserTextField(
+                      label: 'تأكيد كلمة المرور',
+                      hint: 'أعد إدخال كلمة المرور',
+                      variant: YasserFieldVariant.confirmPassword,
+                      isPassword: true,
+                      textInputAction: TextInputAction.done,
+                      controller: _confirmPasswordController,
+                      focusNode: _confirmPasswordFocusNode,
+                      onPasswordVisibilityChanged: (visible) =>
+                          _handlePasswordVisibility(
+                            _confirmPasswordFocusNode,
+                            visible,
                           ),
-                        ),
+                      onFieldSubmitted: _submitRegister,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return 'يرجى تأكيد كلمة المرور';
+                        }
+                        if (v != _passwordController.text) {
+                          return 'كلمتا المرور غير متطابقتين';
+                        }
+                        return null;
+                      },
+                    ),
 
-                        SizedBox(height: 12.h),
+                    SizedBox(height: 20.h),
 
-                        // Role Selector Pills (Child / Parent)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ChoiceChip(
-                              label: const Text('بطل صغير 🧒'),
-                              selected: _selectedRole == UserRole.child,
-                              selectedColor: AppColors.primary,
-                              labelStyle: TextStyle(
-                                color: _selectedRole == UserRole.child ? Colors.white : AppColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              onSelected: (_) => setState(() => _selectedRole = UserRole.child),
-                            ),
-                            SizedBox(width: 12.w),
-                            ChoiceChip(
-                              label: const Text('ولي أمر / أخصائي 👨‍🏫'),
-                              selected: _selectedRole == UserRole.parent,
-                              selectedColor: AppColors.secondary,
-                              labelStyle: TextStyle(
-                                color: _selectedRole == UserRole.parent ? Colors.white : AppColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              onSelected: (_) => setState(() => _selectedRole = UserRole.parent),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 16.h),
-
-                        // Name Input
-                        YasserTextField(
-                          label: 'اسم البطل',
-                          hint: 'مثال: يوسف، مريم، عمر...',
-                          controller: _nameController,
-                          focusNode: _nameFocusNode,
-                          prefixIcon: const Icon(Icons.badge_rounded),
-                          onChanged: (val) {
-                            setState(() => _enteredName = val.trim());
-                            if (val.trim().length >= 3) {
-                              _yasserController.reactToValidation(true);
-                            }
-                          },
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return 'يرجى كتابة الاسم';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 14.h),
-
-                        // Email Input
-                        YasserTextField(
-                          label: 'البريد الإلكتروني',
-                          hint: 'name@example.com',
-                          controller: _emailController,
-                          focusNode: _emailFocusNode,
-                          keyboardType: TextInputType.emailAddress,
-                          prefixIcon: const Icon(Icons.email_rounded),
-                          validator: (v) {
-                            if (v == null || !v.contains('@') || !v.contains('.')) {
-                              return 'يرجى إدخال بريد إلكتروني صحيح';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 14.h),
-
-                        // Password Field
-                        YasserTextField(
-                          label: 'كلمة المرور السرية',
-                          hint: '6 خانات على الأقل',
-                          controller: _passwordController,
-                          focusNode: _passwordFocusNode,
-                          isPassword: true,
-                          prefixIcon: const Icon(Icons.lock_rounded),
-                          onPasswordVisibilityChanged: (visible) =>
-                              _handlePasswordVisibility(_passwordFocusNode, visible),
-                          validator: (v) {
-                            if (v == null || v.length < 6) {
-                              return 'كلمة المرور يجب ألا تقل عن 6 خانات';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 14.h),
-
-                        // Confirm Password Field
-                        YasserTextField(
-                          label: 'تأكيد كلمة المرور',
-                          hint: 'أعد إدخال كلمة المرور',
-                          controller: _confirmPasswordController,
-                          focusNode: _confirmPasswordFocusNode,
-                          isPassword: true,
-                          textInputAction: TextInputAction.done,
-                          prefixIcon: const Icon(Icons.lock_clock_rounded),
-                          onPasswordVisibilityChanged: (visible) =>
-                              _handlePasswordVisibility(_confirmPasswordFocusNode, visible),
-                          onFieldSubmitted: _submitRegister,
-                          validator: (v) {
-                            if (v != _passwordController.text) {
-                              return 'كلمتا المرور غير متطابقتين';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 20.h),
-
-                        // Register Action Button
-                        PrimaryButton(
-                          label: 'انضم إلى مغامرة لقاء ✨',
-                          isLoading: isLoading,
-                          onPressed: isLoading ? null : _submitRegister,
-                        ),
-
-                        SizedBox(height: 14.h),
-
-                        // Login prompt
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              'لديك حساب بالفعل؟',
-                              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                            ),
-                            TextButton(
-                              onPressed: () => context.pop(),
-                              child: Text(
-                                'تسجيل الدخول',
-                                style: AppTextStyles.labelLarge.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 20.h),
-                      ],
+                    PrimaryButton(
+                      label: _selectedRole == UserRole.specialist
+                          ? 'إنشاء حساب الأخصائي'
+                          : 'انضم إلى مغامرة لقاء',
+                      icon: const Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: Colors.white,
+                      ),
+                      isLoading: isLoading,
+                      onPressed: isLoading ? null : _submitRegister,
+                    ),
+                  ],
+                ),
+              ),
+              footerChild: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'لديك حساب بالفعل؟',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
-                ),
+                  TextButton(
+                    onPressed: () => context.pushReplacement(AppRoutes.login),
+                    child: const Text('تسجيل الدخول'),
+                  ),
+                ],
               ),
             ),
           ),

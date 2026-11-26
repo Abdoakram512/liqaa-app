@@ -16,12 +16,14 @@ class MockTestAuthRepo implements AuthRepo {
   Future<AuthResult<UserModel>> login({
     required String identity,
     required String password,
+    UserRole? preferredRole,
   }) async {
     return AuthResult.success(
       UserModel(
         id: '1',
         name: identity,
         email: '$identity@test.com',
+        role: preferredRole ?? UserRole.child,
         createdAt: DateTime.now(),
       ),
     );
@@ -33,6 +35,7 @@ class MockTestAuthRepo implements AuthRepo {
     required String email,
     required String password,
     UserRole role = UserRole.child,
+    String? organization,
   }) async => throw UnimplementedError();
 
   @override
@@ -92,7 +95,7 @@ void main() {
 
       // Verify key fields exist
       expect(find.text('تسجيل الدخول'), findsOneWidget);
-      expect(find.text('انطلق الآن 🚀'), findsOneWidget);
+      expect(find.text('انطلق الآن'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(2));
       final character = tester.widget<YasserCharacter>(
         find.byType(YasserCharacter),

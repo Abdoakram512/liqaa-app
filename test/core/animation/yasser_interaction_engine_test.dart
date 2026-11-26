@@ -41,16 +41,19 @@ void main() {
       expect(engine.currentPriority, equals(YasserAnimationPriority.critical));
     });
 
-    test('transient state automatically returns to idle after hold duration', () async {
-      engine.triggerState(
-        YasserAnimationState.waving,
-        customHoldDuration: const Duration(milliseconds: 50),
-      );
-      expect(engine.currentState, equals(YasserAnimationState.waving));
+    test(
+      'transient state automatically returns to idle after hold duration',
+      () async {
+        engine.triggerState(
+          YasserAnimationState.waving,
+          customHoldDuration: const Duration(milliseconds: 50),
+        );
+        expect(engine.currentState, equals(YasserAnimationState.waving));
 
-      await Future.delayed(const Duration(milliseconds: 80));
-      expect(engine.currentState, equals(YasserAnimationState.idle));
-    });
+        await Future.delayed(const Duration(milliseconds: 80));
+        expect(engine.currentState, equals(YasserAnimationState.idle));
+      },
+    );
 
     test('tap cooldown prevents spamming', () {
       final firstTap = engine.handleTap();
@@ -62,7 +65,10 @@ void main() {
 
     test('event history tracks triggers and priorities', () {
       engine.triggerState(YasserAnimationState.waving, reason: 'Test Wave');
-      engine.triggerState(YasserAnimationState.coveringEyes, reason: 'Test Cover');
+      engine.triggerState(
+        YasserAnimationState.coveringEyes,
+        reason: 'Test Cover',
+      );
 
       expect(engine.eventHistory.length, greaterThanOrEqualTo(2));
       final lastLog = engine.eventHistory.last;

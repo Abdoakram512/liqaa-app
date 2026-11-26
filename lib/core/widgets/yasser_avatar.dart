@@ -2,14 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../constants/asset_paths.dart';
 
-enum YasserPose {
-  standing,
-  waving,
-  thinking,
-  celebrating,
-  walking,
-  presenting,
-}
+enum YasserPose { standing, waving, thinking, celebrating, walking, presenting }
 
 /// A unified character presentation widget for Yasser.
 /// Currently displays high-resolution, transparent 2.5D poses with organic spring motion.

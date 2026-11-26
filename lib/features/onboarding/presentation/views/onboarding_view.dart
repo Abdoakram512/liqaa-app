@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/dependency_injection/service_locator.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/yasser_design_tokens.dart';
 import '../../../../core/widgets/phonological_background.dart';
+import '../../data/models/onboarding_item_model.dart';
 import '../cubits/onboarding_cubit.dart';
 import '../cubits/onboarding_state.dart';
 import '../widgets/onboarding_header.dart';
@@ -21,6 +23,7 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView> {
   late final PageController _pageController;
   int? _settledPage = 0;
+  double _pageProgress = 0.0;
 
   @override
   void initState() {
@@ -30,16 +33,26 @@ class _OnboardingViewState extends State<OnboardingView> {
           position.isScrollingNotifier.addListener(_updateSettledPage),
       onDetach: (position) =>
           position.isScrollingNotifier.removeListener(_updateSettledPage),
-    );
+    )..addListener(_handlePageScroll);
   }
 
   @override
   void dispose() {
+    _pageController.removeListener(_handlePageScroll);
     _pageController.dispose();
     super.dispose();
   }
 
+  void _handlePageScroll() {
+    if (!_pageController.hasClients) return;
+    final page = _pageController.page ?? 0.0;
+    if ((page - _pageProgress).abs() > 0.005 && mounted) {
+      setState(() => _pageProgress = page);
+    }
+  }
+
   void _updateSettledPage() {
+    if (!_pageController.hasClients) return;
     final position = _pageController.position;
     final next = position.isScrollingNotifier.value
         ? null
@@ -53,18 +66,40 @@ class _OnboardingViewState extends State<OnboardingView> {
     if (state.isLastPage) {
       context.read<OnboardingCubit>().completeOnboarding();
     } else {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeOutCubic,
+      final reduced = YasserMotion.isReducedMotion(context);
+      if (reduced) {
+        _pageController.jumpToPage(state.currentIndex + 1);
+      } else {
+        _pageController.nextPage(
+          duration: YasserMotion.pageTransition,
+          curve: YasserMotion.smoothMorph,
+        );
+      }
+    }
+  }
+
+  void _onPreviousPressed(BuildContext context, OnboardingState state) {
+    if (state.isFirstPage) return;
+    final reduced = YasserMotion.isReducedMotion(context);
+    if (reduced) {
+      _pageController.jumpToPage(state.currentIndex - 1);
+    } else {
+      _pageController.previousPage(
+        duration: YasserMotion.pageTransition,
+        curve: YasserMotion.smoothMorph,
       );
     }
   }
 
-  void _onPreviousPressed() {
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 380),
-      curve: Curves.easeOutCubic,
-    );
+  PhonologicalSceneVariant _sceneForEnvironment(OnboardingEnvironment env) {
+    return switch (env) {
+      OnboardingEnvironment.welcomeSound =>
+        PhonologicalSceneVariant.sunriseArch,
+      OnboardingEnvironment.soundPuzzle =>
+        PhonologicalSceneVariant.soundDiscovery,
+      OnboardingEnvironment.celebrationLaunch =>
+        PhonologicalSceneVariant.celebrationStage,
+    };
   }
 
   @override
@@ -83,36 +118,36 @@ class _OnboardingViewState extends State<OnboardingView> {
 
           return Scaffold(
             body: PhonologicalBackground(
+              variant: _sceneForEnvironment(state.currentItem.environment),
+              morphProgress: _pageProgress,
               child: SafeArea(
                 child: Column(
                   children: [
-                    // Top Header with Step Counter & Skip button
                     OnboardingHeader(
                       onSkip: cubit.skipOnboarding,
                       showSkip: !state.isLastPage,
                       currentStep: state.currentIndex + 1,
                       totalSteps: state.totalPages,
                     ),
-
-                    // PageView with 3 unique scene compositions
                     Expanded(
                       child: PageView.builder(
                         controller: _pageController,
                         itemCount: state.totalPages,
                         physics: const BouncingScrollPhysics(),
-                        onPageChanged: (index) {
-                          cubit.onPageChanged(index);
-                        },
+                        onPageChanged: cubit.onPageChanged,
                         itemBuilder: (context, index) {
+                          final parallax = (_pageProgress - index).clamp(
+                            -1.0,
+                            1.0,
+                          );
                           return OnboardingPageItem(
                             item: state.items[index],
                             isActive: index == _settledPage,
+                            parallaxOffset: parallax,
                           );
                         },
                       ),
                     ),
-
-                    // Bottom Navigation Bar
                     OnboardingNavigationBar(
                       currentIndex: state.currentIndex,
                       totalPages: state.totalPages,
@@ -120,7 +155,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       isFirstPage: state.isFirstPage,
                       activeColor: state.currentItem.accentColor,
                       onNext: () => _onNextPressed(context, state),
-                      onPrevious: _onPreviousPressed,
+                      onPrevious: () => _onPreviousPressed(context, state),
                     ),
                   ],
                 ),

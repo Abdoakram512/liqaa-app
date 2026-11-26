@@ -4,27 +4,45 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 abstract final class AppTextStyles {
-  // Primary Font Family: Cairo for Arabic & English harmonious readability
   static TextStyle get _baseCairo =>
-      GoogleFonts.cairo(color: AppColors.textPrimary, letterSpacing: -0.2);
+      GoogleFonts.cairo(color: AppColors.textPrimary, letterSpacing: -0.1);
 
-  // Display Styles
+  // Display Styles (Hero titles, target Arabic words)
   static TextStyle get displayLarge => _baseCairo.copyWith(
     fontSize: 34.sp,
-    fontWeight: FontWeight.w800,
-    height: 1.25,
+    fontWeight: FontWeight.w900,
+    height: 1.28,
   );
 
   static TextStyle get displayMedium => _baseCairo.copyWith(
     fontSize: 28.sp,
     fontWeight: FontWeight.w800,
-    height: 1.3,
+    height: 1.32,
   );
 
   static TextStyle get displaySmall => _baseCairo.copyWith(
     fontSize: 24.sp,
     fontWeight: FontWeight.w800,
-    height: 1.3,
+    height: 1.34,
+  );
+
+  // Headline Styles
+  static TextStyle get headlineLarge => _baseCairo.copyWith(
+    fontSize: 23.sp,
+    fontWeight: FontWeight.w800,
+    height: 1.35,
+  );
+
+  static TextStyle get headlineMedium => _baseCairo.copyWith(
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w700,
+    height: 1.38,
+  );
+
+  static TextStyle get headlineSmall => _baseCairo.copyWith(
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
   );
 
   // Title Styles
@@ -49,75 +67,63 @@ abstract final class AppTextStyles {
   // Label Styles
   static TextStyle get labelLarge => _baseCairo.copyWith(
     fontSize: 14.sp,
-    fontWeight: FontWeight.w600,
-    height: 1.3,
-  );
-
-  static TextStyle get labelMedium => _baseCairo.copyWith(
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w600,
-    height: 1.3,
-  );
-
-  static TextStyle get labelSmall => _baseCairo.copyWith(
-    fontSize: 10.sp,
-    fontWeight: FontWeight.w500,
-    height: 1.3,
-  );
-
-  // Headline Styles
-  static TextStyle get headlineLarge => _baseCairo.copyWith(
-    fontSize: 24.sp,
     fontWeight: FontWeight.w700,
     height: 1.35,
   );
 
-  static TextStyle get headlineMedium => _baseCairo.copyWith(
-    fontSize: 20.sp,
+  static TextStyle get labelMedium => _baseCairo.copyWith(
+    fontSize: 12.sp,
     fontWeight: FontWeight.w700,
-    height: 1.4,
+    height: 1.35,
   );
 
-  static TextStyle get headlineSmall => _baseCairo.copyWith(
-    fontSize: 18.sp,
+  static TextStyle get labelSmall => _baseCairo.copyWith(
+    fontSize: 11.sp,
     fontWeight: FontWeight.w600,
-    height: 1.4,
+    height: 1.3,
   );
 
   // Body Styles
   static TextStyle get bodyLarge => _baseCairo.copyWith(
     fontSize: 16.sp,
-    fontWeight: FontWeight.w500,
-    height: 1.6,
+    fontWeight: FontWeight.w600,
+    height: 1.58,
     color: AppColors.textSecondary,
   );
 
   static TextStyle get bodyMedium => _baseCairo.copyWith(
     fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
     height: 1.55,
     color: AppColors.textSecondary,
   );
 
   static TextStyle get bodySmall => _baseCairo.copyWith(
     fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
     height: 1.5,
     color: AppColors.textMuted,
   );
 
-  // Label & Button Styles
+  // Component Specific
   static TextStyle get buttonLabel => _baseCairo.copyWith(
     fontSize: 16.sp,
-    fontWeight: FontWeight.w700,
-    height: 1.2,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
     color: AppColors.textInverse,
   );
 
   static TextStyle get badgeLabel => _baseCairo.copyWith(
     fontSize: 13.sp,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    color: AppColors.primaryDeep,
+  );
+
+  static TextStyle get numericMetric => _baseCairo.copyWith(
+    fontSize: 22.sp,
+    fontWeight: FontWeight.w800,
     height: 1.2,
-    color: AppColors.primaryDark,
+    fontFeatures: const [FontFeature.tabularFigures()],
   );
 }

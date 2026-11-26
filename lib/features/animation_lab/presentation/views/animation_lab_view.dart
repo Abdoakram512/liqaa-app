@@ -201,8 +201,12 @@ class _AnimationLabViewState extends State<AnimationLabView>
                   ),
                   const SizedBox(height: 6),
                   _buildStatusChip(
-                    _controller.isRiveInitialized ? 'Rive Native شغال' : 'نمط 2.5D Fallback',
-                    _controller.isRiveInitialized ? AppColors.success : Colors.amber.shade800,
+                    _controller.isRiveInitialized
+                        ? 'Rive Native شغال'
+                        : 'نمط 2.5D Fallback',
+                    _controller.isRiveInitialized
+                        ? AppColors.success
+                        : Colors.amber.shade800,
                   ),
                 ],
               ),
@@ -338,8 +342,13 @@ class _AnimationLabViewState extends State<AnimationLabView>
         const SizedBox(height: 20),
         _buildSectionHeader('اختبار التحمل والسرعة (Stress Testing)'),
         PrimaryButton(
-          label: _stressTestRunning ? 'إيقاف اختبار التحمل' : 'بدء اختبار التحمل السريع (Rapid Stress Test)',
-          icon: Icon(_stressTestRunning ? Icons.stop : Icons.flash_on, color: Colors.white),
+          label: _stressTestRunning
+              ? 'إيقاف اختبار التحمل'
+              : 'بدء اختبار التحمل السريع (Rapid Stress Test)',
+          icon: Icon(
+            _stressTestRunning ? Icons.stop : Icons.flash_on,
+            color: Colors.white,
+          ),
           backgroundColor: _stressTestRunning ? Colors.red : Colors.deepOrange,
           onPressed: _runStressTest,
         ),
@@ -493,7 +502,8 @@ class _AnimationLabViewState extends State<AnimationLabView>
           child: ListView.builder(
             itemCount: _controller.eventHistory.length,
             itemBuilder: (context, index) {
-              final log = _controller.eventHistory[_controller.eventHistory.length - 1 - index];
+              final log = _controller
+                  .eventHistory[_controller.eventHistory.length - 1 - index];
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Text(
@@ -533,12 +543,17 @@ class _AnimationLabViewState extends State<AnimationLabView>
 
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: ListTile(
               leading: Icon(Icons.check_circle, color: tierColor, size: 24),
               title: Text(
                 cap.featureName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
               subtitle: Text(
                 'المعرف: ${cap.riveIdentifier ?? "غير محدد"}\n${cap.description}',
@@ -595,7 +610,10 @@ class _AnimationLabViewState extends State<AnimationLabView>
       ),
       onPressed: onPressed,
       icon: Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

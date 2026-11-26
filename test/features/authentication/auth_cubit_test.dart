@@ -13,6 +13,7 @@ class StubAuthRepo implements AuthRepo {
   Future<AuthResult<UserModel>> login({
     required String identity,
     required String password,
+    UserRole? preferredRole,
   }) async {
     if (shouldSucceed) {
       return AuthResult.success(
@@ -20,6 +21,7 @@ class StubAuthRepo implements AuthRepo {
           id: '1',
           name: identity,
           email: '$identity@test.com',
+          role: preferredRole ?? UserRole.child,
           createdAt: DateTime.now(),
         ),
       );
@@ -33,6 +35,7 @@ class StubAuthRepo implements AuthRepo {
     required String email,
     required String password,
     UserRole role = UserRole.child,
+    String? organization,
   }) async {
     if (shouldSucceed) {
       return AuthResult.success(
@@ -41,6 +44,7 @@ class StubAuthRepo implements AuthRepo {
           name: name,
           email: email,
           role: role,
+          organization: organization,
           createdAt: DateTime.now(),
         ),
       );
@@ -50,17 +54,29 @@ class StubAuthRepo implements AuthRepo {
 
   @override
   Future<AuthResult<bool>> sendPasswordReset({required String email}) async {
-    return shouldSucceed ? const AuthResult.success(true) : AuthResult.failure(errorMessage);
+    return shouldSucceed
+        ? const AuthResult.success(true)
+        : AuthResult.failure(errorMessage);
   }
 
   @override
-  Future<AuthResult<bool>> verifyOtp({required String email, required String otp}) async {
-    return shouldSucceed ? const AuthResult.success(true) : AuthResult.failure(errorMessage);
+  Future<AuthResult<bool>> verifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    return shouldSucceed
+        ? const AuthResult.success(true)
+        : AuthResult.failure(errorMessage);
   }
 
   @override
-  Future<AuthResult<bool>> resetPassword({required String email, required String newPassword}) async {
-    return shouldSucceed ? const AuthResult.success(true) : AuthResult.failure(errorMessage);
+  Future<AuthResult<bool>> resetPassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    return shouldSucceed
+        ? const AuthResult.success(true)
+        : AuthResult.failure(errorMessage);
   }
 
   @override
@@ -105,19 +121,24 @@ void main() {
         return cubit;
       },
       act: (c) => c.login(identity: 'wrong', password: 'password123'),
-      expect: () => [
-        const AuthLoading(operation: 'login'),
-        isA<AuthFailure>(),
-      ],
+      expect: () => [const AuthLoading(operation: 'login'), isA<AuthFailure>()],
     );
 
     blocTest<AuthCubit, AuthState>(
-      'emits [AuthLoading, AuthSuccess] on successful registration',
+      'emits [AuthLoading, AuthSuccess] with specialist role on registration',
       build: () => cubit,
-      act: (c) => c.register(name: 'مريم', email: 'maryam@test.com', password: 'pass12345'),
+      act: (c) => c.register(
+        name: 'د. مريم',
+        email: 'maryam@test.com',
+        password: 'pass12345',
+        role: UserRole.specialist,
+        organization: 'عيادة الأمل',
+      ),
       expect: () => [
         const AuthLoading(operation: 'register'),
-        isA<AuthSuccess>().having((s) => s.user.name, 'name', 'مريم'),
+        isA<AuthSuccess>()
+            .having((s) => s.user.name, 'name', 'د. مريم')
+            .having((s) => s.user.role, 'role', UserRole.specialist),
       ],
     );
 
@@ -144,7 +165,10 @@ void main() {
     blocTest<AuthCubit, AuthState>(
       'emits [AuthLoading, AuthPasswordResetSuccess] on reset password',
       build: () => cubit,
-      act: (c) => c.resetPassword(email: 'user@test.com', newPassword: 'newPassword123'),
+      act: (c) => c.resetPassword(
+        email: 'user@test.com',
+        newPassword: 'newPassword123',
+      ),
       expect: () => [
         const AuthLoading(operation: 'set_new_password'),
         isA<AuthPasswordResetSuccess>(),
@@ -155,9 +179,7 @@ void main() {
       'emits [AuthLoggedOut] on logout',
       build: () => cubit,
       act: (c) => c.logout(),
-      expect: () => [
-        const AuthLoggedOut(),
-      ],
+      expect: () => [const AuthLoggedOut()],
     );
   });
 }

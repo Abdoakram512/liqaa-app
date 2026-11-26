@@ -168,7 +168,10 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -187,7 +190,11 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.science_rounded, color: Colors.purple.shade800, size: 28),
+                  Icon(
+                    Icons.science_rounded,
+                    color: Colors.purple.shade800,
+                    size: 28,
+                  ),
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
@@ -207,7 +214,9 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
 
             Text(
               'حالات الاختبار المرجعية (8 Real Audio Scenarios):',
-              style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.titleSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 10.h),
 
@@ -222,7 +231,9 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                   side: BorderSide(
-                    color: isSelected ? AppColors.primary : AppColors.borderSoft,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.borderSoft,
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -236,19 +247,32 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                   ),
                   subtitle: Text(
                     'الملف: ${(item['fixturePath'] as String).split('/').last} | الهدف: ${item['targetWord']} | المتوقع: ${item['expectedResult']}',
-                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   trailing: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSelected ? AppColors.primary : Colors.grey.shade200,
-                      foregroundColor: isSelected ? Colors.white : AppColors.textPrimary,
+                      backgroundColor: isSelected
+                          ? AppColors.primary
+                          : Colors.grey.shade200,
+                      foregroundColor: isSelected
+                          ? Colors.white
+                          : AppColors.textPrimary,
                       elevation: 0,
                       minimumSize: Size(0, 36.h),
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
                     ),
                     onPressed: _isRunning ? null : () => _runBenchmarkCase(idx),
                     child: _isRunning && isSelected
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('تشغيل العينة'),
                   ),
                 ),
@@ -261,7 +285,9 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
             if (_lastAssessment != null) ...[
               Text(
                 'نتائج الاستدلال والتقييم الفعلي:',
-                style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 10.h),
 
@@ -290,7 +316,9 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
-                            color: _lastAssessment!.passed ? Colors.green.shade700 : Colors.red.shade700,
+                            color: _lastAssessment!.passed
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
                           ),
                         ),
                         Row(
@@ -298,7 +326,9 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                             3,
                             (i) => Icon(
                               Icons.star_rounded,
-                              color: i < _lastAssessment!.stars ? Colors.amber : Colors.grey.shade300,
+                              color: i < _lastAssessment!.stars
+                                  ? Colors.amber
+                                  : Colors.grey.shade300,
                               size: 24,
                             ),
                           ),
@@ -307,9 +337,15 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                     ),
                     SizedBox(height: 8.h),
 
-                    Text('الكلمة المستهدفة: ${_lastAssessment!.targetWordArabic}'),
-                    Text('النص المكتشف عبر الذكاء الاصطناعي: "${_lastAssessment!.recognizedTranscript}"'),
-                    Text('الدرجة الكلية: ${_lastAssessment!.overallScore}% | زمن الاستدلال: ${_lastAssessment!.latencyMs}ms'),
+                    Text(
+                      'الكلمة المستهدفة: ${_lastAssessment!.targetWordArabic}',
+                    ),
+                    Text(
+                      'النص المكتشف عبر الذكاء الاصطناعي: "${_lastAssessment!.recognizedTranscript}"',
+                    ),
+                    Text(
+                      'الدرجة الكلية: ${_lastAssessment!.overallScore}% | زمن الاستدلال: ${_lastAssessment!.latencyMs}ms',
+                    ),
                     if (_lastAssessment!.clinicalErrorName != null) ...[
                       SizedBox(height: 4.h),
                       Text(
@@ -327,7 +363,9 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
 
                     Text(
                       'مصفوفة المحاذاة الفونيمية (DP Alignment Matrix):',
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 8.h),
 
@@ -349,7 +387,10 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                         }
 
                         return Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 6.h,
+                          ),
                           decoration: BoxDecoration(
                             color: chipColor,
                             borderRadius: BorderRadius.circular(8),
@@ -359,15 +400,23 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                             children: [
                               Text(
                                 '${a.expectedArabic.isNotEmpty ? a.expectedArabic : "Ø"} -> ${a.recognizedToken?.arabicSymbol ?? "Ø"}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
                                 '/${a.expectedPhoneme.isNotEmpty ? a.expectedPhoneme : "Ø"}/ -> /${a.recognizedToken?.symbol ?? "Ø"}/',
-                                style: TextStyle(fontSize: 10.sp, color: AppColors.textSecondary),
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                               Text(
                                 a.status,
-                                style: TextStyle(fontSize: 9.sp, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 9.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -384,12 +433,19 @@ class _ClinicalBenchmarkViewState extends State<ClinicalBenchmarkView> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 20),
+                          const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: Colors.amber,
+                            size: 20,
+                          ),
                           SizedBox(width: 8.w),
                           Expanded(
                             child: Text(
                               'رسالة ياسر للطفل: ${_lastAssessment!.yasserFeedbackMessage}',
-                              style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade900),
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.amber.shade900,
+                              ),
                             ),
                           ),
                         ],

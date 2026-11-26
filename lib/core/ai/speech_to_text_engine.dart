@@ -8,7 +8,8 @@ import 'ort_dynamic_session.dart';
 
 class SttResult {
   final String text;
-  final double? confidence; // Null unless decoder exposes a calibrated acoustic posterior
+  final double?
+  confidence; // Null unless decoder exposes a calibrated acoustic posterior
   final int latencyMs;
   final double realTimeFactor;
   final bool isModelInference;
@@ -69,26 +70,32 @@ class SpeechToTextEngine {
     }
 
     try {
-      _encoderPath = encoderPathOverride ??
+      _encoderPath =
+          encoderPathOverride ??
           await AiAssetHelper.getLocalAssetPath(
             'assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx',
           );
-      _decoderPath = decoderPathOverride ??
+      _decoderPath =
+          decoderPathOverride ??
           await AiAssetHelper.getLocalAssetPath(
             'assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx',
           );
-      _tokensPath = tokensPathOverride ??
+      _tokensPath =
+          tokensPathOverride ??
           await AiAssetHelper.getLocalAssetPath(
             'assets/ai_models/whisper_tiny/tiny-tokens.txt',
           );
 
-      final hasEncoder = _encoderPath != null && File(_encoderPath!).existsSync();
-      final hasDecoder = _decoderPath != null && File(_decoderPath!).existsSync();
+      final hasEncoder =
+          _encoderPath != null && File(_encoderPath!).existsSync();
+      final hasDecoder =
+          _decoderPath != null && File(_decoderPath!).existsSync();
       final hasTokens = _tokensPath != null && File(_tokensPath!).existsSync();
 
       if (!hasEncoder || !hasDecoder || !hasTokens) {
         _isNativeAvailable = false;
-        _lastError = 'Whisper Tiny model files incomplete '
+        _lastError =
+            'Whisper Tiny model files incomplete '
             '(enc=$hasEncoder, dec=$hasDecoder, tok=$hasTokens).';
         _isInitialized = true;
         return;
@@ -118,7 +125,9 @@ class SpeechToTextEngine {
       _recognizer = sherpa_onnx.OfflineRecognizer(recognizerConfig);
       _isNativeAvailable = true;
       _lastError = null;
-      debugPrint('[SpeechToTextEngine] Initialized native Whisper Tiny ASR (Arabic)');
+      debugPrint(
+        '[SpeechToTextEngine] Initialized native Whisper Tiny ASR (Arabic)',
+      );
     } catch (e) {
       _lastError = 'Whisper Tiny initialization error: $e';
       _isNativeAvailable = false;
@@ -129,7 +138,10 @@ class SpeechToTextEngine {
   }
 
   /// Blindly transcribes 16kHz audio samples to Arabic text. Zero target hint parameter.
-  Future<SttResult> transcribe(Float32List samples, {int sampleRate = 16000}) async {
+  Future<SttResult> transcribe(
+    Float32List samples, {
+    int sampleRate = 16000,
+  }) async {
     final Stopwatch sw = Stopwatch()..start();
 
     if (!_isInitialized) {
@@ -181,7 +193,9 @@ class SpeechToTextEngine {
 
       sw.stop();
       final int latency = sw.elapsedMilliseconds;
-      final double rtf = audioDurationMs > 0 ? (latency / audioDurationMs) : 0.0;
+      final double rtf = audioDurationMs > 0
+          ? (latency / audioDurationMs)
+          : 0.0;
 
       final rawText = result.text.trim();
       final cleanedText = rawText.replaceAll(RegExp(r'[.,!?؟]'), '').trim();

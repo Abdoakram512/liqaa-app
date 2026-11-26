@@ -37,14 +37,14 @@ class PronunciationRepository {
     PronunciationEvaluator? evaluator,
     SpeechToTextEngine? sttEngine,
     AiModelManager? modelManager,
-  })  : recorder = recorder ?? AudioRecorderService(),
-        preprocessor = preprocessor ?? const AudioPreprocessor(),
-        vadEngine = vadEngine ?? SileroVadEngine(),
-        denoiserEngine = denoiserEngine ?? RnnoiseDenoiserEngine(),
-        phonemeEngine = phonemeEngine ?? PhonemeRecognitionEngine(),
-        evaluator = evaluator ?? const PronunciationEvaluator(),
-        sttEngine = sttEngine ?? SpeechToTextEngine(),
-        modelManager = modelManager ?? AiModelManager();
+  }) : recorder = recorder ?? AudioRecorderService(),
+       preprocessor = preprocessor ?? const AudioPreprocessor(),
+       vadEngine = vadEngine ?? SileroVadEngine(),
+       denoiserEngine = denoiserEngine ?? RnnoiseDenoiserEngine(),
+       phonemeEngine = phonemeEngine ?? PhonemeRecognitionEngine(),
+       evaluator = evaluator ?? const PronunciationEvaluator(),
+       sttEngine = sttEngine ?? SpeechToTextEngine(),
+       modelManager = modelManager ?? AiModelManager();
 
   bool get isInitialized => _isInitialized;
   List<VocabularyWord> get vocabulary => _vocabulary;
@@ -81,7 +81,9 @@ class PronunciationRepository {
     }
 
     _isInitialized = true;
-    debugPrint('[PronunciationRepository] Initialized with ${_vocabulary.length} words');
+    debugPrint(
+      '[PronunciationRepository] Initialized with ${_vocabulary.length} words',
+    );
   }
 
   /// Processes recorded WAV bytes through the blind on-device AI pipeline.
@@ -113,7 +115,10 @@ class PronunciationRepository {
     // 1. Unified WAV validation, chunk parsing, downmix, & resampling to 16kHz mono Float32
     late final PreprocessedAudio audio;
     try {
-      audio = preprocessor.preprocessWav(rawAudioBytes, targetSampleRate: 16000);
+      audio = preprocessor.preprocessWav(
+        rawAudioBytes,
+        targetSampleRate: 16000,
+      );
     } on InvalidAudioFormatException catch (e) {
       sw.stop();
       return _systemFailure(
@@ -146,7 +151,8 @@ class PronunciationRepository {
         targetPhoneme: targetWord.targetPhoneme,
         alignments: _deletedAlignments(targetWord),
         recognizedPhonemes: const [],
-        yasserFeedbackMessage: 'في دوشة حواليك يا بطل! روح لمكان هادي وقول تاني.',
+        yasserFeedbackMessage:
+            'في دوشة حواليك يا بطل! روح لمكان هادي وقول تاني.',
         yasserPose: 'thinking',
         latencyMs: sw.elapsedMilliseconds,
         passed: false,
@@ -172,7 +178,8 @@ class PronunciationRepository {
         clinicalName: 'فشل تهيئة نموذج كشف الصوت (Silero VAD Unavailable)',
         stage: 'SileroVAD',
         detail: vadEngine.lastError ?? 'Native Silero VAD not loaded.',
-        userMessage: 'تعذّر تشغيل نموذج كشف الصوت (Silero VAD). راجع مختبر النماذج.',
+        userMessage:
+            'تعذّر تشغيل نموذج كشف الصوت (Silero VAD). راجع مختبر النماذج.',
         latencyMs: sw.elapsedMilliseconds,
       );
     }
@@ -191,7 +198,9 @@ class PronunciationRepository {
       );
     }
 
-    if (!vad.speechDetected || vad.trimmedSamples == null || vad.trimmedSamples!.isEmpty) {
+    if (!vad.speechDetected ||
+        vad.trimmedSamples == null ||
+        vad.trimmedSamples!.isEmpty) {
       sw.stop();
       return evaluator.evaluate(
         word: targetWord,
@@ -211,13 +220,17 @@ class PronunciationRepository {
       );
     }
     if (speechRms < 0.05) {
-      speechSamples = preprocessor.normalizePeak(speechSamples, targetPeak: 0.7);
+      speechSamples = preprocessor.normalizePeak(
+        speechSamples,
+        targetPeak: 0.7,
+      );
     }
 
     // 3. Neural Speech Enhancement (GTCRN) or explicit/clean bypass
     // Ablation proved GTCRN improves heavy noise (SNR <= 14 dB) while attenuating clean consonants above 15 dB.
     final bool prevDenoiseEnabled = denoiserEngine.enabled;
-    final bool enableDenoise = overrideDenoise ?? (prevDenoiseEnabled && rawSnr < 14.0);
+    final bool enableDenoise =
+        overrideDenoise ?? (prevDenoiseEnabled && rawSnr < 14.0);
     denoiserEngine.enabled = enableDenoise;
     late final DenoiseResult denoise;
     try {
@@ -250,24 +263,28 @@ class PronunciationRepository {
         errorType: AssessmentErrorType.modelInitFailed,
         clinicalName: 'نموذج الفونيمات غير مهيأ (Wav2Vec2-eSpeak Unavailable)',
         stage: 'PhonemeRecognition',
-        detail: phonemeEngine.lastError ?? 'Wav2Vec2-eSpeak ONNX session not ready.',
+        detail:
+            phonemeEngine.lastError ??
+            'Wav2Vec2-eSpeak ONNX session not ready.',
         userMessage: 'تعذّر تشغيل نموذج تحليل الفونيمات الصوتي على الجهاز.',
         latencyMs: sw.elapsedMilliseconds,
       );
     }
 
-    final PhonemeRecognitionResult phonemeResult =
-        await phonemeEngine.recognizePhonemesDetailed(finalSamples);
+    final PhonemeRecognitionResult phonemeResult = await phonemeEngine
+        .recognizePhonemesDetailed(finalSamples);
     sw.stop();
 
     if (phonemeResult.hasError) {
       return _systemFailure(
         word: targetWord,
         errorType: AssessmentErrorType.inferenceFailed,
-        clinicalName: 'فشل استدلال الفونيمات الصوتي (Wav2Vec2 Inference Failed)',
+        clinicalName:
+            'فشل استدلال الفونيمات الصوتي (Wav2Vec2 Inference Failed)',
         stage: 'PhonemeRecognition',
         detail: phonemeResult.errorMessage!,
-        userMessage: 'حصل خطأ أثناء استدلال الفونيمات: ${phonemeResult.errorMessage}',
+        userMessage:
+            'حصل خطأ أثناء استدلال الفونيمات: ${phonemeResult.errorMessage}',
         latencyMs: sw.elapsedMilliseconds,
       );
     }
@@ -276,6 +293,7 @@ class PronunciationRepository {
     return evaluator.evaluate(
       word: targetWord,
       recognizedTokens: phonemeResult.tokens,
+      speechDetected: true,
       latencyMs: sw.elapsedMilliseconds,
     );
   }
@@ -327,7 +345,10 @@ class PronunciationRepository {
     final double rms = preprocessor.calculateRms(samples);
     final double peak = preprocessor.calculatePeak(samples);
     final double snr = preprocessor.estimateSnrDb(samples);
-    final List<double> waveform = preprocessor.downsampleForWaveform(samples, 64);
+    final List<double> waveform = preprocessor.downsampleForWaveform(
+      samples,
+      64,
+    );
 
     // Match the game: only reject dead digital silence before Silero VAD.
     // Quiet recordings with short consonant peaks must reach the VAD.
@@ -336,7 +357,10 @@ class PronunciationRepository {
             speechDetected: false,
             speechStartMs: 0,
             speechEndMs: 0,
-            speechProbabilities: List<double>.filled(math.max(1, samples.length ~/ 512), 0.0),
+            speechProbabilities: List<double>.filled(
+              math.max(1, samples.length ~/ 512),
+              0.0,
+            ),
             isNativeModel: vadEngine.isNativeAvailable,
           )
         : vadEngine.analyze(samples);
@@ -381,20 +405,26 @@ class PronunciationRepository {
       bitsPerSample: prep.sourceMetadata.bitsPerSample,
       sampleCount: prep.sampleCount,
       clippingCount: prep.clippingCount,
-      denoisedRms: denoiseOk ? double.parse(denoise.rmsAfter.toStringAsFixed(4)) : 0.0,
-      denoisedPeakAmplitude: denoiseOk ? double.parse(denoise.peakAfter.toStringAsFixed(3)) : 0.0,
+      denoisedRms: denoiseOk
+          ? double.parse(denoise.rmsAfter.toStringAsFixed(4))
+          : 0.0,
+      denoisedPeakAmplitude: denoiseOk
+          ? double.parse(denoise.peakAfter.toStringAsFixed(3))
+          : 0.0,
       denoiserFilterType: denoise.filterType,
       vadSegments: vad.segments
           .asMap()
           .entries
-          .map((e) => VadSegmentSummary(
-                index: e.key,
-                startMs: e.value.startMs,
-                endMs: e.value.endMs,
-                startSample: e.value.startSample,
-                sampleCount: e.value.sampleCount,
-                rms: double.parse(e.value.rms.toStringAsFixed(4)),
-              ))
+          .map(
+            (e) => VadSegmentSummary(
+              index: e.key,
+              startMs: e.value.startMs,
+              endMs: e.value.endMs,
+              startSample: e.value.startSample,
+              sampleCount: e.value.sampleCount,
+              rms: double.parse(e.value.rms.toStringAsFixed(4)),
+            ),
+          )
           .toList(),
       isValidAudio: stageErr == null,
       errorMessage: stageErr,
@@ -468,7 +498,8 @@ class PronunciationRepository {
             substitutedPhoneme: 'ت',
             targetPhoneme: 'ك',
             clinicalName: 'Fronting (إبدال أمامي)',
-            feedbackAr: 'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
+            feedbackAr:
+                'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
             yasserPose: 'thinking',
           ),
         ],
@@ -492,7 +523,8 @@ class PronunciationRepository {
             substitutedPhoneme: 'ث',
             targetPhoneme: 'س',
             clinicalName: 'Interdental Lisp (لدغة بين الأسنان)',
-            feedbackAr: 'ممتاز! بس لسانك طلع برة سنانك.. خلّي لسانك جوة واصفر: سسسـ سمكة!',
+            feedbackAr:
+                'ممتاز! بس لسانك طلع برة سنانك.. خلّي لسانك جوة واصفر: سسسـ سمكة!',
             yasserPose: 'thinking',
           ),
         ],
@@ -516,7 +548,8 @@ class PronunciationRepository {
             substitutedPhoneme: 'ل',
             targetPhoneme: 'ر',
             clinicalName: 'Lateralization (لدغة الراء إلى لام)',
-            feedbackAr: 'برافو يا بطل! بدّلنا صوت الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
+            feedbackAr:
+                'برافو يا بطل! بدّلنا صوت الـ ر بالـ ل.. يلا نخلّي لساننا يهتز: أرررنب!',
             yasserPose: 'thinking',
           ),
         ],

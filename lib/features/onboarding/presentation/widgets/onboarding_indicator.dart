@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/yasser_design_tokens.dart';
 
 class OnboardingIndicator extends StatelessWidget {
   final int count;
@@ -17,24 +17,31 @@ class OnboardingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduced = YasserMotion.isReducedMotion(context);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(count, (index) {
-        final isActive = index == currentIndex;
+        final bool isActive = index == currentIndex;
+        final bool isCompleted = index < currentIndex;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: reduced ? Duration.zero : const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
           margin: EdgeInsets.symmetric(horizontal: 4.w),
-          height: 8.h,
-          width: isActive ? 28.w : 8.w,
-          decoration: BoxDecoration(
-            color: isActive ? activeColor : AppColors.borderSubtle,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-            boxShadow: isActive
+          height: 10.h.clamp(8.0, 12.0),
+          width: isActive ? 32.w : 10.w,
+          decoration: ShapeDecoration(
+            color: isActive
+                ? activeColor
+                : (isCompleted
+                      ? activeColor.withValues(alpha: 0.38)
+                      : AppColors.borderStrong.withValues(alpha: 0.55)),
+            shape: YasserShapes.squircle(6),
+            shadows: isActive
                 ? [
                     BoxShadow(
-                      color: activeColor.withAlpha(80),
-                      blurRadius: 6,
+                      color: activeColor.withValues(alpha: 0.30),
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ]

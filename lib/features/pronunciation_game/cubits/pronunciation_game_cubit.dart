@@ -1,23 +1,40 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/ai/models/pronunciation_assessment.dart';
+import '../../../core/ai/models/vocabulary_word.dart';
 import '../../../core/ai/pronunciation_repository.dart';
 import '../../../core/animation/yasser/yasser_viseme.dart';
+import '../../../core/audio/yasser_audio_coordinator.dart';
+import '../../home/data/child_progress_service.dart';
 import '../models/yasser_prompt.dart';
 import 'pronunciation_game_state.dart';
+
+typedef AttemptEvaluatedCallback =
+    Future<void> Function(
+      VocabularyWord word,
+      PronunciationAssessment assessment,
+    );
 
 class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   final PronunciationRepository _repository;
   final AudioPlayer _audioPlayer;
+  final YasserAudioCoordinator? _audioCoordinator;
+  final ChildProgressService? _progressService;
+  final AttemptEvaluatedCallback? _onAttemptEvaluated;
+  final String? _categoryFilter;
+  final List<String>? _targetPhonemeFilter;
+
   late final StreamSubscription<double> _amplitudeSubscription;
   late final StreamSubscription<Duration> _positionSubscription;
   late final StreamSubscription<PlayerState> _playbackSubscription;
+
   YasserPrompt? _prompt;
   Future<void>? _startingPrompt;
-  bool _startingRecording = false;
+  Future<void>? _startingRecording;
   bool _closing = false;
   final Set<String> _masteredWordIds = {};
 
@@ -27,50 +44,122 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
 
   bool get _canInteract =>
       !_closing &&
-      !_startingRecording &&
+      _startingRecording == null &&
+      _startingPrompt == null &&
       _prompt == null &&
       !state.isListening &&
       state.status != GameStatus.evaluating &&
       state.status != GameStatus.loading;
 
-  PronunciationGameCubit(this._repository, {AudioPlayer? audioPlayer})
-    : _audioPlayer = audioPlayer ?? AudioPlayer(),
-      super(const PronunciationGameState()) {
+  PronunciationGameCubit(
+    this._repository, {
+    AudioPlayer? audioPlayer,
+    YasserAudioCoordinator? audioCoordinator,
+    ChildProgressService? progressService,
+    AttemptEvaluatedCallback? onAttemptEvaluated,
+    String? categoryFilter,
+    List<String>? targetPhonemeFilter,
+    String? activeCaseName,
+  }) : _audioPlayer = audioPlayer ?? AudioPlayer(),
+       _audioCoordinator = audioCoordinator,
+       _progressService = progressService,
+       _onAttemptEvaluated = onAttemptEvaluated,
+       _categoryFilter = categoryFilter,
+       _targetPhonemeFilter = targetPhonemeFilter,
+       super(PronunciationGameState(activeCaseName: activeCaseName)) {
     _amplitudeSubscription = _repository.recorder.amplitudeStream.listen((amp) {
       if (!_closing && state.isListening) {
         emit(state.copyWith(liveAmplitude: amp));
       }
     });
+
     _positionSubscription = _audioPlayer.onPositionChanged.listen((position) {
       if (_closing || !state.isPlayingAudioPrompt) return;
       final pose = _prompt?.poseAt(position) ?? YasserViseme.rest;
-      if (pose != state.promptViseme) emit(state.copyWith(promptViseme: pose));
+      if (pose != state.promptViseme) {
+        emit(state.copyWith(promptViseme: pose));
+      }
     });
+
     _playbackSubscription = _audioPlayer.onPlayerStateChanged.listen((
       playback,
     ) {
       if (_closing || _prompt == null) return;
       if (playback == PlayerState.playing) {
-        emit(state.copyWith(isPlayingAudioPrompt: true));
-      } else if (state.isPlayingAudioPrompt) {
-        _clearPrompt();
+        emit(
+          state.copyWith(
+            status: GameStatus.readyToSpeak,
+            isPlayingAudioPrompt: true,
+          ),
+        );
+      } else if (state.isPlayingAudioPrompt ||
+          playback == PlayerState.completed) {
+        _clearPrompt(announceTurn: true);
       }
     });
   }
 
-  /// Initializes game session and loads 28 vocabulary cards
+  List<VocabularyWord> _filterWords(List<VocabularyWord> allWords) {
+    if (allWords.isEmpty) return allWords;
+
+    if (_targetPhonemeFilter != null && _targetPhonemeFilter.isNotEmpty) {
+      final filtered = allWords
+          .where((w) => _targetPhonemeFilter.contains(w.targetPhoneme))
+          .toList();
+      if (filtered.isNotEmpty) return filtered;
+    }
+
+    if (_categoryFilter != null && _categoryFilter.isNotEmpty) {
+      const frontOral = {'ب', 'م', 'ت', 'د', 'ل', 'ن', 'ر'};
+      const fricatives = {'س', 'ز', 'ش', 'ف', 'ث', 'ذ', 'ه'};
+      const backEmphatic = {
+        'ك',
+        'ق',
+        'ج',
+        'خ',
+        'غ',
+        'ع',
+        'ح',
+        'ط',
+        'ص',
+        'ض',
+        'ظ',
+      };
+
+      final Set<String>? allowed = switch (_categoryFilter) {
+        'front_oral' => frontOral,
+        'fricatives' => fricatives,
+        'back_emphatic' => backEmphatic,
+        _ => null,
+      };
+      if (allowed != null) {
+        final subset = allWords
+            .where((w) => allowed.contains(w.targetPhoneme))
+            .toList();
+        if (subset.isNotEmpty) return subset;
+      }
+    }
+
+    return allWords;
+  }
+
+  /// Initializes game session and loads vocabulary cards.
   Future<void> initializeGame() async {
-    emit(state.copyWith(status: GameStatus.loading));
+    emit(state.copyWith(status: GameStatus.loading, clearError: true));
     try {
       await _repository.initialize();
       if (_closing) return;
-      final words = _repository.vocabulary;
+      final words = _filterWords(_repository.vocabulary);
       final currentWord = words.isNotEmpty ? words.first : null;
 
       emit(
         state.copyWith(
-          status: _speechModelsReady ? GameStatus.readyToSpeak : GameStatus.error,
-          errorMessage: _speechModelsReady ? null : 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
+          status: _speechModelsReady
+              ? GameStatus.readyToSpeak
+              : GameStatus.error,
+          errorMessage: _speechModelsReady
+              ? null
+              : 'التدريب الصوتي مش جاهز دلوقتي على الجهاز ده. جرّب تاني.',
           words: words,
           currentWordIndex: 0,
           currentWord: currentWord,
@@ -91,7 +180,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     }
   }
 
-  /// Selects a specific word card by index
+  /// Selects a specific word card by index.
   void selectWord(int index) {
     if (!_canInteract || index < 0 || index >= state.words.length) return;
     final word = state.words[index];
@@ -101,20 +190,21 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         currentWord: word,
         status: GameStatus.readyToSpeak,
         clearAssessment: true,
+        clearError: true,
         yasserMessage: 'يلا ننطق كلمة "${word.wordArabic}" مع ياسر!',
         yasserPose: 'waving',
       ),
     );
   }
 
-  /// Advances to next word in dictionary
+  /// Advances to next word or completes the session at the end of a specialist/child deck.
   void nextWord() {
     if (state.words.isEmpty) return;
     final nextIndex = (state.currentWordIndex + 1) % state.words.length;
     selectWord(nextIndex);
   }
 
-  /// Goes to previous word in dictionary
+  /// Goes to previous word in dictionary.
   void previousWord() {
     if (state.words.isEmpty) return;
     final prevIndex =
@@ -122,65 +212,130 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     selectWord(prevIndex);
   }
 
-  /// Starts child recording
+  /// Transitions to the celebratory session summary screen.
+  Future<void> finishSession() async {
+    if (!_canInteract) return;
+    await _progressService?.recordCompletedSession();
+    _audioCoordinator?.playSfx(YasserSfx.sessionComplete);
+    if (_closing) return;
+    emit(
+      state.copyWith(
+        status: GameStatus.sessionCompleted,
+        yasserMessage: YasserVoiceCue.sessionCompleted.arabicText,
+        yasserPose: 'celebrating',
+      ),
+    );
+  }
+
+  /// Resets to the first card for another practice round.
+  void restartSession() {
+    if (state.words.isEmpty) return;
+    selectWord(0);
+  }
+
+  /// Starts child recording with strict playback mutual exclusion & cleanup guard.
   Future<void> startListening() async {
     if (!_canInteract || state.currentWord == null) return;
-    _startingRecording = true;
+
+    // Mutual exclusion: silence any active prompt/SFX before opening microphone
+    await _audioCoordinator?.enterRecordingSession();
+
+    Future<void>? startOp;
     try {
       if (!_speechModelsReady) {
-        emit(state.copyWith(status: GameStatus.loading, clearAssessment: true));
+        emit(
+          state.copyWith(
+            status: GameStatus.loading,
+            clearAssessment: true,
+            clearError: true,
+          ),
+        );
         if (!_repository.vadEngine.isNativeAvailable) {
           await _repository.vadEngine.initialize();
         }
         if (!_repository.phonemeEngine.isNativeAvailable) {
           await _repository.phonemeEngine.initialize();
         }
-        if (_closing) return;
+        if (_closing) {
+          _audioCoordinator?.exitRecordingSession();
+          return;
+        }
         if (!_speechModelsReady) {
-          emit(state.copyWith(
-            status: GameStatus.error,
-            errorMessage: 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
-            yasserMessage: 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
-            yasserPose: 'thinking',
-          ));
+          _audioCoordinator?.exitRecordingSession();
+          emit(
+            state.copyWith(
+              status: GameStatus.error,
+              errorMessage: 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
+              yasserMessage: 'التدريب الصوتي مش جاهز دلوقتي. جرّب تاني.',
+              yasserPose: 'thinking',
+            ),
+          );
           return;
         }
       }
-      await _repository.recorder.startRecording();
+
+      emit(
+        state.copyWith(
+          status: GameStatus.preparingRecording,
+          clearAssessment: true,
+          clearError: true,
+        ),
+      );
+
+      startOp = _repository.recorder.startRecording();
+      _startingRecording = startOp;
+      await startOp;
+
       if (_closing) {
-        await _repository.recorder.stopRecording();
+        await _repository.recorder.cancelRecording();
+        _audioCoordinator?.exitRecordingSession();
         return;
       }
+
       emit(
         state.copyWith(
           isListening: true,
           clearAssessment: true,
           status: GameStatus.listening,
-          yasserMessage: 'ياسر سامعك.. اتكلم يا بطل!',
+          yasserMessage: 'ياسر سامعك.. اتكلم بوضوح يا بطل!',
           yasserPose: 'thinking',
         ),
       );
     } catch (e) {
+      _audioCoordinator?.exitRecordingSession();
       if (_closing) return;
       emit(
         state.copyWith(
           isListening: false,
           status: GameStatus.error,
           errorMessage: 'فشل فتح الميكروفون: $e',
+          yasserMessage:
+              'مقدرتش أفتح المايك.. اتأكد من صلاحية الميكروفون وجرّب تاني.',
+          yasserPose: 'thinking',
         ),
       );
     } finally {
-      _startingRecording = false;
+      if (identical(_startingRecording, startOp)) {
+        _startingRecording = null;
+      }
     }
   }
 
-  /// Stops recording and runs real on-device evaluation with honest error differentiation
+  /// Stops recording and runs real on-device evaluation with honest error differentiation.
   Future<void> stopListeningAndEvaluate() async {
     if (_closing || !state.isListening) return;
-    emit(state.copyWith(isListening: false, status: GameStatus.evaluating));
+    emit(
+      state.copyWith(
+        isListening: false,
+        liveAmplitude: 0.0,
+        status: GameStatus.evaluating,
+      ),
+    );
 
     try {
       final Uint8List rawBytes = await _repository.recorder.stopRecording();
+      _audioCoordinator?.exitRecordingSession(playStopChime: true);
+
       if (_closing) return;
       final word = state.currentWord;
 
@@ -201,21 +356,24 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           state.copyWith(
             status: GameStatus.error,
             clearAssessment: true,
-            errorMessage: _repository.recorder.lastError ?? 'لم يتم تسجيل بيانات صوتية.',
-            yasserMessage: 'تعذّر تسجيل الصوت من الميكروفون.. تأكد من الصلاحية وجرب تاني.',
+            errorMessage:
+                _repository.recorder.lastError ?? 'لم يتم تسجيل بيانات صوتية.',
+            yasserMessage:
+                'تعذّر تسجيل الصوت من الميكروفون.. تأكد من الصلاحية وجرب تاني.',
             yasserPose: 'thinking',
           ),
         );
         return;
       }
 
-      // Run AI pipeline
+      // Run real ONNX AI pipeline (Preprocessor -> Silero VAD -> GTCRN -> Wav2Vec2 -> Evaluator)
       final assessment = await _repository.evaluateAudio(
         rawAudioBytes: rawBytes,
         targetWord: word,
       );
 
       if (_closing) return;
+
       if (assessment.errorType.isSystemFailure ||
           (assessment.passed && assessment.recognizedPhonemes.isEmpty)) {
         emit(
@@ -227,11 +385,31 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
             yasserPose: 'thinking',
           ),
         );
-      } else if (assessment.passed &&
+        return;
+      }
+
+      // Persist genuine attempt for child progress & optional specialist session
+      await _progressService?.recordPracticeAttempt(
+        wordId: word.id,
+        wordArabic: word.wordArabic,
+        passed:
+            assessment.passed &&
+            assessment.errorType == AssessmentErrorType.correct,
+        starsAwarded: assessment.stars,
+      );
+      if (_onAttemptEvaluated != null) {
+        await _onAttemptEvaluated(word, assessment);
+      }
+      if (_closing) return;
+
+      if (assessment.passed &&
           assessment.errorType == AssessmentErrorType.correct) {
         final firstMastery = _masteredWordIds.add(word.id);
-        final newStars = state.totalStarsEarned + (firstMastery ? assessment.stars : 0);
+        final newStars =
+            state.totalStarsEarned + (firstMastery ? assessment.stars : 0);
         final newMastered = _masteredWordIds.length;
+
+        _audioCoordinator?.playSfx(YasserSfx.starReward);
 
         emit(
           state.copyWith(
@@ -239,15 +417,19 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
             lastAssessment: assessment,
             totalStarsEarned: newStars,
             wordsMasteredCount: newMastered,
+            attemptsCount: state.attemptsCount + 1,
             yasserMessage: assessment.yasserFeedbackMessage,
             yasserPose: assessment.yasserPose,
           ),
         );
       } else {
+        _audioCoordinator?.playSfx(YasserSfx.retryGentle);
+
         emit(
           state.copyWith(
             status: GameStatus.supportiveHint,
             lastAssessment: assessment,
+            attemptsCount: state.attemptsCount + 1,
             yasserMessage: assessment.yasserFeedbackMessage,
             yasserPose: assessment.yasserPose == 'celebrating'
                 ? 'thinking'
@@ -256,6 +438,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         );
       }
     } catch (e) {
+      _audioCoordinator?.exitRecordingSession();
       if (_closing) return;
       emit(
         state.copyWith(
@@ -271,20 +454,46 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
 
   Future<void> playYasserAudioPrompt() async {
     if (!_canInteract) return;
+    if (_audioCoordinator != null && !_audioCoordinator.voiceEnabled) {
+      emit(
+        state.copyWith(
+          yasserMessage: 'صوت ياسر متوقف من الإعدادات. تقدر تشغّله في أي وقت!',
+        ),
+      );
+      return;
+    }
+
     final prompt = YasserPrompt.byWordId[state.currentWord?.id];
     if (prompt == null) return;
 
     _prompt = prompt;
+    emit(
+      state.copyWith(
+        status: GameStatus.preparingPrompt,
+        yasserMessage: 'اسمع الكلمة من ياسر، وبعدها جرّب تقولها!',
+        yasserPose: 'pointing',
+      ),
+    );
+
     try {
       final starting = _audioPlayer.play(AssetSource(prompt.assetPath));
       _startingPrompt = starting;
       await starting;
-      if (!_closing && _audioPlayer.state != PlayerState.playing) {
-        _clearPrompt();
+      if (!_closing && _prompt != null) {
+        if (_audioPlayer.state == PlayerState.playing) {
+          emit(
+            state.copyWith(
+              status: GameStatus.readyToSpeak,
+              isPlayingAudioPrompt: true,
+            ),
+          );
+        } else {
+          _clearPrompt(announceTurn: false);
+        }
       }
     } catch (_) {
       if (_closing) return;
-      _clearPrompt();
+      _clearPrompt(announceTurn: false);
       emit(
         state.copyWith(
           yasserMessage: 'مش قادر أشغّل المثال دلوقتي. جرّب تاني.',
@@ -295,12 +504,18 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
     }
   }
 
-  void _clearPrompt() {
+  void _clearPrompt({required bool announceTurn}) {
     _prompt = null;
     emit(
       state.copyWith(
+        status: state.status == GameStatus.preparingPrompt
+            ? GameStatus.readyToSpeak
+            : state.status,
         isPlayingAudioPrompt: false,
         promptViseme: YasserViseme.rest,
+        yasserMessage: announceTurn
+            ? 'دلوقتي دورك يا بطل! اضغط على الميكروفون وقول الكلمة.'
+            : state.yasserMessage,
       ),
     );
   }
@@ -308,19 +523,36 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   @override
   Future<void> close() async {
     _closing = true;
+    final startingRecording = _startingRecording;
+    final startingPrompt = _startingPrompt;
+    final wasListening = state.isListening;
+
     await _amplitudeSubscription.cancel();
     await _positionSubscription.cancel();
     await _playbackSubscription.cancel();
+
     try {
-      await _startingPrompt;
-    } catch (_) {
-      // The owning playback call handles startup errors.
-    }
+      await startingPrompt;
+    } catch (_) {}
+
+    bool shouldCancelRecording = wasListening;
     try {
-      await _audioPlayer.dispose();
-      if (state.isListening) await _repository.recorder.stopRecording();
+      if (startingRecording != null) {
+        try {
+          await startingRecording;
+          shouldCancelRecording = true;
+        } catch (_) {}
+      }
+      if (shouldCancelRecording) {
+        await _repository.recorder.cancelRecording();
+      }
     } finally {
-      await super.close();
+      _audioCoordinator?.exitRecordingSession();
+      try {
+        await _audioPlayer.dispose();
+      } finally {
+        await super.close();
+      }
     }
   }
 }

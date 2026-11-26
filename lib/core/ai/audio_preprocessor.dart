@@ -33,20 +33,21 @@ class WavAudioMetadata {
   });
 
   int get frameCount => blockAlign > 0 ? dataSize ~/ blockAlign : 0;
-  int get durationMs => sampleRate > 0 ? (frameCount * 1000 / sampleRate).round() : 0;
+  int get durationMs =>
+      sampleRate > 0 ? (frameCount * 1000 / sampleRate).round() : 0;
 
   Map<String, dynamic> toJson() => {
-        'audio_format': audioFormat,
-        'channels': channels,
-        'sample_rate': sampleRate,
-        'byte_rate': byteRate,
-        'block_align': blockAlign,
-        'bits_per_sample': bitsPerSample,
-        'data_offset': dataOffset,
-        'data_size': dataSize,
-        'frame_count': frameCount,
-        'duration_ms': durationMs,
-      };
+    'audio_format': audioFormat,
+    'channels': channels,
+    'sample_rate': sampleRate,
+    'byte_rate': byteRate,
+    'block_align': blockAlign,
+    'bits_per_sample': bitsPerSample,
+    'data_offset': dataOffset,
+    'data_size': dataSize,
+    'frame_count': frameCount,
+    'duration_ms': durationMs,
+  };
 }
 
 /// Unified preprocessed audio container (mono Float32 normalized + canonical PCM16 WAV).
@@ -119,8 +120,11 @@ class AudioPreprocessor {
       );
     }
 
-    if (!_matchesFourCc(wavBytes, 0, 'RIFF') || !_matchesFourCc(wavBytes, 8, 'WAVE')) {
-      throw const InvalidAudioFormatException('Missing RIFF/WAVE container signature.');
+    if (!_matchesFourCc(wavBytes, 0, 'RIFF') ||
+        !_matchesFourCc(wavBytes, 8, 'WAVE')) {
+      throw const InvalidAudioFormatException(
+        'Missing RIFF/WAVE container signature.',
+      );
     }
 
     final ByteData bd = ByteData.sublistView(wavBytes);
@@ -136,13 +140,17 @@ class AudioPreprocessor {
     int? dataSize;
 
     while (offset + 8 <= wavBytes.length) {
-      final String chunkId = String.fromCharCodes(wavBytes.sublist(offset, offset + 4));
+      final String chunkId = String.fromCharCodes(
+        wavBytes.sublist(offset, offset + 4),
+      );
       final int chunkSize = bd.getUint32(offset + 4, Endian.little);
       final int payloadStart = offset + 8;
 
       if (chunkId == 'fmt ') {
         if (chunkSize < 16 || payloadStart + 16 > wavBytes.length) {
-          throw const InvalidAudioFormatException('Corrupt or truncated WAV fmt chunk.');
+          throw const InvalidAudioFormatException(
+            'Corrupt or truncated WAV fmt chunk.',
+          );
         }
         audioFormat = bd.getUint16(payloadStart, Endian.little);
         channels = bd.getUint16(payloadStart + 2, Endian.little);
@@ -152,21 +160,26 @@ class AudioPreprocessor {
         bitsPerSample = bd.getUint16(payloadStart + 14, Endian.little);
 
         // Handle WAVE_FORMAT_EXTENSIBLE (0xFFFE) if SubFormat matches PCM (1) or IEEE Float (3)
-        if (audioFormat == 0xFFFE && chunkSize >= 40 && payloadStart + 26 <= wavBytes.length) {
+        if (audioFormat == 0xFFFE &&
+            chunkSize >= 40 &&
+            payloadStart + 26 <= wavBytes.length) {
           audioFormat = bd.getUint16(payloadStart + 24, Endian.little);
         }
       } else if (chunkId == 'data') {
         dataOffset = payloadStart;
         final int available = wavBytes.length - payloadStart;
         // Handle streaming/unfinalized recorders where chunkSize is 0xFFFFFFFF or slightly stale
-        dataSize = (chunkSize == 0 || chunkSize > available) ? available : chunkSize;
+        dataSize = (chunkSize == 0 || chunkSize > available)
+            ? available
+            : chunkSize;
         break;
       }
 
       // RIFF chunks are word-aligned (even byte boundary)
       final int paddedSize = chunkSize + (chunkSize.isOdd ? 1 : 0);
       final int nextOffset = payloadStart + paddedSize;
-      if (nextOffset <= offset || nextOffset > wavBytes.length && chunkId != 'data') {
+      if (nextOffset <= offset ||
+          nextOffset > wavBytes.length && chunkId != 'data') {
         break;
       }
       offset = nextOffset;
@@ -178,7 +191,9 @@ class AudioPreprocessor {
         bitsPerSample == null ||
         blockAlign == null ||
         byteRate == null) {
-      throw const InvalidAudioFormatException('WAV file is missing required fmt chunk.');
+      throw const InvalidAudioFormatException(
+        'WAV file is missing required fmt chunk.',
+      );
     }
 
     if (audioFormat != 1 && audioFormat != 3) {
@@ -188,19 +203,30 @@ class AudioPreprocessor {
     }
 
     if (channels < 1 || channels > 8) {
-      throw InvalidAudioFormatException('Unsupported channel count: $channels.');
+      throw InvalidAudioFormatException(
+        'Unsupported channel count: $channels.',
+      );
     }
 
     if (sampleRate < 8000 || sampleRate > 192000) {
-      throw InvalidAudioFormatException('Unsupported WAV sample rate: $sampleRate Hz.');
+      throw InvalidAudioFormatException(
+        'Unsupported WAV sample rate: $sampleRate Hz.',
+      );
     }
 
-    if (bitsPerSample != 8 && bitsPerSample != 16 && bitsPerSample != 24 && bitsPerSample != 32) {
-      throw InvalidAudioFormatException('Unsupported WAV bitsPerSample: $bitsPerSample.');
+    if (bitsPerSample != 8 &&
+        bitsPerSample != 16 &&
+        bitsPerSample != 24 &&
+        bitsPerSample != 32) {
+      throw InvalidAudioFormatException(
+        'Unsupported WAV bitsPerSample: $bitsPerSample.',
+      );
     }
 
     if (dataOffset == null || dataSize == null || dataSize <= 0) {
-      throw const InvalidAudioFormatException('WAV file contains no audio data chunk.');
+      throw const InvalidAudioFormatException(
+        'WAV file contains no audio data chunk.',
+      );
     }
 
     return WavAudioMetadata(
@@ -219,7 +245,10 @@ class AudioPreprocessor {
   Uint8List parseWavPcm(Uint8List wavBytes) {
     if (wavBytes.length >= 12 && _matchesFourCc(wavBytes, 0, 'RIFF')) {
       final meta = parseWavMetadata(wavBytes);
-      final int end = math.min(wavBytes.length, meta.dataOffset + meta.dataSize);
+      final int end = math.min(
+        wavBytes.length,
+        meta.dataOffset + meta.dataSize,
+      );
       return wavBytes.sublist(meta.dataOffset, end);
     }
     return wavBytes;
@@ -234,20 +263,30 @@ class AudioPreprocessor {
     bool allowHeaderlessPcm16Fallback = false,
   }) {
     if (rawBytes.isEmpty) {
-      throw const InvalidAudioFormatException('Recorded audio buffer is empty (0 bytes).');
+      throw const InvalidAudioFormatException(
+        'Recorded audio buffer is empty (0 bytes).',
+      );
     }
 
     late final WavAudioMetadata meta;
     late final Float32List decodedMono;
 
-    final bool hasRiff = rawBytes.length >= 12 &&
+    final bool hasRiff =
+        rawBytes.length >= 12 &&
         _matchesFourCc(rawBytes, 0, 'RIFF') &&
         _matchesFourCc(rawBytes, 8, 'WAVE');
 
     if (hasRiff) {
       meta = parseWavMetadata(rawBytes);
-      final int end = math.min(rawBytes.length, meta.dataOffset + meta.dataSize);
-      final Uint8List payload = Uint8List.sublistView(rawBytes, meta.dataOffset, end);
+      final int end = math.min(
+        rawBytes.length,
+        meta.dataOffset + meta.dataSize,
+      );
+      final Uint8List payload = Uint8List.sublistView(
+        rawBytes,
+        meta.dataOffset,
+        end,
+      );
       decodedMono = _decodeToMonoFloat32(payload, meta);
     } else if (allowHeaderlessPcm16Fallback) {
       if (rawBytes.length < 2 || rawBytes.length.isOdd) {
@@ -273,7 +312,9 @@ class AudioPreprocessor {
     }
 
     if (decodedMono.isEmpty) {
-      throw const InvalidAudioFormatException('Decoded WAV audio contains zero samples.');
+      throw const InvalidAudioFormatException(
+        'Decoded WAV audio contains zero samples.',
+      );
     }
 
     final Float32List resampled = meta.sampleRate == targetSampleRate
@@ -334,7 +375,8 @@ class AudioPreprocessor {
         } else if (meta.bitsPerSample == 8) {
           sample = (payload[pos] - 128) / 128.0;
         } else if (meta.bitsPerSample == 24) {
-          int v = payload[pos] | (payload[pos + 1] << 8) | (payload[pos + 2] << 16);
+          int v =
+              payload[pos] | (payload[pos + 1] << 8) | (payload[pos + 2] << 16);
           if ((v & 0x800000) != 0) v |= 0xFF000000;
           sample = v.toSigned(32) / 8388608.0;
         } else if (meta.bitsPerSample == 32) {
@@ -407,7 +449,9 @@ class AudioPreprocessor {
     final double peak = calculatePeak(samples);
     if (peak < 1e-4) return samples;
     final double gain = targetPeak / peak;
-    if (gain <= 1.05) return samples; // Avoid unnecessary amplification of loud audio
+    if (gain <= 1.05) {
+      return samples; // Avoid unnecessary amplification of loud audio
+    }
     final Float32List out = Float32List(samples.length);
     for (int i = 0; i < samples.length; i++) {
       out[i] = (samples[i] * gain).clamp(-1.0, 1.0);
@@ -477,7 +521,10 @@ class AudioPreprocessor {
       signalSum += frameEnergies[i];
       sigCount++;
     }
-    final double signalEnergy = math.max(1e-9, signalSum / math.max(1, sigCount));
+    final double signalEnergy = math.max(
+      1e-9,
+      signalSum / math.max(1, sigCount),
+    );
 
     final double ratio = signalEnergy / noiseEnergy;
     if (ratio <= 0) return 0.0;
@@ -504,7 +551,11 @@ class AudioPreprocessor {
   }
 
   /// Creates a standard 44-byte RIFF/WAVE header for 16-bit PCM.
-  Uint8List addWavHeader(Uint8List pcmData, {int sampleRate = 16000, int channels = 1}) {
+  Uint8List addWavHeader(
+    Uint8List pcmData, {
+    int sampleRate = 16000,
+    int channels = 1,
+  }) {
     final int totalDataLen = pcmData.length;
     final int totalAudioLen = totalDataLen + 36;
     final int byteRate = sampleRate * channels * 2;
@@ -512,10 +563,19 @@ class AudioPreprocessor {
     final Uint8List header = Uint8List(44);
     final ByteData bd = ByteData.sublistView(header);
 
-    header[0] = 0x52; header[1] = 0x49; header[2] = 0x46; header[3] = 0x46;
+    header[0] = 0x52;
+    header[1] = 0x49;
+    header[2] = 0x46;
+    header[3] = 0x46;
     bd.setUint32(4, totalAudioLen, Endian.little);
-    header[8] = 0x57; header[9] = 0x41; header[10] = 0x56; header[11] = 0x45;
-    header[12] = 0x66; header[13] = 0x6D; header[14] = 0x74; header[15] = 0x20;
+    header[8] = 0x57;
+    header[9] = 0x41;
+    header[10] = 0x56;
+    header[11] = 0x45;
+    header[12] = 0x66;
+    header[13] = 0x6D;
+    header[14] = 0x74;
+    header[15] = 0x20;
     bd.setUint32(16, 16, Endian.little);
     bd.setUint16(20, 1, Endian.little);
     bd.setUint16(22, channels, Endian.little);
@@ -523,7 +583,10 @@ class AudioPreprocessor {
     bd.setUint32(28, byteRate, Endian.little);
     bd.setUint16(32, channels * 2, Endian.little);
     bd.setUint16(34, 16, Endian.little);
-    header[36] = 0x64; header[37] = 0x61; header[38] = 0x74; header[39] = 0x61;
+    header[36] = 0x64;
+    header[37] = 0x61;
+    header[38] = 0x74;
+    header[39] = 0x61;
     bd.setUint32(40, totalDataLen, Endian.little);
 
     final Uint8List wav = Uint8List(44 + totalDataLen);
@@ -534,7 +597,11 @@ class AudioPreprocessor {
 
   /// Converts Float32 mono samples directly into a valid 16kHz (or specified rate) PCM16 WAV buffer.
   Uint8List float32ToWav(Float32List samples, {int sampleRate = 16000}) {
-    return addWavHeader(float32ToPcm16(samples), sampleRate: sampleRate, channels: 1);
+    return addWavHeader(
+      float32ToPcm16(samples),
+      sampleRate: sampleRate,
+      channels: 1,
+    );
   }
 
   bool _matchesFourCc(Uint8List bytes, int offset, String tag) {

@@ -10,6 +10,14 @@ abstract final class AppRoutes {
   static const String otpVerification = '/otp-verification';
   static const String resetPassword = '/reset-password';
 
+  // Primary Product Hubs
+  static const String home = '/home';
+  static const String specialistDashboard = '/specialist';
+  static const String specialistCaseDetail = '/specialist/cases/:caseId';
+
+  static String specialistCasePath(String caseId) =>
+      '/specialist/cases/$caseId';
+
   // Character & Lab Routes
   static const String animationLab = '/animation-lab';
   static const String riveDiagnostic = '/rive-diagnostic';

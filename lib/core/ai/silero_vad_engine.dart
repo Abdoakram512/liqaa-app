@@ -69,8 +69,10 @@ class SileroVadEngine {
   String? _lastError;
 
   SileroVadEngine({
-    this.speechThreshold = 0.35, // Tuned for child speech onset & soft consonants
-    this.minSpeechDurationMs = 80, // Preserve monosyllabic Arabic words & isolated phonemes
+    this.speechThreshold =
+        0.35, // Tuned for child speech onset & soft consonants
+    this.minSpeechDurationMs =
+        80, // Preserve monosyllabic Arabic words & isolated phonemes
     this.speechSilencePaddingMs = 200,
     this.preRollMs = 150,
     this.postRollMs = 200,
@@ -96,8 +98,11 @@ class SileroVadEngine {
     }
 
     try {
-      _modelPath = modelPathOverride ??
-          await AiAssetHelper.getLocalAssetPath('assets/ai_models/silero/silero_vad.onnx');
+      _modelPath =
+          modelPathOverride ??
+          await AiAssetHelper.getLocalAssetPath(
+            'assets/ai_models/silero/silero_vad.onnx',
+          );
 
       if (_modelPath == null || !File(_modelPath!).existsSync()) {
         _isNativeAvailable = false;
@@ -136,7 +141,9 @@ class SileroVadEngine {
       );
       _isNativeAvailable = true;
       _lastError = null;
-      debugPrint('[SileroVadEngine] Initialized real Silero VAD ONNX at $_modelPath ($fileSize bytes)');
+      debugPrint(
+        '[SileroVadEngine] Initialized real Silero VAD ONNX at $_modelPath ($fileSize bytes)',
+      );
     } catch (e) {
       _isNativeAvailable = false;
       _lastError = 'Silero VAD ONNX initialization error: $e';
@@ -161,7 +168,10 @@ class SileroVadEngine {
     }
 
     final int numFrames = math.max(1, samples.length ~/ vadWindowSize);
-    final energyEnv = _computeAcousticEnergyEnvelope(samples, frameSize: vadWindowSize);
+    final energyEnv = _computeAcousticEnergyEnvelope(
+      samples,
+      frameSize: vadWindowSize,
+    );
 
     // 1. Native Silero VAD inference when initialized cleanly
     if (_vad != null && _isNativeAvailable) {
@@ -221,10 +231,12 @@ class SileroVadEngine {
         final int postSamples = (postRollMs * sampleRate / 1000).round();
         final List<_RawSpan> padded = rawSpans.map((s) {
           final int start = math.max(0, s.startSample - preSamples);
-          final int end = math.min(samples.length, s.startSample + s.length + postSamples);
+          final int end = math.min(
+            samples.length,
+            s.startSample + s.length + postSamples,
+          );
           return _RawSpan(start, math.max(1, end - start));
-        }).toList()
-          ..sort((a, b) => a.startSample.compareTo(b.startSample));
+        }).toList()..sort((a, b) => a.startSample.compareTo(b.startSample));
 
         final List<_RawSpan> merged = [];
         for (final span in padded) {
@@ -235,8 +247,10 @@ class SileroVadEngine {
             final prevEnd = prev.startSample + prev.length;
             final spanEnd = span.startSample + span.length;
             if (span.startSample <= prevEnd + (350 * sampleRate ~/ 1000)) {
-              merged[merged.length - 1] =
-                  _RawSpan(prev.startSample, math.max(prevEnd, spanEnd) - prev.startSample);
+              merged[merged.length - 1] = _RawSpan(
+                prev.startSample,
+                math.max(prevEnd, spanEnd) - prev.startSample,
+              );
             } else {
               merged.add(span);
             }
@@ -267,20 +281,28 @@ class SileroVadEngine {
           }
           final double segRms = math.sqrt(sumSq / math.max(1, slice.length));
           final int startMs = (span.startSample * 1000 / sampleRate).round();
-          final int endMs = ((span.startSample + span.length) * 1000 / sampleRate).round();
+          final int endMs =
+              ((span.startSample + span.length) * 1000 / sampleRate).round();
 
-          vadSegments.add(VadSegment(
-            startMs: startMs,
-            endMs: endMs,
-            startSample: span.startSample,
-            sampleCount: span.length,
-            confidence: 1.0,
-            rms: segRms,
-          ));
+          vadSegments.add(
+            VadSegment(
+              startMs: startMs,
+              endMs: endMs,
+              startSample: span.startSample,
+              sampleCount: span.length,
+              confidence: 1.0,
+              rms: segRms,
+            ),
+          );
 
-          final int sf = (span.startSample ~/ vadWindowSize).clamp(0, numFrames - 1);
-          final int ef = ((span.startSample + span.length + vadWindowSize - 1) ~/ vadWindowSize)
-              .clamp(0, numFrames);
+          final int sf = (span.startSample ~/ vadWindowSize).clamp(
+            0,
+            numFrames - 1,
+          );
+          final int ef =
+              ((span.startSample + span.length + vadWindowSize - 1) ~/
+                      vadWindowSize)
+                  .clamp(0, numFrames);
           for (int f = sf; f < ef; f++) {
             speechMask[f] = 1.0;
           }
@@ -327,10 +349,17 @@ class SileroVadEngine {
       );
     }
 
-    return _calibratedAcousticAnalyze(samples, sampleRate: sampleRate, energyEnv: energyEnv);
+    return _calibratedAcousticAnalyze(
+      samples,
+      sampleRate: sampleRate,
+      energyEnv: energyEnv,
+    );
   }
 
-  List<double> _computeAcousticEnergyEnvelope(Float32List samples, {required int frameSize}) {
+  List<double> _computeAcousticEnergyEnvelope(
+    Float32List samples, {
+    required int frameSize,
+  }) {
     final int numFrames = samples.length ~/ frameSize;
     if (numFrames == 0) return const [];
     final List<double> env = [];
@@ -390,12 +419,16 @@ class SileroVadEngine {
     int firstSpeechFrame = -1;
     int lastSpeechFrame = -1;
     int consecutiveSpeechFrames = 0;
-    final int minFramesRequired = math.max(1, (minSpeechDurationMs * sampleRate / (frameSize * 1000)).round());
+    final int minFramesRequired = math.max(
+      1,
+      (minSpeechDurationMs * sampleRate / (frameSize * 1000)).round(),
+    );
 
     for (int f = 0; f < probs.length; f++) {
       if (probs[f] >= speechThreshold) {
         consecutiveSpeechFrames++;
-        if (firstSpeechFrame == -1 && consecutiveSpeechFrames >= math.min(2, minFramesRequired)) {
+        if (firstSpeechFrame == -1 &&
+            consecutiveSpeechFrames >= math.min(2, minFramesRequired)) {
           firstSpeechFrame = math.max(0, f - consecutiveSpeechFrames + 1);
         }
         lastSpeechFrame = f;
@@ -415,12 +448,19 @@ class SileroVadEngine {
       );
     }
 
-    final int paddingFrames = (speechSilencePaddingMs * sampleRate / (frameSize * 1000)).round();
+    final int paddingFrames =
+        (speechSilencePaddingMs * sampleRate / (frameSize * 1000)).round();
     final int paddedStartFrame = math.max(0, firstSpeechFrame - paddingFrames);
-    final int paddedEndFrame = math.min(numFrames - 1, lastSpeechFrame + paddingFrames);
+    final int paddedEndFrame = math.min(
+      numFrames - 1,
+      lastSpeechFrame + paddingFrames,
+    );
 
     final int startSample = paddedStartFrame * frameSize;
-    final int endSample = math.min(samples.length, (paddedEndFrame + 1) * frameSize);
+    final int endSample = math.min(
+      samples.length,
+      (paddedEndFrame + 1) * frameSize,
+    );
 
     final int startMs = (startSample * 1000 / sampleRate).round();
     final int endMs = (endSample * 1000 / sampleRate).round();
@@ -436,7 +476,11 @@ class SileroVadEngine {
       );
     }
 
-    final Float32List trimmed = Float32List.sublistView(samples, startSample, endSample);
+    final Float32List trimmed = Float32List.sublistView(
+      samples,
+      startSample,
+      endSample,
+    );
 
     return VadAnalysisResult(
       speechDetected: true,

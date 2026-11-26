@@ -26,7 +26,9 @@ class AiAssetHelper {
         baseDir = await getTemporaryDirectory();
       }
 
-      final sanitizedSubPath = assetPath.replaceAll('assets/', '').replaceAll('\\', '/');
+      final sanitizedSubPath = assetPath
+          .replaceAll('assets/', '')
+          .replaceAll('\\', '/');
       final targetFile = File('${baseDir.path}/$sanitizedSubPath');
 
       if (await targetFile.exists() && (await targetFile.length()) > 0) {
@@ -36,11 +38,16 @@ class AiAssetHelper {
 
       await targetFile.parent.create(recursive: true);
       final ByteData data = await rootBundle.load(assetPath);
-      final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      final Uint8List bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
       await targetFile.writeAsBytes(bytes, flush: true);
 
       _extractedPaths[assetPath] = targetFile.path;
-      debugPrint('[AiAssetHelper] Extracted $assetPath -> ${targetFile.path} (${bytes.length} bytes)');
+      debugPrint(
+        '[AiAssetHelper] Extracted $assetPath -> ${targetFile.path} (${bytes.length} bytes)',
+      );
       return targetFile.path;
     } catch (e) {
       // Fallback for host unit tests running in project root without path_provider plugin

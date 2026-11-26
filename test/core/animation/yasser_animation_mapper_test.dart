@@ -13,7 +13,9 @@ void main() {
     });
 
     test('coveringEyes maps to true passwordTyping and thinking pose', () {
-      final mapping = YasserAnimationMapper.map(YasserAnimationState.coveringEyes);
+      final mapping = YasserAnimationMapper.map(
+        YasserAnimationState.coveringEyes,
+      );
       expect(mapping.semanticState, equals(YasserAnimationState.coveringEyes));
       expect(mapping.rivePasswordTyping, isTrue);
       expect(mapping.fallbackAssetPath, contains('yasser_thinking.png'));
@@ -35,7 +37,9 @@ void main() {
     });
 
     test('celebrating maps to celebrating pose and jump trigger', () {
-      final mapping = YasserAnimationMapper.map(YasserAnimationState.celebrating);
+      final mapping = YasserAnimationMapper.map(
+        YasserAnimationState.celebrating,
+      );
       expect(mapping.semanticState, equals(YasserAnimationState.celebrating));
       expect(mapping.fallbackAssetPath, contains('yasser_celebrating.png'));
       expect(mapping.riveAnimationTrigger, equals('jump'));
@@ -47,7 +51,10 @@ void main() {
         YasserAnimationState.followingInput,
         customGaze: customGaze,
       );
-      expect(mapping.semanticState, equals(YasserAnimationState.followingInput));
+      expect(
+        mapping.semanticState,
+        equals(YasserAnimationState.followingInput),
+      );
       expect(mapping.gazeTarget, equals(customGaze));
     });
   });

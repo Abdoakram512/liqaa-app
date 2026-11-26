@@ -26,7 +26,8 @@ void main() {
         substitutedPhoneme: 'ت',
         targetPhoneme: 'ك',
         clinicalName: 'Fronting (إبدال أمامي)',
-        feedbackAr: 'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
+        feedbackAr:
+            'شاطر جداً! بس بدّلنا صوت الـ ك بالـ ت.. يلا نطلع الكاف: كـ كورة!',
         yasserPose: 'thinking',
       ),
     ],
@@ -53,26 +54,29 @@ void main() {
       expect(assessment.overallScore, greaterThanOrEqualTo(90.0));
     });
 
-    test('Fronting error (كورة -> تورة) triggers clinical substitution feedback', () {
-      final recognized = [
-        const PhonemeToken(symbol: 't', arabicSymbol: 'ت', confidence: 0.92),
-        const PhonemeToken(symbol: 'uː', arabicSymbol: 'و', confidence: 0.91),
-        const PhonemeToken(symbol: 'r', arabicSymbol: 'ر', confidence: 0.88),
-        const PhonemeToken(symbol: 'a', arabicSymbol: 'ة', confidence: 0.93),
-      ];
+    test(
+      'Fronting error (كورة -> تورة) triggers clinical substitution feedback',
+      () {
+        final recognized = [
+          const PhonemeToken(symbol: 't', arabicSymbol: 'ت', confidence: 0.92),
+          const PhonemeToken(symbol: 'uː', arabicSymbol: 'و', confidence: 0.91),
+          const PhonemeToken(symbol: 'r', arabicSymbol: 'ر', confidence: 0.88),
+          const PhonemeToken(symbol: 'a', arabicSymbol: 'ة', confidence: 0.93),
+        ];
 
-      final assessment = evaluator.evaluate(
-        word: testWord,
-        recognizedTokens: recognized,
-      );
+        final assessment = evaluator.evaluate(
+          word: testWord,
+          recognizedTokens: recognized,
+        );
 
-      expect(assessment.passed, isFalse);
-      expect(assessment.errorType, equals(AssessmentErrorType.substitution));
-      expect(assessment.clinicalErrorName, contains('Fronting'));
-      expect(assessment.yasserFeedbackMessage, contains('بدّلنا صوت الـ ك'));
-      expect(assessment.yasserPose, equals('thinking'));
-      expect(assessment.alignments.first.status, equals('substituted'));
-    });
+        expect(assessment.passed, isFalse);
+        expect(assessment.errorType, equals(AssessmentErrorType.substitution));
+        expect(assessment.clinicalErrorName, contains('Fronting'));
+        expect(assessment.yasserFeedbackMessage, contains('بدّلنا صوت الـ ك'));
+        expect(assessment.yasserPose, equals('thinking'));
+        expect(assessment.alignments.first.status, equals('substituted'));
+      },
+    );
 
     test('Omission error (dropping /r/) triggers deletion classification', () {
       final recognized = [

@@ -1,24 +1,41 @@
 import 'package:equatable/equatable.dart';
+import '../../../authentication/data/models/user_model.dart';
 
-abstract class SplashState extends Equatable {
+sealed class SplashState extends Equatable {
   const SplashState();
 
   @override
   List<Object?> get props => [];
 }
 
-class SplashInitial extends SplashState {
+final class SplashInitial extends SplashState {
   const SplashInitial();
 }
 
-class SplashAnimating extends SplashState {
+final class SplashAnimating extends SplashState {
   const SplashAnimating();
 }
 
-class SplashNavigateToOnboarding extends SplashState {
+final class SplashNavigateToOnboarding extends SplashState {
   const SplashNavigateToOnboarding();
 }
 
-class SplashNavigateToAuth extends SplashState {
+final class SplashNavigateToAuth extends SplashState {
   const SplashNavigateToAuth();
+}
+
+final class SplashNavigateToChildHome extends SplashState {
+  final UserModel user;
+  const SplashNavigateToChildHome(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
+final class SplashNavigateToSpecialist extends SplashState {
+  final UserModel user;
+  const SplashNavigateToSpecialist(this.user);
+
+  @override
+  List<Object?> get props => [user];
 }

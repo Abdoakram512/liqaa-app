@@ -37,20 +37,24 @@ class AiLabCubit extends Cubit<AiLabState> {
       final vocab = _repository.vocabulary;
       final selected = vocab.isNotEmpty ? vocab.first : null;
 
-      emit(state.copyWith(
-        status: AiLabStatus.ready,
-        models: models,
-        totalRamUsageMb: ram,
-        vocabulary: vocab,
-        selectedWord: selected,
-        noiseReductionEnabled: _repository.denoiserEngine.enabled,
-        denoiserMode: _repository.denoiserEngine.mode,
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.ready,
+          models: models,
+          totalRamUsageMb: ram,
+          vocabulary: vocab,
+          selectedWord: selected,
+          noiseReductionEnabled: _repository.denoiserEngine.enabled,
+          denoiserMode: _repository.denoiserEngine.mode,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: AiLabStatus.error,
-        errorMessage: 'Failed to initialize AI Lab: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.error,
+          errorMessage: 'Failed to initialize AI Lab: $e',
+        ),
+      );
     }
   }
 
@@ -66,10 +70,12 @@ class AiLabCubit extends Cubit<AiLabState> {
   void setDenoiserMode(DenoiserMode mode) {
     _repository.denoiserEngine.mode = mode;
     _repository.denoiserEngine.enabled = mode != DenoiserMode.bypass;
-    emit(state.copyWith(
-      denoiserMode: mode,
-      noiseReductionEnabled: mode != DenoiserMode.bypass,
-    ));
+    emit(
+      state.copyWith(
+        denoiserMode: mode,
+        noiseReductionEnabled: mode != DenoiserMode.bypass,
+      ),
+    );
   }
 
   void setRawBypassMode(bool bypass) {
@@ -80,48 +86,67 @@ class AiLabCubit extends Cubit<AiLabState> {
   Future<void> startRecording() async {
     try {
       await _repository.recorder.startRecording();
-      emit(state.copyWith(
-        isRecording: true,
-        status: AiLabStatus.recording,
-        clearError: true,
-      ));
+      emit(
+        state.copyWith(
+          isRecording: true,
+          status: AiLabStatus.recording,
+          clearError: true,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isRecording: false,
-        status: AiLabStatus.error,
-        errorMessage: 'Recording failed: $e',
-      ));
+      emit(
+        state.copyWith(
+          isRecording: false,
+          status: AiLabStatus.error,
+          errorMessage: 'Recording failed: $e',
+        ),
+      );
     }
   }
 
   /// Stops recording and runs unified diagnostics across VAD, GTCRN, Wav2Vec2-eSpeak, Whisper & Evaluator.
   Future<AudioProcessingResult?> stopRecordingAndAnalyze() async {
-    emit(state.copyWith(isRecording: false, status: AiLabStatus.processing, clearError: true));
+    emit(
+      state.copyWith(
+        isRecording: false,
+        status: AiLabStatus.processing,
+        clearError: true,
+      ),
+    );
     try {
       final Uint8List rawBytes = await _repository.recorder.stopRecording();
       return await analyzeWavBytesForAllStages(rawBytes);
     } catch (e) {
-      emit(state.copyWith(
-        status: AiLabStatus.error,
-        errorMessage: 'Recording or pipeline analysis error: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.error,
+          errorMessage: 'Recording or pipeline analysis error: $e',
+        ),
+      );
       return null;
     }
   }
 
   /// Runs every diagnostic stage on a single WAV sample (recorded or bundled) with unified preprocessing.
-  Future<AudioProcessingResult?> analyzeWavBytesForAllStages(Uint8List rawBytes) async {
+  Future<AudioProcessingResult?> analyzeWavBytesForAllStages(
+    Uint8List rawBytes,
+  ) async {
     emit(state.copyWith(status: AiLabStatus.processing, clearError: true));
     try {
       await _repository.initialize();
 
-      final AudioProcessingResult audioResult = _repository.analyzeAudioForLab(rawBytes);
+      final AudioProcessingResult audioResult = _repository.analyzeAudioForLab(
+        rawBytes,
+      );
       if (!audioResult.isValidAudio && audioResult.rawAudioBytes.isEmpty) {
-        emit(state.copyWith(
-          status: AiLabStatus.error,
-          lastAudioResult: audioResult,
-          errorMessage: audioResult.errorMessage ?? 'Invalid or empty audio payload.',
-        ));
+        emit(
+          state.copyWith(
+            status: AiLabStatus.error,
+            lastAudioResult: audioResult,
+            errorMessage:
+                audioResult.errorMessage ?? 'Invalid or empty audio payload.',
+          ),
+        );
         return audioResult;
       }
 
@@ -134,27 +159,39 @@ class AiLabCubit extends Cubit<AiLabState> {
       // Determine active samples based on raw bypass toggle vs processed audio
       Float32List processedSamples = prep.samples;
       if (!state.rawBypassMode) {
-        if (audioResult.denoisedAudioBytes != null && audioResult.denoisedAudioBytes!.isNotEmpty) {
+        if (audioResult.denoisedAudioBytes != null &&
+            audioResult.denoisedAudioBytes!.isNotEmpty) {
           processedSamples = _repository.preprocessor
-              .preprocessWav(audioResult.denoisedAudioBytes!, targetSampleRate: 16000)
+              .preprocessWav(
+                audioResult.denoisedAudioBytes!,
+                targetSampleRate: 16000,
+              )
               .samples;
         } else if (audioResult.trimmedAudioBytes != null &&
             audioResult.trimmedAudioBytes!.isNotEmpty) {
           processedSamples = _repository.preprocessor
-              .preprocessWav(audioResult.trimmedAudioBytes!, targetSampleRate: 16000)
+              .preprocessWav(
+                audioResult.trimmedAudioBytes!,
+                targetSampleRate: 16000,
+              )
               .samples;
         }
       }
 
       // Run blind Wav2Vec2-eSpeak phonemes & Whisper STT on active samples
-      final PhonemeRecognitionResult phonemeRes =
-          await _repository.phonemeEngine.recognizePhonemesDetailed(processedSamples);
-      final SttResult sttRes = await _repository.sttEngine.transcribe(processedSamples);
+      final PhonemeRecognitionResult phonemeRes = await _repository
+          .phonemeEngine
+          .recognizePhonemesDetailed(processedSamples);
+      final SttResult sttRes = await _repository.sttEngine.transcribe(
+        processedSamples,
+      );
 
       // Also capture raw-audio phonemes when bypass is disabled for honest side-by-side comparison
       List<PhonemeToken> rawPhonemes = const [];
       if (!state.rawBypassMode) {
-        rawPhonemes = await _repository.phonemeEngine.recognizePhonemes(prep.samples);
+        rawPhonemes = await _repository.phonemeEngine.recognizePhonemes(
+          prep.samples,
+        );
       } else {
         rawPhonemes = phonemeRes.tokens;
       }
@@ -169,26 +206,34 @@ class AiLabCubit extends Cubit<AiLabState> {
         );
       }
 
-      final String? surfaceErr = audioResult.errorMessage ?? phonemeRes.errorMessage ?? sttRes.errorMessage;
+      final String? surfaceErr =
+          audioResult.errorMessage ??
+          phonemeRes.errorMessage ??
+          sttRes.errorMessage;
 
-      emit(state.copyWith(
-        status: AiLabStatus.ready,
-        lastAudioResult: audioResult,
-        lastAssessment: assessment,
-        lastRecognizedPhonemes: assessment?.recognizedPhonemes ?? phonemeRes.tokens,
-        lastPhonemeResult: phonemeRes,
-        lastSttResult: sttRes,
-        lastBlindTranscript: sttRes.text,
-        lastBlindPhonemes: phonemeRes.tokens,
-        lastRawPhonemes: rawPhonemes,
-        errorMessage: surfaceErr,
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.ready,
+          lastAudioResult: audioResult,
+          lastAssessment: assessment,
+          lastRecognizedPhonemes:
+              assessment?.recognizedPhonemes ?? phonemeRes.tokens,
+          lastPhonemeResult: phonemeRes,
+          lastSttResult: sttRes,
+          lastBlindTranscript: sttRes.text,
+          lastBlindPhonemes: phonemeRes.tokens,
+          lastRawPhonemes: rawPhonemes,
+          errorMessage: surfaceErr,
+        ),
+      );
       return audioResult;
     } catch (e) {
-      emit(state.copyWith(
-        status: AiLabStatus.error,
-        errorMessage: 'Analysis pipeline failure: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.error,
+          errorMessage: 'Analysis pipeline failure: $e',
+        ),
+      );
       return null;
     }
   }
@@ -198,78 +243,102 @@ class AiLabCubit extends Cubit<AiLabState> {
     emit(state.copyWith(status: AiLabStatus.processing, clearError: true));
     try {
       await _repository.initialize();
-      final Uint8List raw = audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
+      final Uint8List raw =
+          audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
       if (raw.isEmpty) {
-        emit(state.copyWith(
-          status: AiLabStatus.error,
-          errorMessage: 'No audio buffer available to analyze.',
-          lastBlindTranscript: '',
-          lastBlindPhonemes: const [],
-        ));
+        emit(
+          state.copyWith(
+            status: AiLabStatus.error,
+            errorMessage: 'No audio buffer available to analyze.',
+            lastBlindTranscript: '',
+            lastBlindPhonemes: const [],
+          ),
+        );
         return;
       }
 
-      final PreprocessedAudio prep =
-          _repository.preprocessor.preprocessWav(raw, targetSampleRate: 16000);
-      final Float32List samples = _repository.preprocessor.removeDcOffset(prep.samples);
+      final PreprocessedAudio prep = _repository.preprocessor.preprocessWav(
+        raw,
+        targetSampleRate: 16000,
+      );
+      final Float32List samples = _repository.preprocessor.removeDcOffset(
+        prep.samples,
+      );
 
       Float32List inferenceSamples = samples;
       if (!state.rawBypassMode && _repository.vadEngine.isNativeAvailable) {
         final vad = _repository.vadEngine.analyze(samples);
-        if (!vad.speechDetected || vad.trimmedSamples == null || vad.trimmedSamples!.isEmpty) {
-          emit(state.copyWith(
-            status: AiLabStatus.ready,
-            lastBlindTranscript: '',
-            lastBlindPhonemes: const [],
-            lastPhonemeResult: const PhonemeRecognitionResult(
-              tokens: [],
-              latencyMs: 0,
-              frameCount: 0,
-              audioDurationMs: 0,
-              isNativeModel: true,
+        if (!vad.speechDetected ||
+            vad.trimmedSamples == null ||
+            vad.trimmedSamples!.isEmpty) {
+          emit(
+            state.copyWith(
+              status: AiLabStatus.ready,
+              lastBlindTranscript: '',
+              lastBlindPhonemes: const [],
+              lastPhonemeResult: const PhonemeRecognitionResult(
+                tokens: [],
+                latencyMs: 0,
+                frameCount: 0,
+                audioDurationMs: 0,
+                isNativeModel: true,
+              ),
+              errorMessage: vad.errorMessage,
             ),
-            errorMessage: vad.errorMessage,
-          ));
+          );
           return;
         }
         inferenceSamples = vad.trimmedSamples!;
       }
 
       final stt = await _repository.sttEngine.transcribe(inferenceSamples);
-      final phonemeRes =
-          await _repository.phonemeEngine.recognizePhonemesDetailed(inferenceSamples);
+      final phonemeRes = await _repository.phonemeEngine
+          .recognizePhonemesDetailed(inferenceSamples);
 
-      emit(state.copyWith(
-        status: AiLabStatus.ready,
-        lastBlindTranscript: stt.text,
-        lastBlindPhonemes: phonemeRes.tokens,
-        lastPhonemeResult: phonemeRes,
-        lastSttResult: stt,
-        errorMessage: phonemeRes.errorMessage ?? stt.errorMessage,
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.ready,
+          lastBlindTranscript: stt.text,
+          lastBlindPhonemes: phonemeRes.tokens,
+          lastPhonemeResult: phonemeRes,
+          lastSttResult: stt,
+          errorMessage: phonemeRes.errorMessage ?? stt.errorMessage,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
   /// Runs phoneme recognition & clinical alignment against selected word.
-  Future<void> runPhonemeTest({required VocabularyWord word, Uint8List? audioBytes}) async {
+  Future<void> runPhonemeTest({
+    required VocabularyWord word,
+    Uint8List? audioBytes,
+  }) async {
     emit(state.copyWith(status: AiLabStatus.processing, clearError: true));
     try {
       await _repository.initialize();
-      final Uint8List bytes = audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
+      final Uint8List bytes =
+          audioBytes ?? state.lastAudioResult?.rawAudioBytes ?? Uint8List(0);
       if (bytes.isEmpty) {
-        emit(state.copyWith(
-          status: AiLabStatus.error,
-          errorMessage: 'No audio buffer recorded or selected.',
-        ));
+        emit(
+          state.copyWith(
+            status: AiLabStatus.error,
+            errorMessage: 'No audio buffer recorded or selected.',
+          ),
+        );
         return;
       }
 
-      final PreprocessedAudio prep =
-          _repository.preprocessor.preprocessWav(bytes, targetSampleRate: 16000);
-      final PhonemeRecognitionResult blindPhonemes =
-          await _repository.phonemeEngine.recognizePhonemesDetailed(prep.samples);
+      final PreprocessedAudio prep = _repository.preprocessor.preprocessWav(
+        bytes,
+        targetSampleRate: 16000,
+      );
+      final PhonemeRecognitionResult blindPhonemes = await _repository
+          .phonemeEngine
+          .recognizePhonemesDetailed(prep.samples);
 
       final assessment = await _repository.evaluateAudio(
         rawAudioBytes: bytes,
@@ -277,17 +346,24 @@ class AiLabCubit extends Cubit<AiLabState> {
         overrideDenoise: state.noiseReductionEnabled,
       );
 
-      emit(state.copyWith(
-        status: assessment.errorType.isSystemFailure ? AiLabStatus.error : AiLabStatus.ready,
-        selectedWord: word,
-        lastAssessment: assessment,
-        lastRecognizedPhonemes: assessment.recognizedPhonemes,
-        lastBlindPhonemes: blindPhonemes.tokens,
-        lastPhonemeResult: blindPhonemes,
-        errorMessage: assessment.diagnosticError ?? blindPhonemes.errorMessage,
-      ));
+      emit(
+        state.copyWith(
+          status: assessment.errorType.isSystemFailure
+              ? AiLabStatus.error
+              : AiLabStatus.ready,
+          selectedWord: word,
+          lastAssessment: assessment,
+          lastRecognizedPhonemes: assessment.recognizedPhonemes,
+          lastBlindPhonemes: blindPhonemes.tokens,
+          lastPhonemeResult: blindPhonemes,
+          errorMessage:
+              assessment.diagnosticError ?? blindPhonemes.errorMessage,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
@@ -295,18 +371,22 @@ class AiLabCubit extends Cubit<AiLabState> {
   Future<void> runSttTest({Uint8List? audioBytes}) async {
     final bytes = audioBytes ?? state.lastAudioResult?.rawAudioBytes;
     if (bytes == null || bytes.isEmpty) {
-      emit(state.copyWith(
-        status: AiLabStatus.error,
-        errorMessage: 'Record or select an audio clip before running STT.',
-      ));
+      emit(
+        state.copyWith(
+          status: AiLabStatus.error,
+          errorMessage: 'Record or select an audio clip before running STT.',
+        ),
+      );
       return;
     }
 
     emit(state.copyWith(status: AiLabStatus.processing, clearError: true));
     try {
       await _repository.initialize();
-      final PreprocessedAudio prep =
-          _repository.preprocessor.preprocessWav(bytes, targetSampleRate: 16000);
+      final PreprocessedAudio prep = _repository.preprocessor.preprocessWav(
+        bytes,
+        targetSampleRate: 16000,
+      );
       Float32List samples = prep.samples;
 
       if (!state.rawBypassMode && _repository.vadEngine.isNativeAvailable) {
@@ -317,13 +397,17 @@ class AiLabCubit extends Cubit<AiLabState> {
       }
 
       final stt = await _repository.sttEngine.transcribe(samples);
-      emit(state.copyWith(
-        status: stt.hasError ? AiLabStatus.error : AiLabStatus.ready,
-        lastSttResult: stt,
-        errorMessage: stt.errorMessage,
-      ));
+      emit(
+        state.copyWith(
+          status: stt.hasError ? AiLabStatus.error : AiLabStatus.ready,
+          lastSttResult: stt,
+          errorMessage: stt.errorMessage,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(status: AiLabStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
@@ -374,7 +458,9 @@ class AiLabCubit extends Cubit<AiLabState> {
               'avg_confidence': state.lastPhonemeResult!.averageConfidence,
               'avg_margin': state.lastPhonemeResult!.averageAcousticMargin,
               'error_message': state.lastPhonemeResult!.errorMessage,
-              'tokens': state.lastPhonemeResult!.tokens.map((t) => t.toJson()).toList(),
+              'tokens': state.lastPhonemeResult!.tokens
+                  .map((t) => t.toJson())
+                  .toList(),
             },
       'last_stt_result': state.lastSttResult != null
           ? {
@@ -388,8 +474,12 @@ class AiLabCubit extends Cubit<AiLabState> {
           : null,
       'last_assessment': state.lastAssessment?.toJson(),
       'last_blind_transcript': state.lastBlindTranscript,
-      'last_blind_phonemes': state.lastBlindPhonemes.map((t) => t.toJson()).toList(),
-      'last_raw_phonemes': state.lastRawPhonemes.map((t) => t.toJson()).toList(),
+      'last_blind_phonemes': state.lastBlindPhonemes
+          .map((t) => t.toJson())
+          .toList(),
+      'last_raw_phonemes': state.lastRawPhonemes
+          .map((t) => t.toJson())
+          .toList(),
       'last_error': state.errorMessage,
     };
 

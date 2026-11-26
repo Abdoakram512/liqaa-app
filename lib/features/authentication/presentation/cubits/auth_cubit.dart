@@ -10,8 +10,11 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> checkAuthStatus() async {
     final user = await _authRepo.getCurrentUser();
+    if (isClosed) return;
     if (user != null) {
-      emit(AuthSuccess(user: user, message: 'مرحباً بك مجدداً يا ${user.name}!'));
+      emit(
+        AuthSuccess(user: user, message: 'مرحباً بك مجدداً يا ${user.name}!'),
+      );
     } else {
       emit(const AuthInitial());
     }
@@ -20,22 +23,30 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login({
     required String identity,
     required String password,
+    UserRole? preferredRole,
   }) async {
+    if (state is AuthLoading) return;
     emit(const AuthLoading(operation: 'login'));
     final result = await _authRepo.login(
       identity: identity,
       password: password,
+      preferredRole: preferredRole,
     );
+    if (isClosed) return;
 
     if (result.isSuccess && result.data != null) {
-      emit(AuthSuccess(
-        user: result.data!,
-        message: 'تم تسجيل الدخول بنجاح! مرحباً بك يا ${result.data!.name} 🎉',
-      ));
+      emit(
+        AuthSuccess(
+          user: result.data!,
+          message: 'تم تسجيل الدخول بنجاح! مرحباً بك يا ${result.data!.name}',
+        ),
+      );
     } else {
-      emit(AuthFailure(
-        message: result.error ?? 'تعذر تسجيل الدخول، يرجى التحقق من بياناتك',
-      ));
+      emit(
+        AuthFailure(
+          message: result.error ?? 'تعذر تسجيل الدخول، يرجى التحقق من بياناتك',
+        ),
+      );
     }
   }
 
@@ -44,30 +55,40 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
     UserRole role = UserRole.child,
+    String? organization,
   }) async {
+    if (state is AuthLoading) return;
     emit(const AuthLoading(operation: 'register'));
     final result = await _authRepo.register(
       name: name,
       email: email,
       password: password,
       role: role,
+      organization: organization,
     );
+    if (isClosed) return;
 
     if (result.isSuccess && result.data != null) {
-      emit(AuthSuccess(
-        user: result.data!,
-        message: 'أهلاً بك في عائلة لقاء يا ${result.data!.name}! 🌟',
-      ));
+      emit(
+        AuthSuccess(
+          user: result.data!,
+          message: 'أهلاً بك في عائلة لقاء يا ${result.data!.name}!',
+        ),
+      );
     } else {
-      emit(AuthFailure(
-        message: result.error ?? 'تعذر إنشاء الحساب، يرجى المحاولة مرة أخرى',
-      ));
+      emit(
+        AuthFailure(
+          message: result.error ?? 'تعذر إنشاء الحساب، يرجى المحاولة مرة أخرى',
+        ),
+      );
     }
   }
 
   Future<void> sendPasswordReset(String email) async {
+    if (state is AuthLoading) return;
     emit(const AuthLoading(operation: 'reset_request'));
     final result = await _authRepo.sendPasswordReset(email: email);
+    if (isClosed) return;
     if (result.isSuccess) {
       emit(AuthOtpSent(email: email));
     } else {
@@ -76,8 +97,10 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> verifyOtp({required String email, required String otp}) async {
+    if (state is AuthLoading) return;
     emit(const AuthLoading(operation: 'verify_otp'));
     final result = await _authRepo.verifyOtp(email: email, otp: otp);
+    if (isClosed) return;
     if (result.isSuccess) {
       emit(AuthOtpVerified(email: email));
     } else {
@@ -89,26 +112,32 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String newPassword,
   }) async {
+    if (state is AuthLoading) return;
     emit(const AuthLoading(operation: 'set_new_password'));
     final result = await _authRepo.resetPassword(
       email: email,
       newPassword: newPassword,
     );
+    if (isClosed) return;
     if (result.isSuccess) {
-      emit(const AuthPasswordResetSuccess(
-        message: 'تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول',
-      ));
+      emit(
+        const AuthPasswordResetSuccess(
+          message: 'تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول',
+        ),
+      );
     } else {
-      emit(AuthFailure(message: result.error ?? 'فشل تعيين كلمة المرور الجديدة'));
+      emit(
+        AuthFailure(message: result.error ?? 'فشل تعيين كلمة المرور الجديدة'),
+      );
     }
   }
 
   Future<void> logout() async {
     await _authRepo.logout();
-    emit(const AuthLoggedOut());
+    if (!isClosed) emit(const AuthLoggedOut());
   }
 
   void resetToInitial() {
-    emit(const AuthInitial());
+    if (!isClosed) emit(const AuthInitial());
   }
 }

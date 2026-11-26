@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/animation/yasser/yasser_animation_state.dart';
 import '../../../core/animation/yasser/yasser_viseme.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/yasser_design_tokens.dart';
 import '../../../core/widgets/yasser_character.dart';
+import '../../../core/widgets/yasser_speech_bubble.dart';
 
+/// Interactive Yasser companion feedback block with custom-tailed speech bubble
+/// and state-driven Rive / 2.5D character motion.
 class YasserSpeechFeedbackCard extends StatelessWidget {
   final String message;
   final String poseString;
@@ -38,43 +41,37 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool reduced = YasserMotion.isReducedMotion(context);
+    final Color accent = isListening
+        ? AppColors.accentCoral
+        : isPlayingAudioPrompt
+        ? AppColors.secondary
+        : poseString == 'celebrating'
+        ? AppColors.success
+        : AppColors.primary;
+
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Yasser Character Avatar
+        // Prominent Yasser Companion
         YasserCharacter(
           state: _animation,
           viseme: isPlayingAudioPrompt ? promptViseme : null,
-          width: 98.w,
-          height: 140.h,
-          enableTapReaction: false,
-          showShadow: false,
+          width: 108.w.clamp(94.0, 124.0),
+          height: 152.h.clamp(132.0, 170.0),
+          enableTapReaction: !isListening && !isPlayingAudioPrompt,
+          showShadow: true,
         ),
 
-        SizedBox(width: 10.w),
+        SizedBox(width: 8.w),
 
-        // Speech Bubble
+        // Custom-Painted Speech Bubble Pointing Directly to Yasser
         Expanded(
-          child: Container(
-            margin: EdgeInsets.only(bottom: 24.h),
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(AppSpacing.radiusM),
-                topRight: Radius.circular(AppSpacing.radiusM),
-                bottomLeft: Radius.circular(AppSpacing.radiusM),
-                bottomRight: const Radius.circular(4),
-              ),
-              border: Border.all(color: AppColors.borderSoft),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.shadowWarm,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
+          child: YasserSpeechBubble(
+            tailDirection: SpeechBubbleTailDirection.start,
+            borderColor: accent.withValues(alpha: 0.35),
+            lipColor: accent.withValues(alpha: 0.25),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -82,49 +79,88 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'ياسر:',
+                      'ياسر',
                       style: AppTextStyles.labelLarge.copyWith(
-                        color: AppColors.primaryDark,
+                        color: AppColors.primaryDeep,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    if (isListening) ...[
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'يستمع الآن...',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.red.shade800,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    SizedBox(width: 8.w),
+                    if (isListening)
+                      _StatusChip(
+                        label: 'يستمع إليك الآن',
+                        color: AppColors.accentCoralDark,
+                        bg: AppColors.accentCoralSoft,
+                        icon: Icons.hearing_rounded,
+                      )
+                    else if (isPlayingAudioPrompt)
+                      _StatusChip(
+                        label: 'ينطق المثال',
+                        color: AppColors.secondaryDark,
+                        bg: AppColors.secondarySoft,
+                        icon: Icons.volume_up_rounded,
                       ),
-                    ],
                   ],
                 ),
-                SizedBox(height: 4.h),
-                Text(
-                  message,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
+                SizedBox(height: 5.h),
+                AnimatedSwitcher(
+                  duration: reduced
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  child: Text(
+                    message,
+                    key: ValueKey(message),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      height: 1.45,
+                    ),
                   ),
                 ),
               ],
             ),
-          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
+          ).animate(target: reduced ? 0 : 1).fadeIn(duration: 260.ms),
         ),
       ],
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color bg;
+  final IconData icon;
+
+  const _StatusChip({
+    required this.label,
+    required this.color,
+    required this.bg,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(color: bg, shape: YasserShapes.squircle(8)),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: color),
+            SizedBox(width: 4.w),
+            Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontSize: 10.sp,
+                color: color,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

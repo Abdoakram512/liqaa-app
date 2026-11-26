@@ -28,7 +28,10 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -55,7 +58,11 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.verified_rounded, color: Colors.blue.shade800, size: 24),
+                      Icon(
+                        Icons.verified_rounded,
+                        color: Colors.blue.shade800,
+                        size: 24,
+                      ),
                       SizedBox(width: 10.w),
                       Expanded(
                         child: Column(
@@ -103,8 +110,12 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        isRecording ? 'ياسر يستمع إليك الآن...' : 'سجّل صوتاً حراً من الميكروفون',
-                        style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                        isRecording
+                            ? 'ياسر يستمع إليك الآن...'
+                            : 'سجّل صوتاً حراً من الميكروفون',
+                        style: AppTextStyles.titleSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 12.h),
 
@@ -112,7 +123,9 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                       GestureDetector(
                         onTap: () {
                           if (isRecording) {
-                            context.read<AiLabCubit>().stopRecordingAndAnalyze();
+                            context
+                                .read<AiLabCubit>()
+                                .stopRecordingAndAnalyze();
                           } else {
                             context.read<AiLabCubit>().startRecording();
                           }
@@ -125,14 +138,20 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                             color: isRecording ? Colors.red : AppColors.primary,
                             boxShadow: [
                               BoxShadow(
-                                color: (isRecording ? Colors.red : AppColors.primary).withOpacity(0.4),
+                                color:
+                                    (isRecording
+                                            ? Colors.red
+                                            : AppColors.primary)
+                                        .withOpacity(0.4),
                                 blurRadius: isRecording ? 20 : 10,
                                 spreadRadius: isRecording ? 4 : 0,
                               ),
                             ],
                           ),
                           child: Icon(
-                            isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                            isRecording
+                                ? Icons.stop_rounded
+                                : Icons.mic_rounded,
                             color: Colors.white,
                             size: 36,
                           ),
@@ -168,12 +187,37 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: [
-                    _buildFixtureChip(context, label: 'كورة (صوت حقيقي)', fixturePath: 'assets/audio_samples/correct_kora.wav'),
-                    _buildFixtureChip(context, label: 'تورة (إبدال كـ إلى تـ)', fixturePath: 'assets/audio_samples/error_tora.wav'),
-                    _buildFixtureChip(context, label: 'سمكة (صوت حقيقي)', fixturePath: 'assets/audio_samples/correct_samaka.wav'),
-                    _buildFixtureChip(context, label: 'ثمكة (لدغة ثـ)', fixturePath: 'assets/audio_samples/error_thamaka.wav'),
-                    _buildFixtureChip(context, label: 'مدرسة (كلمة حرة)', fixturePath: 'assets/audio_samples/word_madrasa.wav'),
-                    _buildFixtureChip(context, label: 'صوت صمت (Silence)', fixturePath: 'assets/audio_samples/silence.wav', isSilence: true),
+                    _buildFixtureChip(
+                      context,
+                      label: 'كورة (صوت حقيقي)',
+                      fixturePath: 'assets/audio_samples/correct_kora.wav',
+                    ),
+                    _buildFixtureChip(
+                      context,
+                      label: 'تورة (إبدال كـ إلى تـ)',
+                      fixturePath: 'assets/audio_samples/error_tora.wav',
+                    ),
+                    _buildFixtureChip(
+                      context,
+                      label: 'سمكة (صوت حقيقي)',
+                      fixturePath: 'assets/audio_samples/correct_samaka.wav',
+                    ),
+                    _buildFixtureChip(
+                      context,
+                      label: 'ثمكة (لدغة ثـ)',
+                      fixturePath: 'assets/audio_samples/error_thamaka.wav',
+                    ),
+                    _buildFixtureChip(
+                      context,
+                      label: 'مدرسة (كلمة حرة)',
+                      fixturePath: 'assets/audio_samples/word_madrasa.wav',
+                    ),
+                    _buildFixtureChip(
+                      context,
+                      label: 'صوت صمت (Silence)',
+                      fixturePath: 'assets/audio_samples/silence.wav',
+                      isSilence: true,
+                    ),
                   ],
                 ),
 
@@ -181,10 +225,12 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
 
                 // Results Card
                 if (isProcessing)
-                  const Center(child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(),
-                  ))
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
                 else ...[
                   // Recognized Transcript Display
                   Container(
@@ -208,20 +254,31 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                               ),
                             ),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 2.h,
+                              ),
                               decoration: BoxDecoration(
-                                color: transcript.isNotEmpty ? Colors.green.shade50 : Colors.grey.shade100,
+                                color: transcript.isNotEmpty
+                                    ? Colors.green.shade50
+                                    : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: transcript.isNotEmpty ? Colors.green.shade300 : Colors.grey.shade300,
+                                  color: transcript.isNotEmpty
+                                      ? Colors.green.shade300
+                                      : Colors.grey.shade300,
                                 ),
                               ),
                               child: Text(
-                                transcript.isNotEmpty ? 'تم التعرف' : 'صمت / لا يوجد كلام',
+                                transcript.isNotEmpty
+                                    ? 'تم التعرف'
+                                    : 'صمت / لا يوجد كلام',
                                 style: TextStyle(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.bold,
-                                  color: transcript.isNotEmpty ? Colors.green.shade800 : Colors.grey.shade700,
+                                  color: transcript.isNotEmpty
+                                      ? Colors.green.shade800
+                                      : Colors.grey.shade700,
                                 ),
                               ),
                             ),
@@ -232,7 +289,9 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                           transcript.isNotEmpty ? transcript : '—',
                           style: AppTextStyles.displaySmall.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: transcript.isNotEmpty ? AppColors.textPrimary : AppColors.textMuted,
+                            color: transcript.isNotEmpty
+                                ? AppColors.textPrimary
+                                : AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -264,7 +323,9 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                         if (phonemes.isEmpty)
                           Text(
                             'لم يتم استخراج فونيمات (الصوت كان صمتاً أو لم يبدأ بعد).',
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textMuted,
+                            ),
                           )
                         else
                           Wrap(
@@ -272,11 +333,18 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                             runSpacing: 10.h,
                             children: phonemes.map((token) {
                               return Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 8.h,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryLight.withOpacity(0.35),
+                                  color: AppColors.primaryLight.withOpacity(
+                                    0.35,
+                                  ),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+                                  border: Border.all(
+                                    color: AppColors.primary.withOpacity(0.5),
+                                  ),
                                 ),
                                 child: Column(
                                   children: [
@@ -340,7 +408,10 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
     return ActionChip(
       backgroundColor: Colors.white,
       side: const BorderSide(color: AppColors.borderSoft),
-      label: Text(label, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold)),
+      label: Text(
+        label,
+        style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
+      ),
       avatar: Icon(
         isSilence ? Icons.volume_off_rounded : Icons.play_arrow_rounded,
         size: 16,
@@ -354,7 +425,9 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
             context.read<AiLabCubit>().runBlindPhonemeTest(audioBytes: bytes);
           }
         } catch (e) {
-          debugPrint('[BlindPhonemeRecognitionView] Error loading fixture $fixturePath: $e');
+          debugPrint(
+            '[BlindPhonemeRecognitionView] Error loading fixture $fixturePath: $e',
+          );
         }
       },
     );
