@@ -33,6 +33,10 @@ class YasserSpeechFeedbackCard extends StatelessWidget {
     if (isPlayingAudioPrompt) return YasserAnimationState.talking;
     return switch (poseString) {
       'celebrating' => YasserAnimationState.celebrating,
+      'encouraging' => YasserAnimationState.encouraging,
+      'retry' ||
+      'gentle_retry' ||
+      'try_again' => YasserAnimationState.gentleRetry,
       'thinking' => YasserAnimationState.thinking,
       'pointing' || 'presenting' => YasserAnimationState.pointing,
       _ => YasserAnimationState.greeting,

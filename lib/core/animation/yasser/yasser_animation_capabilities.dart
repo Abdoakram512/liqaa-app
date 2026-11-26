@@ -1,6 +1,6 @@
-/// Classification of character features based on the Phase 1 audit of `assets/rive/yasser.riv`.
+/// Classification of character features based on `assets/rive/yasser.riv`.
 enum RiveSupportTier {
-  /// Verified and controllable through runtime input in the exported asset.
+  /// Verified and controllable through runtime `ViewModel1` bindings in the exported asset.
   verified,
 
   /// Present in rig / layers / timelines, accessible with testing.
@@ -35,10 +35,10 @@ class CharacterCapability {
   });
 }
 
-/// Comprehensive Capability Matrix discovered from `assets/rive/yasser.riv`.
+/// Comprehensive Capability Matrix discovered from the production `assets/rive/yasser.riv`.
 abstract final class YasserAnimationCapabilities {
   static const String assetPath = 'assets/rive/yasser.riv';
-  static const int assetByteSize = 1616813;
+  static const int assetByteSize = 1044056;
   static const String artboardName = 'Yasser_Phase1_Work';
   static const String stateMachineName = 'State Machine 1';
 
@@ -48,98 +48,90 @@ abstract final class YasserAnimationCapabilities {
       riveIdentifier: 'passwordTyping',
       tier: RiveSupportTier.verified,
       description:
-          'Boolean input raising privacy arms over eyes during password entry.',
+          'Privacy preemption boolean raising clean palms/cuffs over both eyes with downward elbows.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_thinking.png',
-      phase2Requirement:
-          'Verified in Phase 1 rig. Needs smooth easing curve and finger separation.',
+      phase2Requirement: 'Verified & authored in production State Machine 1.',
     ),
     CharacterCapability(
       featureName: 'Password Peeking',
-      riveIdentifier: 'Yasser_Privacy_Arm / Yasser_TwoHand_Cover',
-      tier: RiveSupportTier.partiallySupported,
+      riveIdentifier: 'isPeeking',
+      tier: RiveSupportTier.verified,
       description:
-          'Arm/hand cover layers exist in binary; state machine currently maps to boolean passwordTyping.',
+          'Articulated 4-finger right hand spreads smoothly with playful single-eye peek.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_thinking.png',
-      phase2Requirement:
-          'Add dedicated `isPasswordVisible` or `isPeeking` boolean input in State Machine 1.',
+      phase2Requirement: 'Verified & authored in Layer 1 + Blink_Layer.',
     ),
     CharacterCapability(
       featureName: 'Welcoming Wave',
-      riveIdentifier: 'P1_Wave_Validation / wave / Arm_Wave',
-      tier: RiveSupportTier.availableRequiresTesting,
+      riveIdentifier: 'wave',
+      tier: RiveSupportTier.verified,
       description:
-          'Authored wave animations and IK validation timelines found in rig.',
+          'Trigger-driven raised open-palm wave with natural elbow IK orientation and clean wrist swing.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_waving.png',
-      phase2Requirement:
-          'Expose a dedicated `isWaving` boolean or `waveTrigger` in State Machine 1.',
+      phase2Requirement: 'Verified & authored in Anim_Wave.',
     ),
     CharacterCapability(
-      featureName: 'Name / Field Focus Gaze',
-      riveIdentifier: 'nameEntry',
-      tier: RiveSupportTier.partiallySupported,
+      featureName: 'Continuous Eye Gaze Tracking',
+      riveIdentifier: 'lookX / lookY',
+      tier: RiveSupportTier.verified,
       description:
-          'State nameEntry is present in the binary; maps attention to user identity field.',
+          'Formula-bound normalized inputs (-1.0 to 1.0) driving EyeL/EyeR bones directly in Rive.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_presenting.png',
-      phase2Requirement:
-          'Add continuous `lookX` and `lookY` number inputs (-1.0 to 1.0) bound to eye bones.',
+      phase2Requirement: 'Verified via ViewModel1 formula converters.',
     ),
     CharacterCapability(
-      featureName: 'Continuous Eye Tracking',
-      riveIdentifier: 'P1_Neck_Head_Face_EyeL / EyeR',
-      tier: RiveSupportTier.requiresPhase2Authoring,
+      featureName: '9-Shape Native Lip-Sync Mouth Rig',
+      riveIdentifier: 'mouthShape (0..8)',
+      tier: RiveSupportTier.verified,
       description:
-          'Rig bones and eye groups exist, but continuous runtime number inputs are not bound to State Machine 1.',
-      fallbackPoseAsset: null,
-      phase2Requirement:
-          'Expose normalized `lookX` and `lookY` inputs for continuous caret tracking.',
+          'Vector Yasser_Mouth_Rig driven by dedicated Mouth_Articulation_Layer across Arabic/English visemes.',
+      fallbackPoseAsset: 'assets/images/yasser/poses/yasser_presenting.png',
+      phase2Requirement: 'Verified via Mouth_0..Mouth_8 state machine layer.',
     ),
     CharacterCapability(
-      featureName: 'Celebration / Victory Pose',
-      riveIdentifier: 'jump / celebration',
-      tier: RiveSupportTier.partiallySupported,
-      description: 'Rig supports jumping and arm elevation.',
+      featureName: 'Celebration, Jump & Session Complete',
+      riveIdentifier: 'celebrate / jump / sessionComplete',
+      tier: RiveSupportTier.verified,
+      description:
+          'Symmetrical dual open-palm cheers with hip bounce and celebratory brow expression.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_celebrating.png',
-      phase2Requirement:
-          'Add `loginSuccess` or `celebrateTrigger` in State Machine 1 with confetti/cheering action.',
+      phase2Requirement: 'Verified & authored in State Machine 1.',
     ),
     CharacterCapability(
-      featureName: 'Thinking / Puzzle Solving',
-      riveIdentifier: 'P1_Face_Validation',
-      tier: RiveSupportTier.partiallySupported,
+      featureName: 'Thinking, Listening & Speaking Loops',
+      riveIdentifier: 'isThinking / isListening / isSpeaking',
+      tier: RiveSupportTier.verified,
       description:
-          'Face validation and eyebrow bones support thoughtful expression.',
+          'Sustained boolean-driven states with non-conflicting brow and articulation layers.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_thinking.png',
-      phase2Requirement: 'Add `isThinking` boolean state machine input.',
+      phase2Requirement: 'Verified in Layer 1 + Expression_Layer.',
     ),
     CharacterCapability(
-      featureName: 'Gentle Confusion / Error Feedback',
-      riveIdentifier: 'P1_Neck_Head / BrowL / BrowR',
-      tier: RiveSupportTier.requiresPhase2Authoring,
+      featureName: 'Supportive Encourage & Gentle Retry',
+      riveIdentifier: 'encourage / retry',
+      tier: RiveSupportTier.verified,
       description:
-          'Eyebrow and neck joints can tilt, but needs authored timeline in state machine.',
+          'Supportive open-palm gesture and empathetic head tilt with calm brow & mouth expressions.',
       fallbackPoseAsset: 'assets/images/yasser/poses/yasser_thinking.png',
-      phase2Requirement:
-          'Add `validationError` trigger providing an encouraging, supportive head tilt.',
+      phase2Requirement: 'Verified in Anim_Encourage & Anim_GentleRetry.',
     ),
     CharacterCapability(
-      featureName: 'Speech Listening & Talking',
-      riveIdentifier: 'P1_Neck_Head_Face_Mouth',
-      tier: RiveSupportTier.requiresPhase2Authoring,
+      featureName: 'Onboarding Story Chapters (1..3)',
+      riveIdentifier: 'onboardingScene',
+      tier: RiveSupportTier.verified,
       description:
-          'Mouth geometry and neck joints are rigged; timeline for active listening loop pending Phase 2.',
-      fallbackPoseAsset: 'assets/images/yasser/poses/yasser_presenting.png',
-      phase2Requirement:
-          'Add `isListening` and `isTalking` states for speech development sessions.',
+          'Dedicated welcome, sound discovery, and hero-ready state loops indexed 1..3.',
+      fallbackPoseAsset: 'assets/images/yasser/poses/yasser_waving.png',
+      phase2Requirement: 'Verified in Onboarding_1..3 states.',
     ),
     CharacterCapability(
-      featureName: 'Ambient Breathing & Blinking',
-      riveIdentifier: 'P1_RigRoot / EyeL / EyeR',
-      tier: RiveSupportTier.availableRequiresTesting,
+      featureName: 'Independent Ambient Breathing & Blinking',
+      riveIdentifier: 'P2_Idle + Blink_Layer',
+      tier: RiveSupportTier.verified,
       description:
-          'Rig root and eye geometries allow continuous subtle breathing and randomized blinking.',
+          'Natural chest breathing paired with non-overlapping Blink_Layer double-blink loop.',
       fallbackPoseAsset: 'assets/images/yasser/original/yasser_standing.png',
-      phase2Requirement:
-          'Ensure idle state machine layer runs ambient blinking without overriding active gestures.',
+      phase2Requirement: 'Verified across Layer 1 & Blink_Layer.',
     ),
   ];
 }

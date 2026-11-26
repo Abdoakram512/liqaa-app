@@ -61,9 +61,12 @@ void main() {
     tester,
   ) async {
     const moods = {
-      OnboardingEnvironment.welcomeSound: YasserAnimationState.greeting,
-      OnboardingEnvironment.soundPuzzle: YasserAnimationState.listening,
-      OnboardingEnvironment.celebrationLaunch: YasserAnimationState.celebrating,
+      OnboardingEnvironment.welcomeSound:
+          YasserAnimationState.onboardingWelcome,
+      OnboardingEnvironment.soundPuzzle:
+          YasserAnimationState.onboardingDiscovery,
+      OnboardingEnvironment.celebrationLaunch:
+          YasserAnimationState.onboardingReady,
     };
     for (final mood in moods.entries) {
       final item = OnboardingItemModel(

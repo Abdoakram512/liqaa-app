@@ -822,9 +822,9 @@ class _PronunciationGameViewState extends State<PronunciationGameView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 YasserCharacter(
-                  state: YasserAnimationState.celebrating,
-                  width: 170.w,
-                  height: 220.h,
+                  state: YasserAnimationState.sessionComplete,
+                  width: 150.w,
+                  height: 205.h,
                   enableTapReaction: true,
                 ),
                 SizedBox(height: 12.h),

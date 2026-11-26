@@ -15,14 +15,19 @@ enum YasserAnimationState {
   greeting,
   happy,
   excited,
+  onboardingWelcome,
+  onboardingDiscovery,
+  onboardingReady,
 
   // Cognitive & Educational
   curious,
   thinking,
   confused,
+  gentleRetry,
   sad,
   encouraging,
   celebrating,
+  sessionComplete,
 
   // Interactive Sessions (AI & Listening)
   waiting,

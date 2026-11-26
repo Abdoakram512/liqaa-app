@@ -58,6 +58,9 @@ class YasserAnimationConfig {
       case YasserAnimationState.followingInput:
       case YasserAnimationState.waiting:
       case YasserAnimationState.curious:
+      case YasserAnimationState.onboardingWelcome:
+      case YasserAnimationState.onboardingDiscovery:
+      case YasserAnimationState.onboardingReady:
         return YasserAnimationPriority.attentive;
 
       case YasserAnimationState.waving:
@@ -71,9 +74,11 @@ class YasserAnimationConfig {
       case YasserAnimationState.happy:
       case YasserAnimationState.excited:
       case YasserAnimationState.confused:
+      case YasserAnimationState.gentleRetry:
       case YasserAnimationState.sad:
       case YasserAnimationState.encouraging:
       case YasserAnimationState.celebrating:
+      case YasserAnimationState.sessionComplete:
       case YasserAnimationState.returningToIdle:
         return YasserAnimationPriority.transient;
 

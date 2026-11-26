@@ -110,6 +110,75 @@ class YasserController extends ChangeNotifier {
     );
   }
 
+  /// Warm encouraging reaction during speech training.
+  void encourage({Duration? duration}) {
+    engine.triggerState(
+      YasserAnimationState.encouraging,
+      customHoldDuration: duration ?? const Duration(milliseconds: 1800),
+      reason: 'Warm encouraging feedback',
+    );
+  }
+
+  /// Supportive gentle retry cue on an imprecise pronunciation attempt.
+  void gentleRetry({Duration? duration}) {
+    engine.triggerState(
+      YasserAnimationState.gentleRetry,
+      customHoldDuration: duration ?? const Duration(milliseconds: 1800),
+      reason: 'Gentle empathetic retry guidance',
+    );
+  }
+
+  /// Heroic celebration at the completion of a pronunciation session.
+  void sessionComplete({Duration? duration}) {
+    engine.triggerState(
+      YasserAnimationState.sessionComplete,
+      customHoldDuration: duration ?? const Duration(milliseconds: 2800),
+      reason: 'Session completed celebration',
+    );
+  }
+
+  /// Sets an onboarding chapter scene (`1..3`) or `0` to clear.
+  void setOnboardingScene(int sceneIndex) {
+    switch (sceneIndex) {
+      case 1:
+        engine.triggerState(
+          YasserAnimationState.onboardingWelcome,
+          reason: 'Onboarding chapter 1',
+        );
+      case 2:
+        engine.triggerState(
+          YasserAnimationState.onboardingDiscovery,
+          reason: 'Onboarding chapter 2',
+        );
+      case 3:
+        engine.triggerState(
+          YasserAnimationState.onboardingReady,
+          reason: 'Onboarding chapter 3',
+        );
+      default:
+        returnToIdle();
+    }
+  }
+
+  /// Fires a raw ViewModel1 trigger directly on the active Rive controller (for Lab QA).
+  bool fireRiveTrigger(String triggerName) =>
+      _widgetController?.fireTrigger(triggerName) ?? false;
+
+  /// Overrides `mouthShape` directly on the active Rive controller (`0..8`, or `null` to clear).
+  void setDirectMouthShape(int? shapeIndex) =>
+      _widgetController?.setDirectMouthShape(shapeIndex);
+
+  /// Live ViewModel1 values when the Rive runtime controller is attached.
+  Map<String, dynamic> get liveRiveViewModelValues =>
+      _widgetController?.liveViewModelValues ?? const {};
+
+  /// Read-only rig bone/IK telemetry for Yasser Lab skeletal overlay.
+  YasserRigDebugSnapshot? readRigSnapshot() =>
+      _widgetController?.readRigSnapshot();
+
+  /// Active Rive controller reference for inspection and Lab transport controls.
+  YasserRiveController? get riveController => _widgetController;
+
   /// Thoughtful puzzle-solving pose.
   void think({Duration? duration}) {
     engine.triggerState(

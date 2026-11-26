@@ -114,7 +114,7 @@ class OnboardingCharacterScene extends StatelessWidget {
           ),
           Positioned(
             bottom: 4,
-            child: _character(YasserAnimationState.greeting),
+            child: _character(YasserAnimationState.onboardingWelcome),
           ),
         ],
       ),
@@ -212,7 +212,7 @@ class OnboardingCharacterScene extends StatelessWidget {
           ),
           Positioned(
             bottom: 4,
-            child: _character(YasserAnimationState.listening),
+            child: _character(YasserAnimationState.onboardingDiscovery),
           ),
         ],
       ),
@@ -303,7 +303,7 @@ class OnboardingCharacterScene extends StatelessWidget {
           ),
           Positioned(
             bottom: 4,
-            child: _character(YasserAnimationState.celebrating),
+            child: _character(YasserAnimationState.onboardingReady),
           ),
         ],
       ),

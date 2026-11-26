@@ -1,0 +1,54 @@
+{
+  "Sleeve_ScreenL_Clean.png": {
+    "width": 168,
+    "height": 300
+  },
+  "Sleeve_ScreenR_Clean.png": {
+    "width": 168,
+    "height": 300
+  },
+  "Hand_ScreenL_Relaxed.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_ScreenR_Relaxed.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_ScreenL_Palm.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_ScreenR_Palm.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_ScreenL_Cover.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_ScreenR_Cover.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_R_Cover_Palm.png": {
+    "width": 160,
+    "height": 160
+  },
+  "Hand_R_Finger_Index.png": {
+    "width": 64,
+    "height": 40
+  },
+  "Hand_R_Finger_Middle.png": {
+    "width": 64,
+    "height": 40
+  },
+  "Hand_R_Finger_Ring.png": {
+    "width": 64,
+    "height": 40
+  },
+  "Hand_R_Finger_Little.png": {
+    "width": 64,
+    "height": 40
+  }
+}
