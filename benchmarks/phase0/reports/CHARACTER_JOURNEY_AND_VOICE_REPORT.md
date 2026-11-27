@@ -25,35 +25,44 @@
 
 ---
 
-## 3. ElevenLabs Voice Casting Audit (Read-Only, `0` Credits Spent)
+## 3. ElevenLabs Voice Casting & Approved Selection (`0` Generation Credits Spent Yet)
 
-All voice casting discovery and cost estimation used authenticated **ElevenLabs Hosted MCP (`https://api.elevenlabs.io/v1/mcp`)** tools (`creative_list_voices` and `creative_generate_speech` with `estimate_only: true`).
+All voice casting discovery and cost estimation used authenticated **ElevenLabs Hosted MCP (`https://api.elevenlabs.io/v1/mcp`)** tools (`creative_list_voices`, `account_get_usage`, and `creative_generate_speech` with `estimate_only: true`).
+
+- **Approved Primary Voice (`status: voice_approved_by_user_awaiting_batch_scope`):**
+  - **Voice ID:** `QfMIySsRuJWjZPZCnDQp`
+  - **Name:** `Ashraf - Warm and Genial` (Egyptian Arabic)
+- **Workspace Quota Verified (`account_get_usage`):**
+  - **Tier:** `starter` (`active`)
+  - **Used:** `4,164` / `40,000` characters (`35,836` remaining)
 
 ### Egyptian Arabic Shortlist (`assets/pronunciation/yasser_voice_manifest.json`)
 
 | Rank | Voice ID | Voice Name | Dialect / Profile | Suitability Notes |
 | --- | --- | --- | --- | --- |
-| **1 (Recommended)** | `PmRaqkJ2uk3Y9jrp9UjJ` | **Mawardy - Warm, Natural Egyptian** | `egyptian` / `young` / `male` | Warm conversational Egyptian Masri with clear child-friendly diction; best fit for Yasser. |
-| **2** | `Y65Dz2XsznJl6gZHkXPi` | **Sattar - Warm Egyptian explainer** | `egyptian` / `young` / `male` | Friendly older-brother explainer delivery suited to instructions and game hints. |
-| **3** | `IES4nrmZdUBHByLBde0P` | **Haytham - Conversation** | `egyptian` / `middle_aged` / `male` | Crisp Egyptian storytelling cadence; optional fit for `مدينة الحكايات` narration. |
-| **4** | `QvNF0qyyt1Tuy1YAmnzH` | **Mostafa - Bold and Spirited** | `egyptian` / `young` / `male` | Bright celebratory energy for achievement fanfare lines. |
-| **5** | `5REPlS2Ja1VZ7zNA0ykn` | **Ziad - Dynamic and Vibrant** | `egyptian` / `young` / `male` | Dynamic pacing for game intros. |
-| **6** | `4mZ0H4Jh5iqmgAWK97eF` | **Omarii - Confident Customer Care Agent** | `egyptian` / `young` / `male` | Clear formal-supportive Egyptian cadence. |
+| **Approved Primary** | `QfMIySsRuJWjZPZCnDQp` | **Ashraf - Warm and Genial** | `egyptian` / `male` | **Approved by user:** friendly, warm, easygoing Egyptian Arabic delivery. |
+| **Alternative 1** | `PmRaqkJ2uk3Y9jrp9UjJ` | **Mawardy - Warm, Natural Egyptian** | `egyptian` / `young` / `male` | Warm conversational Egyptian Masri with clear child-friendly diction. |
+| **Alternative 2** | `Y65Dz2XsznJl6gZHkXPi` | **Sattar - Warm Egyptian explainer** | `egyptian` / `young` / `male` | Friendly older-brother explainer delivery suited to instructions and game hints. |
+| **Alternative 3** | `IES4nrmZdUBHByLBde0P` | **Haytham - Conversation** | `egyptian` / `middle_aged` / `male` | Crisp Egyptian storytelling cadence; optional fit for `مدينة الحكايات` narration. |
+| **Alternative 4** | `QvNF0qyyt1Tuy1YAmnzH` | **Mostafa - Bold and Spirited** | `egyptian` / `young` / `male` | Bright celebratory energy for achievement fanfare lines. |
+| **Alternative 5** | `5REPlS2Ja1VZ7zNA0ykn` | **Ziad - Dynamic and Vibrant** | `egyptian` / `young` / `male` | Dynamic pacing for game intros. |
+| **Alternative 6** | `4mZ0H4Jh5iqmgAWK97eF` | **Omarii - Confident Customer Care Agent** | `egyptian` / `young` / `male` | Clear formal-supportive Egyptian cadence. |
 
 ---
 
-## 4. Script Library & Exact Cost Estimate (Awaiting User Approval)
+## 4. Script Library & Exact Cost Estimate (Awaiting Batch Scope Approval)
 
 - **Generated Script Library:** `assets/pronunciation/yasser_voice_script_library.json`
   - **Total Scripts:** `150` child-friendly Egyptian Arabic lines (greetings, 6 region intros, 8 mini-game instructions, encouragement, gentle retry hints, adventure milestones, and reviewed word prompts).
   - **Total Characters:** `6,574` characters.
-- **Verified Cost Estimate (`estimate_only: true`, Flow `g2xvPxRggxl4rN1t0ltc` on `eleven_multilingual_v2`):**
-  - Sample prompt length: `59` characters
-  - Estimated cost per `59`-char sample: **`59.0` credits** (`1.18` cents / **`$0.0118` USD**)
-  - Projected total for full `150`-script batch (`6,574` chars): **~`6,574`–`7,800` credits** (provisional linear estimate around ~$1.30–$1.56 USD depending on batch rounding)
-- **Credits Spent So Far:** **`0.0` credits** (`status: preview_shortlist_ready_zero_credits_spent`).
+- **Verified Cost Estimate for Approved Voice `QfMIySsRuJWjZPZCnDQp` (`estimate_only: true`, Flow `MwnSpDXo6QYU7nbfpSRX` on `eleven_multilingual_v2`):**
+  - Sample prompt length: `64` characters
+  - Estimated cost per `64`-char sample (`generations_count: 1`): **`64.0` credits** (`1.28` cents / **`$0.0128` USD**, `1.0` credit/char)
+  - Projected total for pilot batch (15–20 core greetings/game prompts): **~`900` credits** (`~2.5%` of remaining `35,836` credits)
+  - Projected total for full `150`-script batch (`6,574` chars): **`~6,574` credits** (`~18.3%` of remaining `35,836` credits)
+- **Speech Credits Spent So Far:** **`0.0` credits** on `QfMIySsRuJWjZPZCnDQp` (`estimate_only: true`).
 
-### Next Step Requiring Explicit User Approval
-Before generating paid WAV files with ElevenLabs:
-1. Confirm your preferred voice from the Egyptian Arabic shortlist (`PmRaqkJ2uk3Y9jrp9UjJ` *Mawardy* recommended, or specify another candidate ID).
-2. Approve whether to synthesize an initial pilot batch (e.g., 15–30 core greetings & game instructions) or the full `150`-script batch (`~6,574` chars).
+### Next Step Requiring Batch Scope Confirmation
+Voice `QfMIySsRuJWjZPZCnDQp` (*Ashraf - Warm and Genial*) is now locked in `yasser_voice_manifest.json`. Confirm whether to run:
+1. A **pilot batch** (e.g., 15–20 core greetings & game instructions, ~`900` credits), OR
+2. The **full `150`-script batch** (`6,574` characters ≈ `6,574` credits out of `35,836` remaining).

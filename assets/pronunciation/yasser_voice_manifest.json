@@ -10,17 +10,30 @@
     "runtime_paid_tts_policy": "PROHIBITED — only verified local WAV assets or graceful speech-bubble + gentle chime fallback."
   },
   "elevenlabs_voice_casting_shortlist": {
-    "status": "preview_shortlist_ready_zero_credits_spent",
-    "recommended_voice_id": "PmRaqkJ2uk3Y9jrp9UjJ",
+    "status": "voice_approved_by_user_awaiting_batch_scope",
+    "approved_voice_id": "QfMIySsRuJWjZPZCnDQp",
+    "approved_voice_name": "Ashraf - Warm and Genial",
+    "recommended_voice_id": "QfMIySsRuJWjZPZCnDQp",
     "estimate_reference": {
       "model_id": "eleven_multilingual_v2",
-      "sample_prompt_chars": 59,
-      "estimated_credits_per_sample": 59.0,
-      "estimated_price_cents_per_sample": 1.18,
-      "estimated_credits_150_scripts_approx": 7800,
-      "flow_id_preview": "g2xvPxRggxl4rN1t0ltc"
+      "sample_prompt_chars": 64,
+      "estimated_credits_per_sample": 64.0,
+      "estimated_price_cents_per_sample": 1.28,
+      "estimated_credits_150_scripts_exact_chars": 6574,
+      "starter_remaining_credits": 35836,
+      "flow_id_preview": "MwnSpDXo6QYU7nbfpSRX"
     },
     "candidates": [
+      {
+        "voice_id": "QfMIySsRuJWjZPZCnDQp",
+        "name": "Ashraf - Warm and Genial",
+        "category": "professional",
+        "age": "young_genial",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "User-approved primary voice for Yasser: warm, friendly, natural Egyptian Arabic delivery.",
+        "preview_url": "https://api.us.elevenlabs.io/v1/voices/QfMIySsRuJWjZPZCnDQp/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJjdXN0b20iLCJ3b3Jrc3BhY2VfaWQiOiIxZGEwNmVhNjc5YTU0OTc1YWQ5NmEyMjIxZmU2NTMwZCIsImZpbGVuYW1lIjoiWTB1blprRnVES2RZWVNwaVpCWjMubXAzIiwidGltZXN0YW1wIjoxNzk1NzcwMDAwMDAwMDAwfQ%3D%3D"
+      },
       {
         "voice_id": "PmRaqkJ2uk3Y9jrp9UjJ",
         "name": "Mawardy - Warm, Natural Egyptian",
