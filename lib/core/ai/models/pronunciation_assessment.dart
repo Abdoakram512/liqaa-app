@@ -26,6 +26,14 @@ extension AssessmentErrorTypeX on AssessmentErrorType {
       this == AssessmentErrorType.inferenceFailed ||
       this == AssessmentErrorType.invalidAudioFormat ||
       this == AssessmentErrorType.recordingFailed;
+
+  /// Technical failures or inconclusive acoustic inputs must NOT count as child pronunciation errors.
+  bool get isInconclusiveOrTechnical =>
+      isSystemFailure ||
+      this == AssessmentErrorType.noSpeech ||
+      this == AssessmentErrorType.poorAudioQuality ||
+      this == AssessmentErrorType.uncertain ||
+      this == AssessmentErrorType.unrecognized;
 }
 
 class PhonemeAlignment extends Equatable {

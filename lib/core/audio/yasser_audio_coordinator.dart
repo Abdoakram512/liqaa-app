@@ -59,8 +59,8 @@ class YasserAudioCoordinator extends ChangeNotifier
   static const String prefHapticsEnabled = 'yasser_audio_haptics_enabled';
 
   final SharedPreferences? _prefs;
-  final AudioPlayer _voicePlayer;
-  final AudioPlayer _sfxPlayer;
+  final AudioPlayer? _voicePlayer;
+  final AudioPlayer? _sfxPlayer;
   final bool _enablePlatformAudio;
 
   final Map<YasserSfx, Uint8List> _synthesizedSfxCache = {};
@@ -75,6 +75,7 @@ class YasserAudioCoordinator extends ChangeNotifier
   YasserPrompt? _activePrompt;
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<PlayerState>? _voiceStateSub;
+  final Set<Future<void> Function()> _externalRecordingStopHooks = {};
 
   final ValueNotifier<YasserViseme> visemeNotifier =
       ValueNotifier<YasserViseme>(YasserViseme.rest);
@@ -86,19 +87,69 @@ class YasserAudioCoordinator extends ChangeNotifier
     bool enablePlatformAudio = true,
     bool observeAppLifecycle = true,
   }) : _prefs = prefs,
-       _voicePlayer = voicePlayer ?? AudioPlayer(),
-       _sfxPlayer = sfxPlayer ?? AudioPlayer(),
+       _voicePlayer =
+           voicePlayer ?? (enablePlatformAudio ? AudioPlayer() : null),
+       _sfxPlayer = sfxPlayer ?? (enablePlatformAudio ? AudioPlayer() : null),
        _enablePlatformAudio = enablePlatformAudio {
     _voiceEnabled = _prefs?.getBool(prefVoiceEnabled) ?? true;
     _sfxEnabled = _prefs?.getBool(prefSfxEnabled) ?? true;
     _hapticsEnabled = _prefs?.getBool(prefHapticsEnabled) ?? true;
 
+    _configureNonBlockingAudioContexts();
     _syncGlobalUiFeedback();
     _bindVoiceStreams();
 
     if (observeAppLifecycle) {
       WidgetsBinding.instance.addObserver(this);
     }
+  }
+
+  void _configureNonBlockingAudioContexts() {
+    final sfxPlayer = _sfxPlayer;
+    final voicePlayer = _voicePlayer;
+    if (!_enablePlatformAudio) return;
+    try {
+      // UI chimes must NEVER grab Android AudioFocus away from AudioRecord.
+      if (sfxPlayer != null) {
+        unawaited(
+          sfxPlayer.setAudioContext(
+            AudioContext(
+              android: const AudioContextAndroid(
+                isSpeakerphoneOn: false,
+                stayAwake: false,
+                contentType: AndroidContentType.sonification,
+                usageType: AndroidUsageType.assistanceSonification,
+                audioFocus: AndroidAudioFocus.none,
+              ),
+            ),
+          ),
+        );
+      }
+      if (voicePlayer != null) {
+        unawaited(
+          voicePlayer.setAudioContext(
+            AudioContext(
+              android: const AudioContextAndroid(
+                isSpeakerphoneOn: false,
+                stayAwake: false,
+                contentType: AndroidContentType.speech,
+                usageType: AndroidUsageType.assistant,
+                audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+              ),
+            ),
+          ),
+        );
+      }
+    } catch (_) {}
+  }
+
+  /// Registers external feature players (e.g. game prompt player) so entering mic capture stops ALL speakers.
+  void registerExternalAudioStopHook(Future<void> Function() stopHook) {
+    _externalRecordingStopHooks.add(stopHook);
+  }
+
+  void unregisterExternalAudioStopHook(Future<void> Function() stopHook) {
+    _externalRecordingStopHooks.remove(stopHook);
   }
 
   bool get voiceEnabled => _voiceEnabled;
@@ -115,7 +166,9 @@ class YasserAudioCoordinator extends ChangeNotifier
   }
 
   void _bindVoiceStreams() {
-    _positionSub = _voicePlayer.onPositionChanged.listen((pos) {
+    final voicePlayer = _voicePlayer;
+    if (!_enablePlatformAudio || voicePlayer == null) return;
+    _positionSub = voicePlayer.onPositionChanged.listen((pos) {
       if (_disposed || !_isPlayingVoice || _activePrompt == null) return;
       final nextPose = _activePrompt!.poseAt(pos);
       if (visemeNotifier.value != nextPose) {
@@ -123,7 +176,7 @@ class YasserAudioCoordinator extends ChangeNotifier
       }
     });
 
-    _voiceStateSub = _voicePlayer.onPlayerStateChanged.listen((state) {
+    _voiceStateSub = voicePlayer.onPlayerStateChanged.listen((state) {
       if (_disposed) return;
       if (state == PlayerState.playing) {
         if (!_isPlayingVoice) {
@@ -191,13 +244,19 @@ class YasserAudioCoordinator extends ChangeNotifier
     }
     await stopVoice();
     _activePrompt = prompt;
-    if (!_enablePlatformAudio) {
+    final vp = _voicePlayer;
+    if (!_enablePlatformAudio || vp == null) {
       return false;
     }
 
     try {
-      await _voicePlayer.play(AssetSource(prompt.assetPath));
-      if (!_disposed && _voicePlayer.state == PlayerState.playing) {
+      await vp.play(AssetSource(prompt.assetPath));
+      if (_disposed || _isRecordingActive) {
+        await _safeStopPlayer(vp);
+        _resetVoiceState();
+        return false;
+      }
+      if (vp.state == PlayerState.playing) {
         _isPlayingVoice = true;
         notifyListeners();
         return true;
@@ -213,10 +272,12 @@ class YasserAudioCoordinator extends ChangeNotifier
 
   /// Plays a gentle, harmonic, non-intrusive PCM16 WAV sound effect.
   Future<void> playSfx(YasserSfx effect) async {
+    final sfx = _sfxPlayer;
     if (_disposed ||
         !_sfxEnabled ||
         _isRecordingActive ||
-        !_enablePlatformAudio) {
+        !_enablePlatformAudio ||
+        sfx == null) {
       return;
     }
     try {
@@ -224,8 +285,8 @@ class YasserAudioCoordinator extends ChangeNotifier
         effect,
         () => YasserHarmonicSfxSynthesizer.generateWav(effect),
       );
-      await _sfxPlayer.stop();
-      await _sfxPlayer.play(BytesSource(bytes, mimeType: 'audio/wav'));
+      await sfx.stop();
+      await sfx.play(BytesSource(bytes, mimeType: 'audio/wav'));
     } catch (_) {
       // Never crash or surface errors if platform audio backend is unavailable.
     }
@@ -240,12 +301,15 @@ class YasserAudioCoordinator extends ChangeNotifier
     await Future.wait([
       _safeStopPlayer(_voicePlayer),
       _safeStopPlayer(_sfxPlayer),
+      ..._externalRecordingStopHooks.toList().map(
+        (hook) => hook().catchError((_) {}),
+      ),
     ]);
     _resetVoiceState();
   }
 
-  Future<void> _safeStopPlayer(AudioPlayer player) async {
-    if (!_enablePlatformAudio) return;
+  Future<void> _safeStopPlayer(AudioPlayer? player) async {
+    if (!_enablePlatformAudio || player == null) return;
     try {
       await player.stop();
     } catch (_) {}
@@ -286,8 +350,8 @@ class YasserAudioCoordinator extends ChangeNotifier
     await _voiceStateSub?.cancel();
     try {
       if (_enablePlatformAudio) {
-        await _voicePlayer.dispose();
-        await _sfxPlayer.dispose();
+        await _voicePlayer?.dispose();
+        await _sfxPlayer?.dispose();
       }
     } catch (_) {}
     visemeNotifier.dispose();

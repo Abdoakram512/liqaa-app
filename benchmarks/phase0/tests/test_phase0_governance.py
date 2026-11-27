@@ -138,33 +138,37 @@ class Phase0GovernanceTests(unittest.TestCase):
             self.assertNotIn("S4", flagged_ids)
 
     def test_blind_protection_strips_labels_and_blocks_drift(self) -> None:
-        stage_a = [{"sample_id": "A1", "speaker_id": "SA1"}]
-        stage_b_raw = [
-            {
-                "sample_id": "B1",
-                "speaker_id": "SB1",
-                "file_path": "x.wav",
-                "target_word": "كورة",
-                "expected_outcome": "pass",
-                "audio_type": "human_pediatric",
-            }
-        ]
-        inputs, labels = strip_blind_labels(stage_b_raw)
-        self.assertNotIn("target_word", inputs[0])
-        self.assertEqual(labels["B1"]["target_word"], "كورة")
+        with tempfile.TemporaryDirectory() as tmp:
+            tp = Path(tmp)
+            wav_p = tp / "utt_001.wav"
+            _write_wav(wav_p, np.sin(2 * np.pi * 400 * np.arange(8000) / 16000.0).astype(np.float32) * 0.2)
+            stage_a = [{"sample_id": "A1", "speaker_id": "SA1", "audio_type": "human_pediatric"}]
+            stage_b_raw = [
+                {
+                    "sample_id": "B1",
+                    "speaker_id": "SB1",
+                    "file_path": "utt_001.wav",
+                    "target_word": "كورة",
+                    "expected_outcome": "pass",
+                    "audio_type": "human_pediatric",
+                }
+            ]
+            inputs, labels = strip_blind_labels(stage_b_raw, strict_filename_guard=True)
+            self.assertNotIn("target_word", inputs[0])
+            self.assertEqual(labels["B1"]["target_word"], "كورة")
 
-        lock = create_freeze_lock(stage_a, inputs, labels, {"rev": "r1"}, {"thr": 0.5}, {"sr": 16000})
-        auth = authorize_blind_execution(lock, inputs, {"rev": "r1"}, {"thr": 0.5}, {"sr": 16000})
-        self.assertTrue(auth["authorized"])
+            lock = create_freeze_lock(stage_a, inputs, labels, {"rev": "r1"}, {"thr": 0.5}, {"sr": 16000}, audio_root=tp)
+            auth = authorize_blind_execution(lock, inputs, {"rev": "r1"}, {"thr": 0.5}, {"sr": 16000}, audio_root=tp)
+            self.assertTrue(auth["authorized"])
 
-        with self.assertRaises(BlindAuthorizationError):
-            authorize_blind_execution(lock, inputs, {"rev": "r2"}, {"thr": 0.5}, {"sr": 16000})
+            with self.assertRaises(BlindAuthorizationError):
+                authorize_blind_execution(lock, inputs, {"rev": "r2"}, {"thr": 0.5}, {"sr": 16000}, audio_root=tp)
 
-        def sneaky(audio: np.ndarray, expected_phonemes: list[str]) -> None:
-            _ = (audio, expected_phonemes)
+            def sneaky(audio: np.ndarray, expected_phonemes: list[str]) -> None:
+                _ = (audio, expected_phonemes)
 
-        with self.assertRaises(BlindAuthorizationError):
-            verify_blind_inference_signature(sneaky)
+            with self.assertRaises(BlindAuthorizationError):
+                verify_blind_inference_signature(sneaky)
 
     def test_metrics_engine_exactness_and_wilson_ci(self) -> None:
         ci = wilson_ci(0, 0)

@@ -75,6 +75,7 @@ class PhonemeRecognitionEngine {
   bool get isNativeAvailable => _isNativeAvailable;
   int get tokenCount => _idToToken.length;
   String? get modelPath => _modelPath;
+  String? get vocabPath => _vocabPath;
   String? get lastError => _lastError;
 
   /// Loads `vocab.json` and opens the quantized Wav2Vec2-eSpeak ONNX session.

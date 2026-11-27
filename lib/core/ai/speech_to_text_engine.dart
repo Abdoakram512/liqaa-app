@@ -54,6 +54,9 @@ class SpeechToTextEngine {
 
   bool get isInitialized => _isInitialized;
   bool get isNativeAvailable => _isNativeAvailable;
+  String? get encoderPath => _encoderPath;
+  String? get decoderPath => _decoderPath;
+  String? get tokensPath => _tokensPath;
   String? get lastError => _lastError;
 
   /// Initializes Sherpa-ONNX Whisper Tiny multilingual speech recognizer (Arabic ASR).
@@ -184,12 +187,21 @@ class SpeechToTextEngine {
       );
     }
 
+    sherpa_onnx.OfflineStream? stream;
     try {
-      final stream = _recognizer!.createStream();
-      stream.acceptWaveform(samples: samples, sampleRate: sampleRate);
+      // Pad ultra-short speech segments (< 900ms) slightly with silence so Whisper cross-attention stabilizes.
+      final Float32List inputSamples =
+          samples.length < (sampleRate * 0.9).round()
+          ? (Float32List((sampleRate * 0.95).round())
+              ..setRange(0, samples.length, samples))
+          : samples;
+
+      stream = _recognizer!.createStream();
+      // Default sherpa-onnx max_tokens_per_second=6 truncates Arabic BPE utterances mid-sentence.
+      stream.setOption(key: 'max_tokens_per_second', value: '24');
+      stream.acceptWaveform(samples: inputSamples, sampleRate: sampleRate);
       _recognizer!.decode(stream);
       final result = _recognizer!.getResult(stream);
-      stream.free();
 
       sw.stop();
       final int latency = sw.elapsedMilliseconds;
@@ -222,6 +234,10 @@ class SpeechToTextEngine {
         isModelInference: false,
         errorMessage: _lastError,
       );
+    } finally {
+      try {
+        stream?.free();
+      } catch (_) {}
     }
   }
 

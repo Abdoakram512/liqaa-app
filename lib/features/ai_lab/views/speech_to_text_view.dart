@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/ai/models/lab_task_mode.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -73,7 +74,9 @@ class SpeechToTextView extends StatelessWidget {
                             if (state.isRecording) {
                               context
                                   .read<AiLabCubit>()
-                                  .stopRecordingAndAnalyze();
+                                  .stopRecordingAndRunTask(
+                                    LabTaskMode.speechToText,
+                                  );
                             } else {
                               context.read<AiLabCubit>().startRecording();
                             }

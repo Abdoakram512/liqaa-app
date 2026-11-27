@@ -19,10 +19,10 @@ Note on Native Test Environment: Two Rive FFI tests (`yasser_master_rig_integrat
 - **`E:` (Repo):** `126.14 GB` free.
 - **`C:` (System Blocker):** **`2.08 GB` free** (`222.10 GB` total) — remains a critical OS risk; no ML caches or installs target `C:`.
 
-## 3. Unresolved Limitations & Phase 1 Entry Conditions
-1. Stage B Blind Holdout (`1,500` target samples) is NOT yet collected/frozen (`stage_b_frozen: false`).
+## 3. Unresolved Limitations & Phase 1 Entry Conditions (Aligned With Section 13 Roadmap)
+1. Stage B Blind Holdout (`1,500` target samples) is NOT yet collected/frozen (`stage_b_frozen: false`) — scheduled for **Phase 4** after **Phase 1** (`2,000` Egyptian pediatric dev set) and **Phase 2** (13-candidate comparative benchmark).
 2. `MON3EMPASHA/SmartArabicSpeechTherapy` Space weights (`phoneme_scorer_latest.pth`) are MIT-licensed and public, but trained on ASMDD (`dataset_info/ASMDD.csv`, `5,298` rows) and require target-word ASR alignment.
 3. Short clipped fragments leaving `<16` active frames (`<270ms`) or extreme noise (`<= 5 dB SNR`) reduce spectral fingerprint recall and remain governed by strict `parent_source_id` lineage enforcement.
-4. No physical Android hardware benchmark has been executed yet.
+4. No physical Android hardware benchmark has been executed yet (`NOT VERIFIED`).
 
-**Decision:** Approved to proceed to **Phase 1 (Arabic Phoneme Inventory & Linguistic Engine)** cleanly after merging/reviewing this branch as desired; do NOT evaluate or claim Stage B accuracy until Phase 3 blind data collection is completed and locked.
+**Decision:** Superseded by Phase 0.1 hardening & `PHASE_1_READINESS_REPORT.md` — proceed to **Phase 1 (Model Acquisition & 2,000-Sample Egyptian Pediatric Dev Dataset)** only under documented hardware/Android caveats; do NOT evaluate or claim Stage B accuracy until **Phase 4** blind holdout evaluation.

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../../../core/ai/models/ai_model_info.dart';
 import '../../../../core/ai/models/audio_processing_result.dart';
+import '../../../../core/ai/models/lab_task_mode.dart';
 import '../../../../core/ai/models/phoneme_token.dart';
 import '../../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../../core/ai/models/vocabulary_word.dart';
@@ -31,6 +32,8 @@ class AiLabState extends Equatable {
   final String? lastBlindTranscript;
   final List<PhonemeToken> lastBlindPhonemes;
   final List<PhonemeToken> lastRawPhonemes;
+  final LabExecutionTelemetry? lastTelemetry;
+  final String? dualReplaySummary;
 
   const AiLabState({
     this.status = AiLabStatus.initial,
@@ -53,6 +56,8 @@ class AiLabState extends Equatable {
     this.lastBlindTranscript,
     this.lastBlindPhonemes = const [],
     this.lastRawPhonemes = const [],
+    this.lastTelemetry,
+    this.dualReplaySummary,
   });
 
   AiLabState copyWith({
@@ -77,6 +82,8 @@ class AiLabState extends Equatable {
     String? lastBlindTranscript,
     List<PhonemeToken>? lastBlindPhonemes,
     List<PhonemeToken>? lastRawPhonemes,
+    LabExecutionTelemetry? lastTelemetry,
+    String? dualReplaySummary,
   }) {
     return AiLabState(
       status: status ?? this.status,
@@ -101,6 +108,8 @@ class AiLabState extends Equatable {
       lastBlindTranscript: lastBlindTranscript ?? this.lastBlindTranscript,
       lastBlindPhonemes: lastBlindPhonemes ?? this.lastBlindPhonemes,
       lastRawPhonemes: lastRawPhonemes ?? this.lastRawPhonemes,
+      lastTelemetry: lastTelemetry ?? this.lastTelemetry,
+      dualReplaySummary: dualReplaySummary ?? this.dualReplaySummary,
     );
   }
 
@@ -125,5 +134,7 @@ class AiLabState extends Equatable {
     lastBlindTranscript,
     lastBlindPhonemes,
     lastRawPhonemes,
+    lastTelemetry,
+    dualReplaySummary,
   ];
 }

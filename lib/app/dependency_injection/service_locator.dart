@@ -92,6 +92,7 @@ Future<void> setupServiceLocator() async {
       evaluator: sl(),
       sttEngine: sl(),
       modelManager: sl(),
+      useBackgroundWorker: true,
     ),
   );
 

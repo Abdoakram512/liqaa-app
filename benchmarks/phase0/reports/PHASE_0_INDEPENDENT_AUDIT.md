@@ -8,10 +8,10 @@ Audit Date UTC: `2026-11-27`
 Phase 0 AI Integrity, Dataset Governance, Leakage Detection, Blind Freeze Architecture, and Yasser AI Lab visibility have passed independent adversarial auditing and full regression testing (`11/11` Python governance & adversarial tests, `15/15` anti-cheating checks, `flutter analyze` `0` issues, `115/115` Flutter tests passed).
 
 The verdict is **CONDITIONAL PASS** (not full unconditional Stage B sign-off) because of four real external/data conditions:
-1. **Stage B Blind Holdout Not Yet Populated (`stage_b_frozen = false`):** An empty blind dataset cannot be certified as independently validated; Phase 0 proves the *lock/isolation mechanism*, while Stage B data acquisition occurs in Phase 3.
-2. **`C:` System Drive Critically Low (`2.08 GB` free):** All ML caches/datasets are isolated on `D:\YasserML` (`270.72 GB` free), but system updates or Windows SDK builds remain at risk until user cleanup on `C:`.
+1. **Stage B Blind Holdout Not Yet Populated (`stage_b_frozen = false`):** An empty blind dataset cannot be certified as independently validated; Phase 0 proves the *lock/isolation mechanism*, while Stage A (`2,000` dev) acquisition occurs in **Phase 1** and Stage B (`1,500` blind) evaluation occurs in **Phase 4**.
+2. **`C:` System Drive Status:** Historical baseline audit noted `2.08 GB` free on `C:`; current Phase 0.1 re-check confirmed `27.1 GB` free (`C:`), `271.22 GB` free (`D:\YasserML`), and `101.14 GB` free (`E:`).
 3. **External Candidate Licenses & Contamination Limits:** Five candidate datasets/models have access, license, or documented overlap restrictions (`ASMDD` overlap with `MON3EMPASHA/SmartArabicSpeechTherapy`; `arabic_speech_corpus` overlap with `MostafaMaroof/wav2vec2-arabic-phoneme-asr`; `arabic-egy-cleaned` overlap with `MAdel121/whisper-small-egyptian-arabic` + `null` dataset license; gated `Quran-Lab/zipformer_p-arabic-v3`; restricted `L2-KSU`; 404 HF mirror for `Arabic Little STT`).
-4. **Desktop-Only Runtime Verification:** All `115/115` Flutter tests ran cleanly on Windows (`rive_native.dll` + ONNX Runtime CPU FFI); physical Android hardware profiling remains deferred to Phase 11.
+4. **Desktop-Only Runtime Verification:** All Flutter tests ran on Windows desktop (`rive_native.dll` + ONNX Runtime CPU FFI); physical Android hardware verification remains **`NOT VERIFIED`** until an actual Android phone is tested via USB `adb`.
 
 ---
 

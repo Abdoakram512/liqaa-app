@@ -130,7 +130,7 @@ Every sample holds ONE primary category from `{", ".join(dataset_reg['primary_ca
 ## Stage Quotas
 - **Stage A Calibration / Dev:** `2,000` target samples (`450` correct pediatric, `450` mispronounced, `350` noisy/weak pediatric, `400` adult Arabic, `250` noise/silence, `100` separated controlled synthetic).
 - **Stage B Immutable Blind Holdout:** `1,500` target human-only samples (`450` correct pediatric, `450` mispronounced, `250` noisy/weak pediatric, `200` adult Arabic, `150` noise/silence, **`0` synthetic**).
-- **Future Phase 3+ Pool (`130,000` target):** Speaker/fingerprint firewalled from Stage A and Stage B.
+- **Future Phase 5+ Pool (`130,000+` target):** Speaker/fingerprint firewalled from Stage A (`2,000`, Phase 1) and Stage B (`1,500`, Phase 4).
 """,
     )
 
@@ -274,9 +274,9 @@ Extended existing Developer AI Lab without duplicating screens:
         """# 12 — Honest Phase 0 Failures, Gaps & Risks
 
 1. **Incomplete Candidate Access:** `Quran-Lab/zipformer_p-arabic-v3` is gated (`license:other`, weights missing); `SmartArabicSpeechTherapy` exposes 0 public HF models; `Arabic Little STT` HF URL returned 404; `L2-KSU` requires LDC agreement; `MAdel121/arabic-egy-cleaned` has `null` license on HF.
-2. **Stage A (2,000) & Stage B (1,500) Corpora Not Yet Populated:** Phase 0 built schemas, leakage gates, and blind locks, NOT the full 3,500-sample evaluation sets (left intentionally to Phase 3 acquisition after human verification).
-3. **Android Device Benchmark Gap:** Desktop FFI checks ran cleanly, while real mid/low-tier Android device thermals, memory ceiling, and Oboe/NNAPI behavior are NOT yet benchmarked in Phase 0.
-4. **System `C:` Drive Scarcity (`2.07 GB` free):** Requires user cleanup before installing large Windows SDK updates or Android NDK caches.
+2. **Stage A (2,000) & Stage B (1,500) Corpora Not Yet Populated:** Phase 0 built schemas, leakage gates, and blind locks, NOT the full 3,500-sample evaluation sets (Stage A `2,000` is scheduled for Phase 1; Stage B `1,500` blind holdout evaluation is scheduled for Phase 4 after human verification).
+3. **Android Device Benchmark Gap:** Desktop FFI checks ran cleanly, while real mid/low-tier Android device thermals, memory ceiling, and Oboe/NNAPI behavior are NOT yet benchmarked (`NOT VERIFIED` until a physical phone is tested).
+4. **System `C:` Drive Scarcity (`{drives['C'].get('free_gb')} GB` free):** Keep heavy ML/Android caches redirected to `D:\\YasserML`.
 5. **Known Acoustic Fingerprinter Boundary:** Extreme low-SNR (`<0 dB`) augmentation can reduce waveform spectral similarity below `0.88`, making strict `parent_source_id` lineage logging mandatory alongside audio hashing.
 """,
     )
@@ -284,15 +284,15 @@ Extended existing Developer AI Lab without duplicating screens:
     # 13. User Manual Action Items
     emit(
         "13_USER_MANUAL_ACTION_ITEMS.md",
-        """# 13 — User Manual Action Items Before Phase 1 / Phase 3
+        """# 13 — User Manual Action Items Before Phase 1 / Phase 4
 
-1. **Free Disk Space on `C:` Drive:** Clear personal downloads/Recycle Bin/Docker/Windows temp caches manually on `C:` (currently `2.07 GB` free) — keep `>= 15 GB` buffer before heavy Android/ML workflows.
+1. **Maintain Disk Space on `C:` Drive:** Avoid placing ML/HF/torch/build caches on `C:`; keep `>= 15 GB` buffer before heavy Android/ML workflows (`D:\\YasserML` holds primary ML data).
 2. **Clarify External Restricted Assets:**
    - Decide whether to apply for `Quran-Lab/zipformer_p-arabic-v3` gated HF access & verify commercial licensing (`license:other`), or exclude Quran-Lab Zipformer from commercial roadmap candidates.
    - Obtain `L2-KSU` (`LDC2024S11`) via LDC membership if needed for L2/Arabic evaluation.
    - Contact authors if `Arabic Little STT` or `SmartArabicSpeechTherapy` weights are desired for academic comparison.
 3. **Pediatric Data Governance Approval:** Finalize Egyptian clinical/parental written consent form before collecting the private Egyptian pediatric cohort (`future_egyptian_pediatric_private_collection`) into `D:\\YasserML`.
-4. **Physical Android Target Device Testing:** Connect an Android test phone over USB (`adb`) when beginning Phase 1/Phase 11 runtime checks.
+4. **Physical Android Target Device Testing:** Connect an Android test phone over USB (`adb`) to verify on-device Picture Naming Game recording, audio focus, and ONNX runtime behavior.
 """,
     )
 
@@ -309,8 +309,8 @@ Extended existing Developer AI Lab without duplicating screens:
 - **Anti-Cheating Suite:** **`{anti['passed_count']} / {anti['total_tests']}` PASSED** (unit + integration verified).
 
 ## Honest Phase 0 Verdict
-- **Phase 0 Infrastructure & Governance Gate:** **PASS (Ready for Phase 1 Code/Inventory & Linguistic Engine work)**.
-- **Condition Carrying Into Phase 1 / Phase 3:** Stage B Blind Holdout (`stage_b_frozen: false`) MUST remain **locked empty / unexecuted** until independent human Stage A (`2,000`) and Stage B (`1,500`) corpora are acquired, human-verified, and frozen with `0%` synthetic audio and verified clean licenses in Phase 3.
+- **Phase 0 Infrastructure & Governance Gate:** **CONDITIONAL PASS (See Phase 0.1 `PHASE_1_READINESS_REPORT.md` for post-hardening & Android device verification status)**.
+- **Condition Carrying Into Phase 1 (2,000 Dev) & Phase 4 (1,500 Blind):** Stage B Blind Holdout (`stage_b_frozen: false`) MUST remain **locked empty / unexecuted** until independent human Stage A (`2,000`, Phase 1/2) and Stage B (`1,500`, Phase 4) corpora are acquired, human-verified, and frozen with `0%` synthetic audio and verified clean licenses.
 """,
     )
 

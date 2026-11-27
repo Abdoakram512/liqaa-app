@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0-phase0",
-  "generated_utc": "2026-11-27T05:31:02.991813+00:00",
+  "generated_utc": "2026-11-27T06:15:54.083821+00:00",
   "model_count": 14,
   "legacy_manifest_reconciliation": {
     "legacy_manifest_version": "2.0.0-phase0",
@@ -43,7 +43,7 @@
         "Silero proprietary multilingual speech + noise mixtures"
       ],
       "contamination_risk_notes": "Low direct memorization risk (VAD gate only), though threshold tuning on Stage A must remain locked before Stage B.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 disk check + HF onnx-community/silero-vad metadata probe (rev e71cae96)",
       "runtime_notes": "Active production VAD in lib/core/ai/silero_vad_engine.dart."
     },
@@ -76,7 +76,7 @@
         "DNS-Challenge / VCTK+DEMAND (upstream checkpoint exact recipe unverified locally)"
       ],
       "contamination_risk_notes": "Signal distortion / consonant attenuation on clean speech observed in prior benchmark; no label memorization.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 disk check + GitHub license verification (Xiaobin-Rong/gtcrn MIT)",
       "runtime_notes": "Active denoiser loaded by AiModelManager (key gtcrn_denoiser), missing from legacy AI_MODELS_MANIFEST.json prior to Phase 0 reconciliation."
     },
@@ -109,7 +109,7 @@
         "UNKNOWN_COMMUNITY_EXPORT"
       ],
       "contamination_risk_notes": "Listed as ready:true in legacy AI_MODELS_MANIFEST.json while runtime loads gtcrn_simple.onnx.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 disk check + AiModelManager key alias inspection",
       "runtime_notes": "Candidate for removal from APK/bundle after Phase 1 verification."
     },
@@ -135,7 +135,7 @@
         "DNS4 / VCTK / Freesound (per upstream DeepFilterNet3 paper)"
       ],
       "contamination_risk_notes": "Cannot leak test Arabic labels; must evaluate consonant preservation vs GTCRN cleanly on paired noisy/clean clips.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "GitHub repository license check (Rikorose/DeepFilterNet)",
       "runtime_notes": "Benchmark candidate only; weights not downloaded in Phase 0."
     },
@@ -174,7 +174,7 @@
         "Mozilla Common Voice multilingual eSpeak phonemized CV-FT"
       ],
       "contamination_risk_notes": "Any Common Voice Arabic clip matching CV-FT training split would be CONTAMINATED; Stage A/B avoid Common Voice Arabic overlap.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 disk check + HF facebook/wav2vec2-lv-60-espeak-cv-ft probe (rev ae45363b)",
       "runtime_notes": "Active baseline phoneme recognizer; omission from AI_MODELS_MANIFEST.json fixed in Phase 0."
     },
@@ -215,7 +215,7 @@
         "Quranic / Classical Arabic Tajweed & phoneme corpora (exact split list UNVERIFIED due to gating)"
       ],
       "contamination_risk_notes": "Domain shift hazard (Quranic adult recitation vs Egyptian pediatric everyday words); gated access + non-standard license.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 check + HF API probe (Quran-Lab/zipformer_p-arabic-v3 rev db89c0fc -> gated: manual, license: other)",
       "runtime_notes": "Local v3 tokens match v2 bit-for-bit; weights missing on disk."
     },
@@ -256,7 +256,7 @@
         "UNKNOWN (presumed Quranic/MSA Arabic corpora)"
       ],
       "contamination_risk_notes": "Duplicate token artifacts of v3; listed in legacy AI_MODELS_MANIFEST.json without weights.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 check + comparison with zipformer_v3",
       "runtime_notes": "Cannot run inference locally; missing ONNX file."
     },
@@ -283,7 +283,7 @@
         "IqraEval/Iqra_train"
       ],
       "contamination_risk_notes": "CRITICAL_CONTAMINATION_DOCUMENTED: Trained on tunis-ai/arabic_speech_corpus and IqraEval! MUST NEVER be scored as clean zero-shot on Arabic Speech Corpus.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "HF API model_info (MostafaMaroof/wav2vec2-arabic-phoneme-asr rev 9c2bc0bc)",
       "runtime_notes": "Promising open-license Arabic phoneme candidate; requires external ONNX conversion and contamination exclusion on ASC."
     },
@@ -309,7 +309,7 @@
         "Multilingual Common Voice / UCLA / VoxLingua / SpeechMatrix subsets (check exact language list incl. Arabic)"
       ],
       "contamination_risk_notes": "RISK_UNVERIFIED if Common Voice Arabic overlaps; zero overlap expected with ASMDD / Abjad-Kids / private Egyptian child data.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "HF API model_info (kgnlp/allophant rev ad69d315)",
       "runtime_notes": "Strong scientific baseline for articulatory error diagnosis (e.g., fronting k->t, lisp s->th) in Phase 5+."
     },
@@ -352,7 +352,7 @@
         "OpenAI 680k hours web weakly-supervised audio (undisclosed exact composition)"
       ],
       "contamination_risk_notes": "RISK_UNVERIFIED against public web datasets; weak Arabic child performance & silence hallucinations documented in MASTER_AI_BENCHMARK_REPORT.md. Also legacy AI_MODELS_MANIFEST.json has stale encoder/decoder byte sizes & hashes!",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "Local SHA-256 disk check + HF openai/whisper-tiny probe (rev 169d4a43)",
       "runtime_notes": "Active auxiliary STT engine; cannot judge mispronounced sub-word phones accurately on its own."
     },
@@ -378,7 +378,7 @@
         "OpenAI undisclosed web + pseudo-labeled corpus (large-v3 family)"
       ],
       "contamination_risk_notes": "RISK_UNVERIFIED on web-scraped Arabic audio; risks hiding mispronunciations via language-model correction.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "HF API model_info (openai/whisper-large-v3-turbo rev 41f01f3f)",
       "runtime_notes": "Benchmark/annotation reference only."
     },
@@ -404,7 +404,7 @@
         "NAMAA Egyptian Arabic speech collections (verify overlap with MASC / YouTube / EGYSpeak / public Egyptian corpora)"
       ],
       "contamination_risk_notes": "RISK_UNVERIFIED with public Egyptian YouTube/podcast datasets; cannot guarantee zero overlap with MASC-Arabic or arabic-egy-cleaned.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "HF API model_info (NAMAA-Space/EgypTalk-ASR-v2 rev d23895cf)",
       "runtime_notes": "Candidate Egyptian ASR for benchmark & dataset pre-screening."
     },
@@ -430,7 +430,7 @@
         "MAdel121/arabic-egy-cleaned (explicitly tagged on MAdel121 model)"
       ],
       "contamination_risk_notes": "CRITICAL_CONTAMINATION_DOCUMENTED: MAdel121/whisper-small-egyptian-arabic explicitly trains on MAdel121/arabic-egy-cleaned! Evaluating it on arabic-egy-cleaned violates holdout integrity.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "HF API model_info on both repos (1388a7fd and 562137b3)",
       "runtime_notes": "Both MIT repos tracked together under Phase 0 governance."
     },
@@ -456,7 +456,7 @@
         "ASMDD (dataset_info/ASMDD.csv inside Space: 5,298 rows; 4,235 train + 1,059 test samples reported)"
       ],
       "contamination_risk_notes": "CRITICAL_CONTAMINATION_DOCUMENTED: Space includes dataset_info/ASMDD.csv and trained phoneme_scorer_latest.pth on 4,235/1,059 ASMDD split! Must NOT evaluate cleanly on ASMDD.",
-      "last_verified_timestamp": "2026-11-27T05:31:02.991813+00:00",
+      "last_verified_timestamp": "2026-11-27T06:15:54.083821+00:00",
       "verification_method": "HF Space API + Git LFS JSON/PTH resolution on MON3EMPASHA/SmartArabicSpeechTherapy (rev ef84267f)",
       "runtime_notes": "Audited during Phase 0 independent audit after discovering weights live inside HF Space rather than SmartArabicSpeechTherapy org models."
     }

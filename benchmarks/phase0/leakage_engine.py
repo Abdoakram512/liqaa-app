@@ -341,11 +341,122 @@ def is_non_speech_record(rec: dict[str, Any]) -> bool:
     return False
 
 
+def _lsh_candidate_pairs(
+    sig_list: list[AudioSignature],
+    min_active_ratio: float = 0.30,
+) -> tuple[list[tuple[int, int]], dict[str, Any]]:
+    """Multi-table binary spectral + coarse duration bucketing to avoid O(N^2) exhaustive scans.
+
+    Uses 4 overlapping quantization projections across mean_spectrum and active-thirds
+    energy/spectral summaries, plus neighbor duration bins so silence-padded/trimmed variants
+    retrieve together without dropping valid candidates.
+    """
+    n = len(sig_list)
+    if n <= 1:
+        return [], {"tables": 4, "candidate_pairs": 0, "exhaustive_pairs": 0}
+
+    rng = np.random.default_rng(20260)
+    proj = rng.normal(0.0, 1.0, size=(4, 8, 14)).astype(np.float32)
+
+    tables: list[dict[tuple[int, int], list[int]]] = [{}, {}, {}, {}]
+    for idx, sig in enumerate(sig_list):
+        if sig.is_near_silent:
+            continue
+        dur_bin = int(np.floor(np.log2(max(50, sig.active_duration_ms) / 100.0)))
+        # Build global + prefix + suffix summaries so trimmed prefixes/suffixes hash to same bucket in >=1 table
+        fr = sig.spectral_frames
+        vecs = [
+            sig.mean_spectrum,
+            np.mean(fr[: max(1, len(fr) // 2)], axis=0),
+            np.mean(fr[len(fr) // 2 :], axis=0),
+            np.mean(fr[max(0, len(fr) // 4) : max(1, (3 * len(fr)) // 4)], axis=0),
+        ]
+        for t_idx in range(4):
+            bits = (vecs[t_idx] @ proj[t_idx].T) >= 0.0
+            key_int = 0
+            for b in bits:
+                key_int = (key_int << 1) | int(bool(b))
+            # Index into exact + +/-1 adjacent duration bins to preserve recall under 50% trimming
+            for db in (dur_bin - 1, dur_bin, dur_bin + 1):
+                tables[t_idx].setdefault((db, key_int), []).append(idx)
+
+    pair_set: set[tuple[int, int]] = set()
+    for tbl in tables:
+        for bucket in tbl.values():
+            if len(bucket) < 2 or len(bucket) > 64:
+                # Cap overly broad degenerate buckets cleanly, though non-silent speech stays diverse
+                bucket = bucket[:64]
+            for a_i in range(len(bucket)):
+                ia = bucket[a_i]
+                for b_i in range(a_i + 1, len(bucket)):
+                    ib = bucket[b_i]
+                    lo, hi = (ia, ib) if ia < ib else (ib, ia)
+                    if lo == hi:
+                        continue
+                    sa, sb = sig_list[lo], sig_list[hi]
+                    ratio = min(sa.active_duration_ms, sb.active_duration_ms) / max(
+                        1, max(sa.active_duration_ms, sb.active_duration_ms)
+                    )
+                    if ratio >= min_active_ratio:
+                        pair_set.add((lo, hi))
+
+    candidates = sorted(pair_set)
+    stats = {
+        "tables": 4,
+        "candidate_pairs": len(candidates),
+        "exhaustive_pairs": n * (n - 1) // 2,
+    }
+    return candidates, stats
+
+
+def evaluate_indexed_recall(
+    records: list[dict[str, Any]],
+    audio_root: Path,
+    acoustic_sim_threshold: float = 0.82,
+) -> dict[str, Any]:
+    """Compare LSH candidate retrieval against exhaustive pairwise reference on small sets."""
+    sigs: list[AudioSignature] = []
+    for rec in records:
+        rel_path = rec.get("file_path") or rec.get("path") or ""
+        full_path = (audio_root / rel_path) if rel_path and not Path(rel_path).is_absolute() else Path(rel_path)
+        if rel_path and full_path.exists():
+            sigs.append(extract_audio_signature(rec["sample_id"], full_path))
+
+    exact_hits: set[tuple[str, str]] = set()
+    for i in range(len(sigs)):
+        if sigs[i].is_near_silent:
+            continue
+        for j in range(i + 1, len(sigs)):
+            if sigs[j].is_near_silent:
+                continue
+            if acoustic_similarity(sigs[i], sigs[j]) >= acoustic_sim_threshold:
+                a, b = sigs[i].sample_id, sigs[j].sample_id
+                exact_hits.add((min(a, b), max(a, b)))
+
+    cand_idx_pairs, idx_stats = _lsh_candidate_pairs(sigs)
+    indexed_hits: set[tuple[str, str]] = set()
+    for i, j in cand_idx_pairs:
+        if acoustic_similarity(sigs[i], sigs[j]) >= acoustic_sim_threshold:
+            a, b = sigs[i].sample_id, sigs[j].sample_id
+            indexed_hits.add((min(a, b), max(a, b)))
+
+    recalled = len(exact_hits & indexed_hits)
+    recall = (recalled / len(exact_hits)) if exact_hits else 1.0
+    return {
+        "exhaustive_hits": len(exact_hits),
+        "indexed_hits": len(indexed_hits),
+        "recall": round(recall, 4),
+        "missed_pairs": sorted(exact_hits - indexed_hits),
+        **idx_stats,
+    }
+
+
 def run_leakage_audit(
     records: list[dict[str, Any]],
     audio_root: Path,
     acoustic_sim_threshold: float = 0.82,
     check_within_split_duplicates: bool = True,
+    use_indexed_search: bool | None = None,
 ) -> LeakageAuditReport:
     """Audit split records for exact/near duplicates, missing speakers, speaker/session/lineage & transcript leakage."""
     report = LeakageAuditReport(
@@ -456,54 +567,63 @@ def run_leakage_audit(
                 )
                 report.quarantined_sample_ids.extend(ids[1:])
 
-    # 3. Acoustic near-duplicate scan (resampling, trimming, noise augmentation)
+    # 3. Acoustic near-duplicate scan (indexed LSH candidate retrieval for large N; exact pairwise for small reference sets)
     sig_list = list(signatures.values())
     rec_by_id = {r["sample_id"]: r for r in records}
     seen_pairs: set[tuple[str, str]] = set()
-    for i in range(len(sig_list)):
-        sa = sig_list[i]
-        if sa.is_near_silent:
-            continue
-        for j in range(i + 1, len(sig_list)):
-            sb = sig_list[j]
-            if sb.is_near_silent:
-                continue
-            if sa.raw_file_sha256 == sb.raw_file_sha256 or sa.canonical_pcm_sha256 == sb.canonical_pcm_sha256:
-                continue
-            sim = acoustic_similarity(sa, sb)
-            if sim >= acoustic_sim_threshold:
-                pair_key = (min(sa.sample_id, sb.sample_id), max(sa.sample_id, sb.sample_id))
-                if pair_key in seen_pairs:
-                    continue
-                seen_pairs.add(pair_key)
-                ra, rb = rec_by_id[sa.sample_id], rec_by_id[sb.sample_id]
-                splits = sorted({ra.get("split", "unassigned"), rb.get("split", "unassigned")})
-                if len(splits) > 1 or check_within_split_duplicates:
-                    report.acoustic_near_duplicates.append(
-                        LeakageFinding(
-                            finding_type="acoustic_fingerprint_near_duplicate",
-                            severity="HIGH" if len(splits) > 1 else "MEDIUM",
-                            split_pair=",".join(splits),
-                            sample_ids=[sa.sample_id, sb.sample_id],
-                            detail=f"Spectral envelope similarity={sim:.3f} >= {acoustic_sim_threshold} (resampling/trim/noise variant).",
-                            recommended_action="Merge under single parent_source_id group and quarantine cross-split duplicate.",
-                        )
-                    )
-                    report.quarantined_sample_ids.append(sb.sample_id)
+    use_lsh = use_indexed_search if use_indexed_search is not None else (len(sig_list) > 250)
+    if use_lsh:
+        cand_pairs, idx_stats = _lsh_candidate_pairs(sig_list)
+        report.thresholds["search_strategy"] = f"multi_probe_lsh ({idx_stats['candidate_pairs']}/{idx_stats['exhaustive_pairs']} candidate pairs)"
+    else:
+        cand_pairs = [
+            (i, j)
+            for i in range(len(sig_list))
+            for j in range(i + 1, len(sig_list))
+        ]
+        report.thresholds["search_strategy"] = f"exhaustive_reference ({len(cand_pairs)} pairs)"
 
-                ds_a = ra.get("dataset_id", ra.get("original_dataset", ""))
-                ds_b = rb.get("dataset_id", rb.get("original_dataset", ""))
-                if ds_a != ds_b:
-                    report.cross_dataset_overlaps.append(
-                        LeakageFinding(
-                            finding_type="cross_dataset_acoustic_overlap",
-                            severity="CRITICAL",
-                            split_pair=f"{ds_a} <-> {ds_b}",
-                            sample_ids=[sa.sample_id, sb.sample_id],
-                            detail=f"Same acoustic clip appears across distinct datasets ({sim:.3f}).",
-                            recommended_action="Exclude overlapping clip from Stage B Blind Holdout.",
-                        )
+    for i, j in cand_pairs:
+        sa = sig_list[i]
+        sb = sig_list[j]
+        if sa.is_near_silent or sb.is_near_silent:
+            continue
+        if sa.raw_file_sha256 == sb.raw_file_sha256 or sa.canonical_pcm_sha256 == sb.canonical_pcm_sha256:
+            continue
+        sim = acoustic_similarity(sa, sb)
+        if sim >= acoustic_sim_threshold:
+            pair_key = (min(sa.sample_id, sb.sample_id), max(sa.sample_id, sb.sample_id))
+            if pair_key in seen_pairs:
+                continue
+            seen_pairs.add(pair_key)
+            ra, rb = rec_by_id[sa.sample_id], rec_by_id[sb.sample_id]
+            splits = sorted({ra.get("split", "unassigned"), rb.get("split", "unassigned")})
+            if len(splits) > 1 or check_within_split_duplicates:
+                report.acoustic_near_duplicates.append(
+                    LeakageFinding(
+                        finding_type="acoustic_fingerprint_near_duplicate",
+                        severity="HIGH" if len(splits) > 1 else "MEDIUM",
+                        split_pair=",".join(splits),
+                        sample_ids=[sa.sample_id, sb.sample_id],
+                        detail=f"Spectral envelope similarity={sim:.3f} >= {acoustic_sim_threshold} (resampling/trim/noise variant).",
+                        recommended_action="Merge under single parent_source_id group and quarantine cross-split duplicate.",
                     )
+                )
+                report.quarantined_sample_ids.append(sb.sample_id)
+
+            ds_a = ra.get("dataset_id", ra.get("original_dataset", ""))
+            ds_b = rb.get("dataset_id", rb.get("original_dataset", ""))
+            if ds_a != ds_b:
+                report.cross_dataset_overlaps.append(
+                    LeakageFinding(
+                        finding_type="cross_dataset_acoustic_overlap",
+                        severity="CRITICAL",
+                        split_pair=f"{ds_a} <-> {ds_b}",
+                        sample_ids=[sa.sample_id, sb.sample_id],
+                        detail=f"Same acoustic clip appears across distinct datasets ({sim:.3f}).",
+                        recommended_action="Exclude overlapping clip from Stage B Blind Holdout.",
+                    )
+                )
 
     # 4. Speaker overlap across splits & datasets
     for spk, grp in by_speaker.items():

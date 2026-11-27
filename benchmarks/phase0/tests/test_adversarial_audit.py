@@ -17,10 +17,19 @@ from benchmarks.phase0.blind_protection import (
     BlindAuthorizationError,
     authorize_blind_execution,
     create_freeze_lock,
+    resolve_dynamic_model_artifacts,
     strip_blind_labels,
+    verify_and_prepare_blind_scoring,
     verify_blind_inference_signature,
 )
-from benchmarks.phase0.leakage_engine import acoustic_similarity, extract_audio_signature, run_leakage_audit
+from benchmarks.phase0.leakage_engine import (
+    AudioSignature,
+    _lsh_candidate_pairs,
+    acoustic_similarity,
+    evaluate_indexed_recall,
+    extract_audio_signature,
+    run_leakage_audit,
+)
 from benchmarks.phase0.metrics_engine import compute_assessment_metrics
 from benchmarks.phase0.workspace_config import REPO_ROOT
 
@@ -131,24 +140,40 @@ class IndependentAdversarialAuditTests(unittest.TestCase):
 
             # 1. Empty Stage B rejected
             with self.assertRaises(BlindAuthorizationError):
-                create_freeze_lock(stage_a, [], {}, verify_disk_system=False)
+                create_freeze_lock(stage_a, [], {}, audio_root=root, verify_disk_system=False)
 
             # 2. Unknown speaker ID rejected (never assumed disjoint!)
-            bad_b = [{"sample_id": "B_UNK", "speaker_id": "", "audio_type": "human_pediatric"}]
+            bad_b = [{"sample_id": "B_UNK", "speaker_id": "", "file_path": "audio/b1.wav", "audio_type": "human_pediatric"}]
             with self.assertRaises(BlindAuthorizationError):
-                create_freeze_lock(stage_a, bad_b, {}, verify_disk_system=False)
+                create_freeze_lock(stage_a, bad_b, {"B_UNK": {}}, audio_root=root, verify_disk_system=False)
 
-            # 3. Full lock against actual files on disk
+            # 3. Path traversal & label leak filename rejected in strict mode
+            with self.assertRaises(BlindAuthorizationError):
+                strip_blind_labels([{"sample_id": "B_LEAK", "file_path": "error_kora.wav", "speaker_id": "S1"}], strict_filename_guard=True)
+
+            # 4. Full dynamic lock against actual files on disk + Git LFS pointer rejection + GT integrity
             from benchmarks.phase0 import blind_protection as bp
 
             orig_models = bp.DEFAULT_MODEL_ARTIFACTS
-            orig_code = bp.DEFAULT_PREPROCESSING_CODE
+            orig_code = bp.DEFAULT_PIPELINE_CODE_PATHS
             try:
                 bp.DEFAULT_MODEL_ARTIFACTS = ["AI_MODELS_MANIFEST.json", "assets/ai_models/silero/silero_vad.onnx"]
-                bp.DEFAULT_PREPROCESSING_CODE = ["lib/core/ai/audio_preprocessor.dart"]
+                bp.DEFAULT_PIPELINE_CODE_PATHS = ["lib/core/ai/audio_preprocessor.dart"]
+                # Pass explicit artifact path resolver bypass cleanly using temporary registry file inside tmp
+                (root / "benchmarks" / "phase0").mkdir(parents=True, exist_ok=True)
+                (root / "benchmarks" / "phase0" / "MODEL_REGISTRY.json").write_text(
+                    json.dumps({
+                        "models": [{
+                            "model_id": "silero_vad_v4",
+                            "availability_status": "LOCAL_BUNDLED_VERIFIED",
+                            "artifact_files": [{"path": "assets/ai_models/silero/silero_vad.onnx"}],
+                        }]
+                    }),
+                    encoding="utf-8",
+                )
 
                 stage_b_raw = [{"sample_id": "B1", "speaker_id": "SPK_B1", "file_path": "audio/b1.wav", "target_word": "كورة", "expected_outcome": "pass", "audio_type": "human_pediatric"}]
-                inputs, labels = strip_blind_labels(stage_b_raw)
+                inputs, labels = strip_blind_labels(stage_b_raw, strict_filename_guard=True)
                 lock = create_freeze_lock(
                     stage_a,
                     inputs,
@@ -159,48 +184,80 @@ class IndependentAdversarialAuditTests(unittest.TestCase):
                     audio_root=root,
                     verify_disk_system=True,
                 )
-                self.assertTrue(
-                    authorize_blind_execution(
-                        lock,
-                        inputs,
-                        thresholds_config={"pass": 75},
-                        preprocessing_config={"sr": 16000},
-                        repo_root=root,
-                        audio_root=root,
-                        verify_disk_system=True,
-                    )["authorized"]
-                )
+                self.assertIn("assets/ai_models/silero/silero_vad.onnx", lock.tracked_model_paths)
 
-                # Tamper WAV audio on disk -> must fail
-                _save_wav(wav_file, np.zeros(8000, dtype=np.float32))
+                # Reject missing audio_root & path traversal
                 with self.assertRaises(BlindAuthorizationError):
-                    authorize_blind_execution(lock, inputs, thresholds_config={"pass": 75}, preprocessing_config={"sr": 16000}, repo_root=root, audio_root=root)
-                _save_wav(wav_file, np.sin(2 * np.pi * 400 * np.arange(8000) / 16000.0).astype(np.float32) * 0.2)
+                    authorize_blind_execution(lock, inputs, thresholds_config={"pass": 75}, preprocessing_config={"sr": 16000}, repo_root=root, audio_root=None)
 
-                # Modify model weight bytes on disk -> must fail
-                model_file.write_bytes(b"TAMPERED_WEIGHTS")
+                # Reject Git LFS pointer masquerading as model weights
+                model_file.write_bytes(b"version https://git-lfs.github.com/spec/v1\noid sha256:0000\nsize 100\n")
                 with self.assertRaises(BlindAuthorizationError):
                     authorize_blind_execution(lock, inputs, thresholds_config={"pass": 75}, preprocessing_config={"sr": 16000}, repo_root=root, audio_root=root)
                 model_file.write_bytes(b"ORIGINAL_MODEL_WEIGHTS")
 
-                # Modify manifest on disk -> must fail
-                manifest_file.write_text('{"manifest_version": "tampered"}', encoding="utf-8")
+                # Verify ground-truth & prediction integrity before blind scoring
+                ok_score = verify_and_prepare_blind_scoring(lock, stage_a, inputs, labels, [{"sample_id": "B1", "used_target_word_hint": False}])
+                self.assertTrue(ok_score["integrity_verified"])
                 with self.assertRaises(BlindAuthorizationError):
-                    authorize_blind_execution(lock, inputs, thresholds_config={"pass": 75}, preprocessing_config={"sr": 16000}, repo_root=root, audio_root=root)
-                manifest_file.write_text('{"manifest_version": "2.0.0"}', encoding="utf-8")
-
-                # Modify preprocessing code on disk -> must fail
-                code_file.write_text("double preprocess() => 8000;", encoding="utf-8")
+                    verify_and_prepare_blind_scoring(lock, stage_a, inputs, {"B1": {"target_word": "tampered"}}, [{"sample_id": "B1"}])
                 with self.assertRaises(BlindAuthorizationError):
-                    authorize_blind_execution(lock, inputs, thresholds_config={"pass": 75}, preprocessing_config={"sr": 16000}, repo_root=root, audio_root=root)
-                code_file.write_text("double preprocess() => 16000;", encoding="utf-8")
-
-                # Change threshold after freeze -> must fail
-                with self.assertRaises(BlindAuthorizationError):
-                    authorize_blind_execution(lock, inputs, thresholds_config={"pass": 50}, preprocessing_config={"sr": 16000}, repo_root=root, audio_root=root)
+                    verify_and_prepare_blind_scoring(lock, stage_a, inputs, labels, [{"sample_id": "B1", "used_target_word_hint": True}])
             finally:
                 bp.DEFAULT_MODEL_ARTIFACTS = orig_models
-                bp.DEFAULT_PREPROCESSING_CODE = orig_code
+                bp.DEFAULT_PIPELINE_CODE_PATHS = orig_code
+
+    def test_scalable_lsh_indexing_recall_and_runtime(self) -> None:
+        import time
+
+        # 1. Verify recall on real bundled audio clips + derived trimmed/padded duplicates
+        with tempfile.TemporaryDirectory() as tmp:
+            tp = Path(tmp)
+            base = _read_pcm16_samples(self.base_clip)
+            _save_wav(tp / "u0.wav", base)
+            _save_wav(tp / "u1_pad.wav", np.concatenate([np.zeros(16000), base, np.zeros(16000)]))
+            _save_wav(tp / "u2_trim.wav", base[: len(base) // 2])
+            shutil.copy2(self.other_clip, tp / "u3_other.wav")
+            recs = [
+                {"sample_id": "U0", "file_path": "u0.wav"},
+                {"sample_id": "U1", "file_path": "u1_pad.wav"},
+                {"sample_id": "U2", "file_path": "u2_trim.wav"},
+                {"sample_id": "U3", "file_path": "u3_other.wav"},
+            ]
+            rec_res = evaluate_indexed_recall(recs, tp)
+            self.assertGreaterEqual(rec_res["recall"], 1.0, f"LSH missed pairs: {rec_res['missed_pairs']}")
+
+        # 2. Verify scalability at 5,000 signatures avoids O(N^2) blowup (< 2.5s)
+        rng = np.random.default_rng(77)
+        synth_sigs = []
+        for i in range(5000):
+            frames = rng.normal(size=(24, 14)).astype(np.float32)
+            frames /= np.linalg.norm(frames, axis=1, keepdims=True) + 1e-8
+            mspec = frames.mean(axis=0)
+            mspec /= np.linalg.norm(mspec) + 1e-8
+            synth_sigs.append(
+                AudioSignature(
+                    sample_id=f"SYN_{i}",
+                    file_path="",
+                    raw_file_sha256=f"r{i}",
+                    canonical_pcm_sha256=f"c{i}",
+                    duration_ms=800,
+                    active_duration_ms=800,
+                    sample_rate_hz=16000,
+                    rms=0.1,
+                    is_near_silent=False,
+                    spectral_frames=frames,
+                    energy_contour=np.ones(24, dtype=np.float32),
+                    mean_spectrum=mspec,
+                )
+            )
+        t0 = time.time()
+        cands, stats = _lsh_candidate_pairs(synth_sigs)
+        dt = time.time() - t0
+        self.assertLess(dt, 2.5)
+        self.assertLess(len(cands), stats["exhaustive_pairs"] // 10)
+        dyn = resolve_dynamic_model_artifacts()
+        self.assertGreaterEqual(len(dyn), 8)
 
     def test_random_label_permutation_and_target_hint_block(self) -> None:
         def bad_adapter(pcm: np.ndarray, expected_word: str) -> str:

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/ai/models/lab_task_mode.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -123,9 +124,9 @@ class BlindPhonemeRecognitionView extends StatelessWidget {
                       GestureDetector(
                         onTap: () {
                           if (isRecording) {
-                            context
-                                .read<AiLabCubit>()
-                                .stopRecordingAndAnalyze();
+                            context.read<AiLabCubit>().stopRecordingAndRunTask(
+                              LabTaskMode.freePhonemeRecognition,
+                            );
                           } else {
                             context.read<AiLabCubit>().startRecording();
                           }

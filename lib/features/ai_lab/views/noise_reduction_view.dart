@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/ai/models/lab_task_mode.dart';
 import '../../../../core/ai/rnnoise_denoiser_engine.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -158,7 +159,9 @@ class _NoiseReductionViewState extends State<NoiseReductionView> {
                         await _audioPlayer.stop();
                         if (!context.mounted) return;
                         if (state.isRecording) {
-                          context.read<AiLabCubit>().stopRecordingAndAnalyze();
+                          context.read<AiLabCubit>().stopRecordingAndRunTask(
+                            LabTaskMode.noiseReduction,
+                          );
                         } else {
                           context.read<AiLabCubit>().startRecording();
                         }

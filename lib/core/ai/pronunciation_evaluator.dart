@@ -82,7 +82,7 @@ class PronunciationEvaluator {
         overallScore: 0.0,
         stars: 0,
         errorType: AssessmentErrorType.noSpeech,
-        clinicalErrorName: 'صمت تام (No Speech Detected)',
+        clinicalErrorName: 'لم يُكتشف صوت كلام (No Speech Detected)',
         targetPhoneme: word.targetPhoneme,
         alignments: word.expectedPhonemes.asMap().entries.map((e) {
           final int idx = e.key;

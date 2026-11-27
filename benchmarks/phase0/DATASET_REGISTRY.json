@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0-phase0",
-  "generated_utc": "2026-11-27T05:31:03.574361+00:00",
+  "generated_utc": "2026-11-27T06:15:54.630212+00:00",
   "dataset_count": 10,
   "primary_categories": [
     "pediatric_correct",
@@ -80,7 +80,7 @@
         "41 clips already inspected in Phase 0 historical 100-sample benchmark -> reserve those speaker folders ONLY for Stage A or exclude from Stage B blind!"
       ],
       "privacy_constraints": "Public CC0 pediatric audio; DO NOT re-commit extracted WAVs to GitHub.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "abjad_kids",
@@ -106,7 +106,7 @@
         "Verify speaker IDs strictly; keep 39 previously audited clips isolated from Stage B blind."
       ],
       "privacy_constraints": "Public MIT dataset; keep raw WAVs external in D:\\YasserML.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "arayoungvoices",
@@ -130,7 +130,7 @@
         "NC-SA / unverified license blocks commercial mobile deployment unless cleared."
       ],
       "privacy_constraints": "Pediatric/minor voices — obtain exact author access terms & keep offline in D:\\YasserML.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "arabic_egy_cleaned",
@@ -155,7 +155,7 @@
         "CRITICAL_MODEL_OVERLAP: MAdel121/whisper-small-egyptian-arabic explicitly declares dataset:MAdel121/arabic-egy-cleaned."
       ],
       "privacy_constraints": "License is null on HF card; resolve license provenance before commercial fine-tuning.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "egyspeak",
@@ -180,7 +180,7 @@
         "Single-speaker heavy dominance would overfit speaker traits if used in Stage B speaker-diverse evaluation."
       ],
       "privacy_constraints": "CC-BY-4.0 attribution required.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "arabic_little_stt",
@@ -204,7 +204,7 @@
         "Levantine dialect differs from Egyptian Arabic target domain; public HF URL unreachable (404)."
       ],
       "privacy_constraints": "Minor classroom recordings; requires verified download agreement.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "arabic_speech_corpus",
@@ -230,7 +230,7 @@
         "Single-speaker adult MSA studio voice — do NOT treat as proxy for Egyptian child performance."
       ],
       "privacy_constraints": "CC-BY-4.0 attribution required.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "l2_ksu",
@@ -254,7 +254,7 @@
         "Cannot be redistributed or downloaded autonomously without valid LDC account."
       ],
       "privacy_constraints": "Strict LDC redistribution prohibition.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "musan_noise",
@@ -280,7 +280,7 @@
         "NEVER mix the same MUSAN noise file across train augmentation and Stage B blind noise evaluation."
       ],
       "privacy_constraints": "Public CC-BY-4.0.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     },
     {
       "dataset_id": "future_egyptian_pediatric_private_collection",
@@ -306,7 +306,7 @@
         "Must bind every recording to anonymized child_speaker_hash + session_id + recording_device BEFORE entering any manifest."
       ],
       "privacy_constraints": "STRICT_NO_GITHUB_COMMIT: Child voice PII stays strictly in encrypted/external local vault & approved cloud storage under guardian consent.",
-      "last_verified_timestamp": "2026-11-27T05:31:03.574361+00:00"
+      "last_verified_timestamp": "2026-11-27T06:15:54.630212+00:00"
     }
   ]
 }

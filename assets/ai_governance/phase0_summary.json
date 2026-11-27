@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0-phase0",
-  "generated_utc": "2026-11-27T05:31:20.113915+00:00",
+  "generated_utc": "2026-11-27T06:16:10.974465+00:00",
   "phase_status": "PHASE_0_EXECUTED_PRE_STAGE_AB_ACQUISITION",
   "blind_labels_included": false,
   "blind_test_status": {
@@ -13,38 +13,36 @@
     "vault_location": "D:\\YasserML\\manifests\\blind_vault_external"
   },
   "storage_audit": {
-    "checked_utc": "2026-11-27T05:31:02.991795+00:00",
+    "checked_utc": "2026-11-27T06:15:54.083797+00:00",
     "drives": {
       "C": {
         "path": "C:\\",
         "probe_mount": "C:\\",
         "exists": true,
-        "total_gb": 222.1,
-        "used_gb": 220.06,
-        "free_gb": 2.04
+        "total_gb": 247.1,
+        "used_gb": 216.08,
+        "free_gb": 31.02
       },
       "D": {
         "path": "D:\\",
         "probe_mount": "D:\\",
         "exists": true,
         "total_gb": 931.5,
-        "used_gb": 660.77,
-        "free_gb": 270.72
+        "used_gb": 660.27,
+        "free_gb": 271.22
       },
       "E": {
         "path": "E:\\",
         "probe_mount": "E:\\",
         "exists": true,
-        "total_gb": 252.12,
-        "used_gb": 126.01,
-        "free_gb": 126.11
+        "total_gb": 227.12,
+        "used_gb": 125.98,
+        "free_gb": 101.14
       }
     },
     "ml_root": "D:\\YasserML",
     "ml_root_exists": true,
-    "warnings": [
-      "CRITICAL_C_DRIVE_LOW: C: has only 2.04 GB free (< 5.0 GB policy minimum). Block C: installs/caches."
-    ]
+    "warnings": []
   },
   "models_summary": [
     {

@@ -139,8 +139,48 @@ class FullPipelineView extends StatelessWidget {
                             }
                           },
                         ),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.mic_off_rounded, size: 18),
+                          label: const Text('إعادة ضبط المايك'),
+                          onPressed: () =>
+                              context.read<AiLabCubit>().resetRecorderSafe(),
+                        ),
+                        OutlinedButton.icon(
+                          icon: const Icon(
+                            Icons.compare_arrows_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('مقارنة الحر vs اللعبة'),
+                          onPressed: () => context
+                              .read<AiLabCubit>()
+                              .replayDualPipelineComparison(),
+                        ),
                       ],
                     ),
+                    if (state.lastTelemetry != null) ...[
+                      SizedBox(height: 10.h),
+                      Text(
+                        'Attempt #${state.lastTelemetry!.attemptId} (${state.lastTelemetry!.taskMode.name}) | '
+                        '${state.lastTelemetry!.wavBytesLength}B | '
+                        'NonZero=${(state.lastTelemetry!.nonZeroSampleRatio * 100).toStringAsFixed(1)}% | '
+                        'Calls=${state.lastTelemetry!.invocations.toJson()} | '
+                        'Total=${state.lastTelemetry!.totalLatencyMs}ms | '
+                        'Recoveries=${state.lastTelemetry!.recorderRecoveryCount}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    if (state.dualReplaySummary != null) ...[
+                      SizedBox(height: 8.h),
+                      Text(
+                        state.dualReplaySummary!,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.secondaryDark,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

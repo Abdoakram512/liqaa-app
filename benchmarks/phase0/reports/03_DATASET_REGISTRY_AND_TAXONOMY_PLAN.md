@@ -25,4 +25,4 @@ Every sample holds ONE primary category from `pediatric_correct, pediatric_mispr
 ## Stage Quotas
 - **Stage A Calibration / Dev:** `2,000` target samples (`450` correct pediatric, `450` mispronounced, `350` noisy/weak pediatric, `400` adult Arabic, `250` noise/silence, `100` separated controlled synthetic).
 - **Stage B Immutable Blind Holdout:** `1,500` target human-only samples (`450` correct pediatric, `450` mispronounced, `250` noisy/weak pediatric, `200` adult Arabic, `150` noise/silence, **`0` synthetic**).
-- **Future Phase 3+ Pool (`130,000` target):** Speaker/fingerprint firewalled from Stage A and Stage B.
+- **Future Phase 5+ Pool (`130,000+` target):** Speaker/fingerprint firewalled from Stage A (`2,000`, Phase 1) and Stage B (`1,500`, Phase 4).

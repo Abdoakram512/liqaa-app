@@ -290,16 +290,20 @@ def run_all_15_anti_cheating_tests() -> dict[str, Any]:
         True,
     )
 
-    # 13. Post-freeze threshold, code & disk artifact drift abort blind execution
-    stage_a = [{"sample_id": "A1", "speaker_id": "SPK_A"}]
-    stage_b = [{"sample_id": "B1", "speaker_id": "SPK_B", "target_word": "كورة", "expected_outcome": "pass", "audio_type": "human_pediatric"}]
-    inputs_b, labels_b = strip_blind_labels(stage_b)
-    lock = create_freeze_lock(stage_a, inputs_b, labels_b, {"m": "v1"}, {"pass_score": 70}, {"sr": 16000})
-    drift_blocked = False
-    try:
-        authorize_blind_execution(lock, inputs_b, {"m": "v1"}, {"pass_score": 60}, {"sr": 16000})
-    except BlindAuthorizationError:
-        drift_blocked = True
+    # 13. Post-freeze threshold, code, audio & disk artifact drift abort blind execution
+    with tempfile.TemporaryDirectory() as tmp:
+        tp = Path(tmp)
+        b_wav = tp / "subj_01.wav"
+        b_wav.write_bytes(_make_wav_bytes(np.sin(2 * np.pi * 400 * np.arange(8000) / 16000.0).astype(np.float32) * 0.2))
+        stage_a = [{"sample_id": "A1", "speaker_id": "SPK_A", "audio_type": "human_pediatric"}]
+        stage_b = [{"sample_id": "B1", "speaker_id": "SPK_B", "file_path": "subj_01.wav", "target_word": "كورة", "expected_outcome": "pass", "audio_type": "human_pediatric"}]
+        inputs_b, labels_b = strip_blind_labels(stage_b, strict_filename_guard=True)
+        lock = create_freeze_lock(stage_a, inputs_b, labels_b, {"m": "v1"}, {"pass_score": 70}, {"sr": 16000}, audio_root=tp)
+        drift_blocked = False
+        try:
+            authorize_blind_execution(lock, inputs_b, {"m": "v1"}, {"pass_score": 60}, {"sr": 16000}, audio_root=tp)
+        except BlindAuthorizationError:
+            drift_blocked = True
     record("T13", "Post-freeze threshold/artifact lock blocks drift", drift_blocked, "Changing pass_score 70->60 raised BlindAuthorizationError", True)
 
     # 14. Deterministic repeatability check across WAV parse + Silero VAD + Wav2Vec2

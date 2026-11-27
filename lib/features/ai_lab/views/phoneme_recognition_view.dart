@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/ai/models/lab_task_mode.dart';
 import '../../../../core/ai/models/vocabulary_word.dart';
 import '../cubits/ai_lab_cubit.dart';
 import '../cubits/ai_lab_state.dart';
@@ -150,7 +151,9 @@ class PhonemeRecognitionView extends StatelessWidget {
                       label: Text(state.isRecording ? 'إيقاف' : 'تسجيل'),
                       onPressed: () {
                         if (state.isRecording) {
-                          context.read<AiLabCubit>().stopRecordingAndAnalyze();
+                          context.read<AiLabCubit>().stopRecordingAndRunTask(
+                            LabTaskMode.pronunciationAssessment,
+                          );
                         } else {
                           context.read<AiLabCubit>().startRecording();
                         }

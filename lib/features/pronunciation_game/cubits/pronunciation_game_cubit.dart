@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/ai/audio_recorder_service.dart';
 import '../../../core/ai/models/pronunciation_assessment.dart';
 import '../../../core/ai/models/vocabulary_word.dart';
 import '../../../core/ai/pronunciation_repository.dart';
@@ -19,7 +21,8 @@ typedef AttemptEvaluatedCallback =
       PronunciationAssessment assessment,
     );
 
-class PronunciationGameCubit extends Cubit<PronunciationGameState> {
+class PronunciationGameCubit extends Cubit<PronunciationGameState>
+    with WidgetsBindingObserver {
   final PronunciationRepository _repository;
   final AudioPlayer _audioPlayer;
   final YasserAudioCoordinator? _audioCoordinator;
@@ -36,6 +39,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   Future<void>? _startingPrompt;
   Future<void>? _startingRecording;
   bool _closing = false;
+  int _evalSeq = 0;
   final Set<String> _masteredWordIds = {};
 
   bool get _speechModelsReady =>
@@ -97,6 +101,56 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         _clearPrompt(announceTurn: true);
       }
     });
+
+    _audioCoordinator?.registerExternalAudioStopHook(_stopGamePromptAudio);
+    try {
+      WidgetsBinding.instance.addObserver(this);
+    } catch (_) {}
+  }
+
+  Future<void> _stopGamePromptAudio() async {
+    _prompt = null;
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
+    if (!_closing && state.isPlayingAudioPrompt) {
+      emit(
+        state.copyWith(
+          isPlayingAudioPrompt: false,
+          promptViseme: YasserViseme.rest,
+        ),
+      );
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_closing) return;
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      unawaited(_handleBackgroundInterruption());
+    }
+  }
+
+  Future<void> _handleBackgroundInterruption() async {
+    await _stopGamePromptAudio();
+    if (state.isListening || _repository.recorder.isRecording) {
+      await _repository.recorder.cancelRecording();
+      _audioCoordinator?.exitRecordingSession();
+      if (!_closing) {
+        emit(
+          state.copyWith(
+            isListening: false,
+            liveAmplitude: 0.0,
+            status: GameStatus.readyToSpeak,
+            yasserMessage: 'تقدر تضغط على المايك وتكمل التدريب لما تكون جاهز!',
+            yasserPose: 'waving',
+          ),
+        );
+      }
+    }
   }
 
   List<VocabularyWord> _filterWords(List<VocabularyWord> allWords) {
@@ -237,7 +291,6 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   Future<void> startListening() async {
     if (!_canInteract || state.currentWord == null) return;
 
-    // Mutual exclusion: silence any active prompt/SFX before opening microphone
     await _audioCoordinator?.enterRecordingSession();
 
     Future<void>? startOp;
@@ -301,6 +354,25 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           yasserPose: 'thinking',
         ),
       );
+    } on AudioRecordingException catch (e) {
+      _audioCoordinator?.exitRecordingSession();
+      if (_closing) return;
+      final String msg = switch (e.kind) {
+        AudioRecordingErrorKind.permissionDenied =>
+          'محتاجين إذن الميكروفون علشان نسمع صوتك يا بطل!',
+        AudioRecordingErrorKind.micBusy =>
+          'الميكروفون مشغول دلوقتي.. استنى ثانية وجرّب تاني.',
+        _ => 'حصل مشكلة في فتح الميكروفون.. جاهزين نجرب تاني!',
+      };
+      emit(
+        state.copyWith(
+          isListening: false,
+          status: GameStatus.error,
+          errorMessage: e.toString(),
+          yasserMessage: msg,
+          yasserPose: 'thinking',
+        ),
+      );
     } catch (e) {
       _audioCoordinator?.exitRecordingSession();
       if (_closing) return;
@@ -324,6 +396,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
   /// Stops recording and runs real on-device evaluation with honest error differentiation.
   Future<void> stopListeningAndEvaluate() async {
     if (_closing || !state.isListening) return;
+    final int evalSeq = ++_evalSeq;
     emit(
       state.copyWith(
         isListening: false,
@@ -334,9 +407,9 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
 
     try {
       final Uint8List rawBytes = await _repository.recorder.stopRecording();
-      _audioCoordinator?.exitRecordingSession(playStopChime: true);
+      _audioCoordinator?.exitRecordingSession(playStopChime: false);
 
-      if (_closing) return;
+      if (_closing || evalSeq != _evalSeq) return;
       final word = state.currentWord;
 
       if (word == null) {
@@ -366,13 +439,13 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         return;
       }
 
-      // Run real ONNX AI pipeline (Preprocessor -> Silero VAD -> GTCRN -> Wav2Vec2 -> Evaluator)
+      // Run real ONNX AI pipeline (Preprocessor -> Silero VAD -> Conditional GTCRN -> Wav2Vec2 -> Evaluator)
       final assessment = await _repository.evaluateAudio(
         rawAudioBytes: rawBytes,
         targetWord: word,
       );
 
-      if (_closing) return;
+      if (_closing || evalSeq != _evalSeq) return;
 
       if (assessment.errorType.isSystemFailure ||
           (assessment.passed && assessment.recognizedPhonemes.isEmpty)) {
@@ -380,27 +453,33 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           state.copyWith(
             status: GameStatus.error,
             clearAssessment: true,
-            errorMessage: 'تعذّر تحليل الصوت. جرّب تاني.',
-            yasserMessage: 'تعذّر تحليل الصوت. جرّب تاني.',
+            errorMessage:
+                assessment.diagnosticError ?? 'تعذّر تحليل الصوت. جرّب تاني.',
+            yasserMessage: assessment.yasserFeedbackMessage,
             yasserPose: 'thinking',
           ),
         );
         return;
       }
 
-      // Persist genuine attempt for child progress & optional specialist session
-      await _progressService?.recordPracticeAttempt(
-        wordId: word.id,
-        wordArabic: word.wordArabic,
-        passed:
-            assessment.passed &&
-            assessment.errorType == AssessmentErrorType.correct,
-        starsAwarded: assessment.stars,
-      );
-      if (_onAttemptEvaluated != null) {
-        await _onAttemptEvaluated(word, assessment);
+      // Technical/inconclusive cases (digital silence, weak RMS, undetected VAD, low confidence)
+      // MUST NOT count as failed pronunciation attempts against child clinical progress.
+      final bool countProgress =
+          !assessment.errorType.isInconclusiveOrTechnical;
+      if (countProgress) {
+        await _progressService?.recordPracticeAttempt(
+          wordId: word.id,
+          wordArabic: word.wordArabic,
+          passed:
+              assessment.passed &&
+              assessment.errorType == AssessmentErrorType.correct,
+          starsAwarded: assessment.stars,
+        );
+        if (_onAttemptEvaluated != null) {
+          await _onAttemptEvaluated(word, assessment);
+        }
       }
-      if (_closing) return;
+      if (_closing || evalSeq != _evalSeq) return;
 
       if (assessment.passed &&
           assessment.errorType == AssessmentErrorType.correct) {
@@ -423,13 +502,20 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
           ),
         );
       } else {
-        _audioCoordinator?.playSfx(YasserSfx.retryGentle);
+        _audioCoordinator?.playSfx(
+          assessment.errorType == AssessmentErrorType.noSpeech ||
+                  assessment.errorType == AssessmentErrorType.poorAudioQuality
+              ? YasserSfx.retryGentle
+              : YasserSfx.retryGentle,
+        );
 
         emit(
           state.copyWith(
             status: GameStatus.supportiveHint,
             lastAssessment: assessment,
-            attemptsCount: state.attemptsCount + 1,
+            attemptsCount: countProgress
+                ? state.attemptsCount + 1
+                : state.attemptsCount,
             yasserMessage: assessment.yasserFeedbackMessage,
             yasserPose: assessment.yasserPose == 'celebrating'
                 ? 'thinking'
@@ -439,7 +525,7 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
       }
     } catch (e) {
       _audioCoordinator?.exitRecordingSession();
-      if (_closing) return;
+      if (_closing || evalSeq != _evalSeq) return;
       emit(
         state.copyWith(
           status: GameStatus.error,
@@ -547,7 +633,11 @@ class PronunciationGameCubit extends Cubit<PronunciationGameState> {
         await _repository.recorder.cancelRecording();
       }
     } finally {
+      _audioCoordinator?.unregisterExternalAudioStopHook(_stopGamePromptAudio);
       _audioCoordinator?.exitRecordingSession();
+      try {
+        WidgetsBinding.instance.removeObserver(this);
+      } catch (_) {}
       try {
         await _audioPlayer.dispose();
       } finally {

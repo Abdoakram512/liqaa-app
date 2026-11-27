@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-27T05:31:20.111242+00:00",
+  "generated_utc": "2026-11-27T06:16:10.971125+00:00",
   "workspace_setup": {
     "config_file": "D:\\YasserML\\workspace_config.json",
     "directories_created": [
@@ -18,38 +18,36 @@
       "D:\\YasserML\\manifests\\blind_vault_external"
     ],
     "storage_report": {
-      "checked_utc": "2026-11-27T05:31:02.991795+00:00",
+      "checked_utc": "2026-11-27T06:15:54.083797+00:00",
       "drives": {
         "C": {
           "path": "C:\\",
           "probe_mount": "C:\\",
           "exists": true,
-          "total_gb": 222.1,
-          "used_gb": 220.06,
-          "free_gb": 2.04
+          "total_gb": 247.1,
+          "used_gb": 216.08,
+          "free_gb": 31.02
         },
         "D": {
           "path": "D:\\",
           "probe_mount": "D:\\",
           "exists": true,
           "total_gb": 931.5,
-          "used_gb": 660.77,
-          "free_gb": 270.72
+          "used_gb": 660.27,
+          "free_gb": 271.22
         },
         "E": {
           "path": "E:\\",
           "probe_mount": "E:\\",
           "exists": true,
-          "total_gb": 252.12,
-          "used_gb": 126.01,
-          "free_gb": 126.11
+          "total_gb": 227.12,
+          "used_gb": 125.98,
+          "free_gb": 101.14
         }
       },
       "ml_root": "D:\\YasserML",
       "ml_root_exists": true,
-      "warnings": [
-        "CRITICAL_C_DRIVE_LOW: C: has only 2.04 GB free (< 5.0 GB policy minimum). Block C: installs/caches."
-      ]
+      "warnings": []
     }
   },
   "model_registry_path": "E:\\Flutter Projects\\liqaa_app\\benchmarks\\phase0\\MODEL_REGISTRY.json",
@@ -89,7 +87,8 @@
         "min_active_duration_ratio": 0.25,
         "speech_band_hz": "250-3800Hz",
         "near_silent_rms_floor": 0.002,
-        "known_limitations": "Pure silence/white-noise fixtures are excluded from acoustic similarity to avoid FPs; severe <=5 dB additive noise alters clean formants and still requires parent_source_id lineage."
+        "known_limitations": "Pure silence/white-noise fixtures are excluded from acoustic similarity to avoid FPs; severe <=5 dB additive noise alters clean formants and still requires parent_source_id lineage.",
+        "search_strategy": "exhaustive_reference (7503 pairs)"
       },
       "exact_file_duplicates": [],
       "canonical_pcm_duplicates": [],
