@@ -12,8 +12,14 @@ abstract final class AppRoutes {
 
   // Primary Product Hubs
   static const String home = '/home';
+  static const String profileSetup = '/profile-setup';
+  static const String adventureDetail = '/adventure/:regionId';
+  static const String activity = '/activity/:gameType';
   static const String specialistDashboard = '/specialist';
   static const String specialistCaseDetail = '/specialist/cases/:caseId';
+
+  static String adventurePath(String regionId) => '/adventure/$regionId';
+  static String activityPath(String gameType) => '/activity/$gameType';
 
   static String specialistCasePath(String caseId) =>
       '/specialist/cases/$caseId';

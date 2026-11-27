@@ -24,10 +24,12 @@ class SpecialistCubit extends Cubit<SpecialistState> {
         _repository.getCases(),
         _repository.getSessions(),
         _repository.getAttempts(),
+        _repository.getAssignments(),
       ]);
       final cases = results[0] as List<SpecialistCase>;
       final sessions = results[1] as List<TrainingSessionRecord>;
       final attempts = results[2] as List<PronunciationAttemptRecord>;
+      final assignments = results[3] as List<SpecialistActivityAssignment>;
 
       final Map<String, List<SpecialistNoteEntry>> notesMap = {};
       for (final c in cases) {
@@ -42,6 +44,7 @@ class SpecialistCubit extends Cubit<SpecialistState> {
           allSessions: sessions,
           allAttempts: attempts,
           notesByCase: notesMap,
+          allAssignments: assignments,
         ),
       );
     } catch (e) {
@@ -194,6 +197,43 @@ class SpecialistCubit extends Cubit<SpecialistState> {
     );
 
     await _repository.recordAttempt(record);
+    await loadWorkspace();
+  }
+
+  Future<SpecialistActivityAssignment> assignPersonalizedAdventure({
+    required String caseId,
+    String childProfileId = 'profile_default',
+    required String title,
+    required List<String> targetPhonemes,
+    int difficultyLevel = 1,
+    String assignedRegionId = 'sound_garden',
+    List<String> assignedGameTypes = const [
+      'discover_word',
+      'hear_difference',
+      'listen_and_choose',
+      'repeat_after_yasser',
+      'name_the_picture',
+    ],
+  }) async {
+    final assignment = SpecialistActivityAssignment(
+      id: _generateId('assign'),
+      caseId: caseId,
+      childProfileId: childProfileId,
+      title: title.trim().isEmpty ? 'مسار تدريب مخصص' : title.trim(),
+      targetPhonemes: targetPhonemes,
+      difficultyLevel: difficultyLevel,
+      assignedRegionId: assignedRegionId,
+      assignedGameTypes: assignedGameTypes,
+      isActive: true,
+      createdAt: DateTime.now(),
+    );
+    await _repository.saveAssignment(assignment);
+    await loadWorkspace();
+    return assignment;
+  }
+
+  Future<void> removeAssignment(String assignmentId) async {
+    await _repository.deleteAssignment(assignmentId);
     await loadWorkspace();
   }
 }

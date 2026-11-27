@@ -12,7 +12,8 @@ abstract final class AppTheme {
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Cairo',
+      fontFamily: AppTextStyles.bodyFontFamily,
+      fontFamilyFallback: AppTextStyles.arabicFallbacks,
       extensions: const <ThemeExtension<dynamic>>[YasserDesignTokens.light],
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
@@ -39,10 +40,10 @@ abstract final class AppTheme {
         centerTitle: true,
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: TextStyle(
-          fontFamily: 'Cairo',
+          fontFamily: AppTextStyles.displayFontFamily,
           color: AppColors.textPrimary,
           fontSize: 18,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
         ),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,

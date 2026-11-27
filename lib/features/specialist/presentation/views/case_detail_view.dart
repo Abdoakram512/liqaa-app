@@ -296,6 +296,48 @@ class _CaseDetailViewState extends State<CaseDetailView> {
                               ),
                             ),
                           ),
+
+                        SizedBox(height: 20.h),
+
+                        // Detailed Performance Separation (Scored vs Inconclusive vs Total)
+                        _DetailedOutcomeSummaryCard(
+                          totalSessions: summary.totalSessions,
+                          attempts: attempts,
+                        ),
+
+                        SizedBox(height: 20.h),
+
+                        // Specialist Personalized Adventure Assignment (Phase 0.2)
+                        _SpecialistAssignmentsCard(
+                          item: item,
+                          assignments: state.assignmentsForCase(item.id),
+                          onAssign:
+                              ({
+                                required String regionId,
+                                required List<String> phonemes,
+                                required int difficulty,
+                              }) {
+                                final regionLabel =
+                                    _SpecialistAssignmentsCard
+                                        .regionLabels[regionId] ??
+                                    regionId;
+                                context
+                                    .read<SpecialistCubit>()
+                                    .assignPersonalizedAdventure(
+                                      caseId: item.id,
+                                      title:
+                                          'مغامرة $regionLabel (${item.childName})',
+                                      targetPhonemes: phonemes,
+                                      difficultyLevel: difficulty,
+                                      assignedRegionId: regionId,
+                                    );
+                              },
+                          onRemove: (assignmentId) {
+                            context.read<SpecialistCubit>().removeAssignment(
+                              assignmentId,
+                            );
+                          },
+                        ),
                       ]),
                     ),
                   ),
@@ -552,6 +594,270 @@ class _AttemptHistoryTile extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailedOutcomeSummaryCard extends StatelessWidget {
+  final int totalSessions;
+  final List<PronunciationAttemptRecord> attempts;
+
+  const _DetailedOutcomeSummaryCard({
+    required this.totalSessions,
+    required this.attempts,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final passedCount = attempts.where((a) => a.passed).length;
+    final needsPracticeCount = attempts
+        .where((a) => a.scoreIndicator != null && !a.passed)
+        .length;
+    final inconclusiveCount = attempts
+        .where((a) => a.scoreIndicator == null)
+        .length;
+
+    return YasserSurfaceCard(
+      padding: EdgeInsets.all(16.w),
+      radius: AppSpacing.radiusL,
+      lipDepth: 3.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.analytics_outlined,
+                color: AppColors.secondary,
+                size: 20,
+              ),
+              SizedBox(width: 8.w),
+              Text('ملخص الأداء المفصّل', style: AppTextStyles.titleMedium),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'فصل واضح بين محاولات النطق المقيّمة والمحاولات غير الحاسمة تقنياً',
+            style: AppTextStyles.bodySmall,
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: _MiniStat(label: 'جلسات', value: '$totalSessions'),
+              ),
+              Expanded(
+                child: _MiniStat(label: 'ناجحة', value: '$passedCount'),
+              ),
+              Expanded(
+                child: _MiniStat(
+                  label: 'تحتاج تمرين',
+                  value: '$needsPracticeCount',
+                ),
+              ),
+              Expanded(
+                child: _MiniStat(
+                  label: 'غير حاسمة',
+                  value: '$inconclusiveCount',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpecialistAssignmentsCard extends StatefulWidget {
+  static const Map<String, String> regionLabels = {
+    'sound_garden': 'حديقة الأصوات',
+    'animal_forest': 'غابة الحيوانات',
+    'word_island': 'جزيرة الكلمات',
+    'story_city': 'مدينة الحكايات',
+    'hero_castle': 'قلعة الأبطال',
+  };
+
+  final SpecialistCase item;
+  final List<SpecialistActivityAssignment> assignments;
+  final void Function({
+    required String regionId,
+    required List<String> phonemes,
+    required int difficulty,
+  })
+  onAssign;
+  final ValueChanged<String> onRemove;
+
+  const _SpecialistAssignmentsCard({
+    required this.item,
+    required this.assignments,
+    required this.onAssign,
+    required this.onRemove,
+  });
+
+  @override
+  State<_SpecialistAssignmentsCard> createState() =>
+      _SpecialistAssignmentsCardState();
+}
+
+class _SpecialistAssignmentsCardState
+    extends State<_SpecialistAssignmentsCard> {
+  String _selectedRegionId = 'sound_garden';
+  int _difficulty = 1;
+  late List<String> _selectedPhonemes;
+
+  static const _phonemeChoices = ['س', 'ش', 'ر', 'ق', 'ك', 'ب'];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPhonemes = widget.item.targetPhonemes.isNotEmpty
+        ? [...widget.item.targetPhonemes]
+        : ['س', 'ر'];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return YasserSurfaceCard(
+      padding: EdgeInsets.all(16.w),
+      radius: AppSpacing.radiusL,
+      lipDepth: 3.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.explore_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  'تخصيص مسار المغامرة (الأخصائي)',
+                  style: AppTextStyles.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'حدد وجهة وحروف التدريب لتوجيه ألعاب الطفل دون كشف التقييم الطبي له.',
+            style: AppTextStyles.bodySmall,
+          ),
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            children: _SpecialistAssignmentsCard.regionLabels.entries.map((e) {
+              final selected = _selectedRegionId == e.key;
+              return ChoiceChip(
+                label: Text(e.value),
+                selected: selected,
+                selectedColor: AppColors.primaryContainer,
+                onSelected: (_) => setState(() => _selectedRegionId = e.key),
+              );
+            }).toList(),
+          ),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            children: _phonemeChoices.map((ph) {
+              final active = _selectedPhonemes.contains(ph);
+              return FilterChip(
+                label: Text('حرف $ph'),
+                selected: active,
+                selectedColor: AppColors.secondaryContainer,
+                onSelected: (checked) {
+                  setState(() {
+                    if (checked) {
+                      if (!_selectedPhonemes.contains(ph)) {
+                        _selectedPhonemes.add(ph);
+                      }
+                    } else if (_selectedPhonemes.length > 1) {
+                      _selectedPhonemes.remove(ph);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('المستوى:', style: AppTextStyles.labelMedium),
+              for (final level in [1, 2, 3])
+                ChoiceChip(
+                  label: Text('مستوى $level'),
+                  selected: _difficulty == level,
+                  onSelected: (_) => setState(() => _difficulty = level),
+                ),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              icon: const Icon(Icons.add_task_rounded),
+              label: const Text('تعيين مغامرة مخصصة للطفل'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+                widget.onAssign(
+                  regionId: _selectedRegionId,
+                  phonemes: List<String>.from(_selectedPhonemes),
+                  difficulty: _difficulty,
+                );
+              },
+            ),
+          ),
+          if (widget.assignments.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            const Divider(color: AppColors.borderSoft),
+            SizedBox(height: 6.h),
+            ...widget.assignments.map((a) {
+              final regionTitle =
+                  _SpecialistAssignmentsCard.regionLabels[a.assignedRegionId] ??
+                  a.assignedRegionId;
+              return Padding(
+                padding: EdgeInsets.only(bottom: 6.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${a.title} • $regionTitle • ${a.targetPhonemes.join("، ")}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        size: 20,
+                        color: AppColors.error,
+                      ),
+                      tooltip: 'إزالة التخصيص',
+                      onPressed: () => widget.onRemove(a.id),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
         ],
       ),
     );

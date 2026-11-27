@@ -28,6 +28,15 @@ abstract class SpecialistRepository {
 
   Future<List<SpecialistNoteEntry>> getNotes(String caseId);
   Future<SpecialistNoteEntry> addNote(SpecialistNoteEntry note);
+
+  Future<List<SpecialistActivityAssignment>> getAssignments({
+    String? caseId,
+    String? childProfileId,
+  });
+  Future<SpecialistActivityAssignment> saveAssignment(
+    SpecialistActivityAssignment assignment,
+  );
+  Future<void> deleteAssignment(String assignmentId);
 }
 
 class SpecialistLocalRepository implements SpecialistRepository {
@@ -35,6 +44,7 @@ class SpecialistLocalRepository implements SpecialistRepository {
   static const String _sessionsKey = 'yasser_specialist_sessions_v1';
   static const String _attemptsKey = 'yasser_specialist_attempts_v1';
   static const String _notesKey = 'yasser_specialist_notes_v1';
+  static const String _assignmentsKey = 'yasser_specialist_assignments_v2';
 
   final SharedPreferences _prefs;
 
@@ -197,5 +207,51 @@ class SpecialistLocalRepository implements SpecialistRepository {
       await saveCase(parent.copyWith(updatedAt: note.createdAt));
     }
     return note;
+  }
+
+  @override
+  Future<List<SpecialistActivityAssignment>> getAssignments({
+    String? caseId,
+    String? childProfileId,
+  }) async {
+    final all = _readList(
+      _assignmentsKey,
+      SpecialistActivityAssignment.fromJson,
+    );
+    final filtered = all.where((a) {
+      if (caseId != null && a.caseId != caseId) return false;
+      if (childProfileId != null && a.childProfileId != childProfileId) {
+        return false;
+      }
+      return true;
+    }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return filtered;
+  }
+
+  @override
+  Future<SpecialistActivityAssignment> saveAssignment(
+    SpecialistActivityAssignment assignment,
+  ) async {
+    final all = _readList(
+      _assignmentsKey,
+      SpecialistActivityAssignment.fromJson,
+    );
+    final idx = all.indexWhere((a) => a.id == assignment.id);
+    if (idx >= 0) {
+      all[idx] = assignment;
+    } else {
+      all.add(assignment);
+    }
+    await _writeList(_assignmentsKey, all, (a) => a.toJson());
+    return assignment;
+  }
+
+  @override
+  Future<void> deleteAssignment(String assignmentId) async {
+    final all = _readList(
+      _assignmentsKey,
+      SpecialistActivityAssignment.fromJson,
+    )..removeWhere((a) => a.id == assignmentId);
+    await _writeList(_assignmentsKey, all, (a) => a.toJson());
   }
 }

@@ -4,110 +4,77 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/ai/models/vocabulary_word.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/yasser_design_tokens.dart';
+import '../../../core/widgets/world_painters/illustrated_object_painter.dart';
 
-/// Custom vector + painted vocabulary illustration medallion (zero emojis).
-/// Maps the word's English meaning / Arabic ID to a clean thematic icon inside
-/// an illustrated organic squircle vignette.
+/// Custom vector-painted vocabulary illustration medallion (zero emojis).
+/// Uses [IllustratedVocabularyWidget] inside an organic squircle vignette.
 class VocabularyIllustrationBadge extends StatelessWidget {
   final VocabularyWord word;
 
   const VocabularyIllustrationBadge({super.key, required this.word});
 
-  (IconData, Color, Color) _visualForWord() {
+  (Color, Color) _paletteForWord() {
     final meaning = word.meaningEn.toLowerCase();
     final id = word.id.toLowerCase();
 
     if (id.contains('kora') || meaning.contains('ball')) {
-      return (
-        Icons.sports_soccer_rounded,
-        AppColors.primary,
-        AppColors.primarySoft,
-      );
+      return (AppColors.primary, AppColors.primarySoft);
     }
     if (id.contains('samaka') || meaning.contains('fish')) {
-      return (Icons.water_rounded, AppColors.teal, AppColors.tealSoft);
+      return (AppColors.teal, AppColors.tealSoft);
     }
     if (meaning.contains('dog') ||
         meaning.contains('cat') ||
         meaning.contains('rabbit') ||
         meaning.contains('camel') ||
-        meaning.contains('lion') ||
-        meaning.contains('bird') ||
-        meaning.contains('bear')) {
-      return (
-        Icons.pets_rounded,
-        AppColors.primaryDark,
-        AppColors.accentGoldSoft,
-      );
+        meaning.contains('horse') ||
+        meaning.contains('duck') ||
+        meaning.contains('fox') ||
+        meaning.contains('elephant')) {
+      return (AppColors.primaryDark, AppColors.accentGoldSoft);
     }
-    if (meaning.contains('sun') ||
-        meaning.contains('moon') ||
-        meaning.contains('star') ||
-        meaning.contains('sky') ||
-        meaning.contains('tree') ||
-        meaning.contains('flower')) {
-      return (
-        Icons.wb_sunny_rounded,
-        AppColors.accentCoral,
-        AppColors.accentCoralSoft,
-      );
+    if (meaning.contains('sun') || meaning.contains('butterfly')) {
+      return (AppColors.accentCoral, AppColors.accentCoralSoft);
     }
-    if (meaning.contains('apple') ||
-        meaning.contains('banana') ||
-        meaning.contains('bread') ||
-        meaning.contains('milk') ||
-        meaning.contains('water')) {
-      return (
-        Icons.lunch_dining_rounded,
-        AppColors.success,
-        AppColors.successSoft,
-      );
+    if (meaning.contains('apple') || meaning.contains('banana')) {
+      return (AppColors.success, AppColors.successSoft);
     }
-    if (meaning.contains('book') ||
-        meaning.contains('pen') ||
-        meaning.contains('school')) {
-      return (
-        Icons.menu_book_rounded,
-        AppColors.secondary,
-        AppColors.secondarySoft,
-      );
+    if (meaning.contains('book') || meaning.contains('pen')) {
+      return (AppColors.secondary, AppColors.secondarySoft);
     }
-    if (meaning.contains('car') ||
-        meaning.contains('train') ||
-        meaning.contains('plane')) {
-      return (Icons.directions_car_rounded, AppColors.info, AppColors.infoSoft);
+    if (meaning.contains('car') || meaning.contains('plane')) {
+      return (AppColors.info, AppColors.infoSoft);
     }
-    if (meaning.contains('house') ||
-        meaning.contains('door') ||
-        meaning.contains('chair')) {
-      return (Icons.home_rounded, AppColors.secondary, AppColors.secondarySoft);
+    if (meaning.contains('house') || meaning.contains('door')) {
+      return (AppColors.secondary, AppColors.secondarySoft);
     }
 
-    return (
-      Icons.auto_awesome_rounded,
-      AppColors.primary,
-      AppColors.primarySoft,
-    );
+    return (AppColors.primary, AppColors.primarySoft);
   }
 
   @override
   Widget build(BuildContext context) {
-    final (icon, accent, softBg) = _visualForWord();
+    final (accent, softBg) = _paletteForWord();
 
     return SizedBox(
-      width: 78.r,
-      height: 78.r,
+      width: 82.r,
+      height: 82.r,
       child: CustomPaint(
         painter: _VignetteHaloPainter(accent: accent, fill: softBg),
         child: Center(
           child: DecoratedBox(
             decoration: ShapeDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
-              shape: YasserShapes.squircle(20),
+              color: Colors.white.withValues(alpha: 0.9),
+              shape: YasserShapes.squircle(22),
             ),
             child: Padding(
-              padding: EdgeInsets.all(12.r),
-              child: Icon(icon, size: 32.r, color: accent),
+              padding: EdgeInsets.all(6.r),
+              child: IllustratedVocabularyWidget(
+                objectKey: '${word.id}_${word.meaningEn}',
+                semanticLabel: word.wordArabic,
+                size: 56.r,
+                accentColor: accent,
+              ),
             ),
           ),
         ),

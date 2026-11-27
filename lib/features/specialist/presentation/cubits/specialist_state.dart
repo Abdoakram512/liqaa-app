@@ -8,6 +8,7 @@ class SpecialistState extends Equatable {
   final List<TrainingSessionRecord> allSessions;
   final List<PronunciationAttemptRecord> allAttempts;
   final Map<String, List<SpecialistNoteEntry>> notesByCase;
+  final List<SpecialistActivityAssignment> allAssignments;
   final String searchQuery;
   final CaseStatus? statusFilter;
   final String? errorMessage;
@@ -18,6 +19,7 @@ class SpecialistState extends Equatable {
     this.allSessions = const [],
     this.allAttempts = const [],
     this.notesByCase = const {},
+    this.allAssignments = const [],
     this.searchQuery = '',
     this.statusFilter,
     this.errorMessage,
@@ -56,6 +58,16 @@ class SpecialistState extends Equatable {
   List<SpecialistNoteEntry> notesForCase(String caseId) =>
       notesByCase[caseId] ?? const [];
 
+  List<SpecialistActivityAssignment> assignmentsForCase(String caseId) =>
+      allAssignments.where((a) => a.caseId == caseId).toList();
+
+  SpecialistActivityAssignment? activeAssignmentForProfile(String profileId) {
+    for (final a in allAssignments) {
+      if (a.isActive && a.childProfileId == profileId) return a;
+    }
+    return null;
+  }
+
   CaseProgressSummary summaryForCase(String caseId) {
     return CaseProgressSummary.compute(
       sessions: sessionsForCase(caseId),
@@ -69,6 +81,7 @@ class SpecialistState extends Equatable {
     List<TrainingSessionRecord>? allSessions,
     List<PronunciationAttemptRecord>? allAttempts,
     Map<String, List<SpecialistNoteEntry>>? notesByCase,
+    List<SpecialistActivityAssignment>? allAssignments,
     String? searchQuery,
     CaseStatus? statusFilter,
     bool clearStatusFilter = false,
@@ -81,6 +94,7 @@ class SpecialistState extends Equatable {
       allSessions: allSessions ?? this.allSessions,
       allAttempts: allAttempts ?? this.allAttempts,
       notesByCase: notesByCase ?? this.notesByCase,
+      allAssignments: allAssignments ?? this.allAssignments,
       searchQuery: searchQuery ?? this.searchQuery,
       statusFilter: clearStatusFilter
           ? null
@@ -96,6 +110,7 @@ class SpecialistState extends Equatable {
     allSessions,
     allAttempts,
     notesByCase,
+    allAssignments,
     searchQuery,
     statusFilter,
     errorMessage,

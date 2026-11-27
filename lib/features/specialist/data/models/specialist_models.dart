@@ -370,3 +370,83 @@ class CaseProgressSummary extends Equatable {
     scoredTrajectory,
   ];
 }
+
+/// Specialist-authored learning path assignment linked to a child profile.
+class SpecialistActivityAssignment extends Equatable {
+  final String id;
+  final String caseId;
+  final String childProfileId;
+  final String title;
+  final List<String> targetPhonemes;
+  final int difficultyLevel;
+  final String assignedRegionId;
+  final List<String> assignedGameTypes;
+  final bool isActive;
+  final DateTime createdAt;
+
+  const SpecialistActivityAssignment({
+    required this.id,
+    required this.caseId,
+    this.childProfileId = 'profile_default',
+    required this.title,
+    required this.targetPhonemes,
+    this.difficultyLevel = 1,
+    this.assignedRegionId = 'sound_garden',
+    this.assignedGameTypes = const [
+      'discover_word',
+      'listen_and_choose',
+      'name_the_picture',
+    ],
+    this.isActive = true,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'case_id': caseId,
+    'child_profile_id': childProfileId,
+    'title': title,
+    'target_phonemes': targetPhonemes,
+    'difficulty_level': difficultyLevel,
+    'assigned_region_id': assignedRegionId,
+    'assigned_game_types': assignedGameTypes,
+    'is_active': isActive,
+    'created_at': createdAt.toIso8601String(),
+  };
+
+  factory SpecialistActivityAssignment.fromJson(Map<String, dynamic> json) {
+    return SpecialistActivityAssignment(
+      id: json['id'] as String? ?? '',
+      caseId: json['case_id'] as String? ?? '',
+      childProfileId: json['child_profile_id'] as String? ?? 'profile_default',
+      title: json['title'] as String? ?? 'مسار تدريب مخصص',
+      targetPhonemes: List<String>.from(
+        (json['target_phonemes'] as List<dynamic>?) ?? const <String>[],
+      ),
+      difficultyLevel: json['difficulty_level'] as int? ?? 1,
+      assignedRegionId: json['assigned_region_id'] as String? ?? 'sound_garden',
+      assignedGameTypes: List<String>.from(
+        (json['assigned_game_types'] as List<dynamic>?) ??
+            const ['discover_word', 'listen_and_choose', 'name_the_picture'],
+      ),
+      isActive: json['is_active'] as bool? ?? true,
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    caseId,
+    childProfileId,
+    title,
+    targetPhonemes,
+    difficultyLevel,
+    assignedRegionId,
+    assignedGameTypes,
+    isActive,
+    createdAt,
+  ];
+}

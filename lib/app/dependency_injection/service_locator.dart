@@ -11,6 +11,7 @@ import '../../core/ai/pronunciation_repository.dart';
 import '../../core/ai/rnnoise_denoiser_engine.dart';
 import '../../core/ai/silero_vad_engine.dart';
 import '../../core/ai/speech_to_text_engine.dart';
+import '../../core/animation/yasser/yasser_companion_controller.dart';
 import '../../core/audio/yasser_audio_coordinator.dart';
 import '../../core/networking/api_client.dart';
 import '../../core/networking/dio_factory.dart';
@@ -28,6 +29,8 @@ import '../../features/pronunciation_game/cubits/pronunciation_game_cubit.dart';
 import '../../features/specialist/data/repos/specialist_repository.dart';
 import '../../features/specialist/presentation/cubits/specialist_cubit.dart';
 import '../../features/splash/presentation/cubits/splash_cubit.dart';
+import '../../features/world/data/child_world_repository.dart';
+import '../../features/world/presentation/cubits/child_world_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -43,6 +46,9 @@ Future<void> setupServiceLocator() async {
   // Audio, Voice & Haptics Coordinator
   sl.registerLazySingleton<YasserAudioCoordinator>(
     () => YasserAudioCoordinator(prefs: sl()),
+  );
+  sl.registerLazySingleton<YasserCompanionController>(
+    () => YasserCompanionController(audioCoordinator: sl()),
   );
 
   // Networking
@@ -61,6 +67,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<ChildProgressService>(
     () => ChildProgressService(sl()),
   );
+  sl.registerLazySingleton<ChildWorldRepository>(
+    () => ChildWorldRepository(sl()),
+  );
+  sl.registerLazySingleton<ChildWorldCubit>(() => ChildWorldCubit(sl()));
   sl.registerLazySingleton<SpecialistRepository>(
     () => SpecialistLocalRepository(sl()),
   );

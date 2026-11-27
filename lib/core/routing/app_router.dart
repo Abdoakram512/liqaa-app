@@ -3,6 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/dependency_injection/service_locator.dart';
+import '../../features/activities/presentation/views/complete_story_game_view.dart';
+import '../../features/activities/presentation/views/discover_word_game_view.dart';
+import '../../features/activities/presentation/views/hear_difference_game_view.dart';
+import '../../features/activities/presentation/views/listen_and_choose_game_view.dart';
+import '../../features/activities/presentation/views/mystery_sound_boxes_game_view.dart';
+import '../../features/activities/presentation/views/repeat_after_yasser_game_view.dart';
+import '../../features/activities/presentation/views/sound_detective_game_view.dart';
+import '../../features/activities/presentation/widgets/activity_session_scaffold.dart';
 import '../../features/ai_lab/cubits/ai_lab_cubit.dart';
 import '../../features/ai_lab/views/ai_benchmark_lab_view.dart';
 import '../../features/ai_lab/views/ai_lab_hub_view.dart';
@@ -35,6 +43,11 @@ import '../../features/specialist/presentation/cubits/specialist_cubit.dart';
 import '../../features/specialist/presentation/views/case_detail_view.dart';
 import '../../features/specialist/presentation/views/specialist_dashboard_view.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
+import '../../features/world/data/models/world_models.dart';
+import '../../features/world/presentation/cubits/child_world_cubit.dart';
+import '../../features/world/presentation/views/adventure_detail_view.dart';
+import '../../features/world/presentation/views/profile_setup_view.dart';
+import '../ai/models/pronunciation_assessment.dart';
 import '../ai/pronunciation_repository.dart';
 import '../audio/yasser_audio_coordinator.dart';
 import 'app_routes.dart';
@@ -144,6 +157,123 @@ abstract final class AppRouter {
           key: state.pageKey,
           child: const ChildHomeView(),
         ),
+      ),
+
+      // Optional Privacy-Conscious Child Customization & Multi-Profile Setup
+      GoRoute(
+        path: AppRoutes.profileSetup,
+        name: 'profileSetup',
+        pageBuilder: (context, state) => YasserPageTransitions.portalReveal(
+          key: state.pageKey,
+          child: BlocProvider<ChildWorldCubit>.value(
+            value: sl<ChildWorldCubit>(),
+            child: const ProfileSetupView(),
+          ),
+        ),
+      ),
+
+      // Interactive Adventure Chapter Overview
+      GoRoute(
+        path: AppRoutes.adventureDetail,
+        name: 'adventureDetail',
+        pageBuilder: (context, state) {
+          final region = WorldRegionId.fromId(state.pathParameters['regionId']);
+          return YasserPageTransitions.storybookTurn(
+            key: state.pageKey,
+            child: BlocProvider<ChildWorldCubit>.value(
+              value: sl<ChildWorldCubit>(),
+              child: AdventureDetailView(regionId: region),
+            ),
+          );
+        },
+      ),
+
+      // Unified Mini-Game Launcher (All 8 Learning Games)
+      GoRoute(
+        path: AppRoutes.activity,
+        name: 'activity',
+        pageBuilder: (context, state) {
+          final gameType = MiniGameType.fromId(
+            state.pathParameters['gameType'],
+          );
+          final config = ActivityLaunchConfig.fromQuery(
+            gameType,
+            state.uri.queryParameters,
+          );
+          final Widget view = switch (gameType) {
+            MiniGameType.discoverWord => DiscoverWordGameView(config: config),
+            MiniGameType.hearDifference => HearDifferenceGameView(
+              config: config,
+            ),
+            MiniGameType.listenAndChoose => ListenAndChooseGameView(
+              config: config,
+            ),
+            MiniGameType.repeatAfterYasser => RepeatAfterYasserGameView(
+              config: config,
+            ),
+            MiniGameType.nameThePicture => BlocProvider<PronunciationGameCubit>(
+              create: (_) => PronunciationGameCubit(
+                sl<PronunciationRepository>(),
+                audioCoordinator: sl.isRegistered<YasserAudioCoordinator>()
+                    ? sl<YasserAudioCoordinator>()
+                    : null,
+                progressService: sl.isRegistered<ChildProgressService>()
+                    ? sl<ChildProgressService>()
+                    : null,
+                targetPhonemeFilter: config.targetPhonemes.isNotEmpty
+                    ? config.targetPhonemes
+                    : null,
+                onAttemptEvaluated: (word, assessment) async {
+                  if (!sl.isRegistered<ChildWorldCubit>()) return;
+                  final passed =
+                      assessment.passed &&
+                      assessment.errorType == AssessmentErrorType.correct;
+                  await sl<ChildWorldCubit>().recordActivityOutcome(
+                    ActivityOutcomeRecord(
+                      id: 'out_${DateTime.now().microsecondsSinceEpoch}',
+                      activityId: config.stepId ?? 'name_the_picture',
+                      gameType: MiniGameType.nameThePicture,
+                      regionId: config.regionId,
+                      timestamp: DateTime.now(),
+                      completed: passed,
+                      pronunciationPassed: passed,
+                      inconclusiveTechnicalCount:
+                          assessment.errorType.isInconclusiveOrTechnical
+                          ? 1
+                          : 0,
+                      targetPhonemes: [word.targetPhoneme],
+                    ),
+                    stepIdToMarkComplete: passed ? config.stepId : null,
+                    rewardCollectibleId: passed
+                        ? config.rewardCollectibleId
+                        : null,
+                    markAdventureCompleteId:
+                        passed && config.rewardCollectibleId != null,
+                    adventureId: config.adventureId,
+                  );
+                },
+              ),
+              child: const PronunciationGameView(),
+            ),
+            MiniGameType.mysterySoundBoxes => MysterySoundBoxesGameView(
+              config: config,
+            ),
+            MiniGameType.soundDetective => SoundDetectiveGameView(
+              config: config,
+            ),
+            MiniGameType.completeTheStory => CompleteStoryGameView(
+              config: config,
+            ),
+          };
+
+          return YasserPageTransitions.activityLaunch(
+            key: state.pageKey,
+            child: BlocProvider<ChildWorldCubit>.value(
+              value: sl<ChildWorldCubit>(),
+              child: view,
+            ),
+          );
+        },
       ),
 
       // Specialist Clinical Workspace & Case Detail

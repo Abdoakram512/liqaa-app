@@ -270,6 +270,64 @@ class YasserAudioCoordinator extends ChangeNotifier
     }
   }
 
+  /// Plays a prerecorded bundled WAV if [assetPath] is provided and valid,
+  /// otherwise falls back cleanly to gentle chime + honest approximate Arabic
+  /// viseme timeline while strictly respecting `voiceEnabled` and
+  /// `_isRecordingActive` mutual exclusion (NEVER invokes network TTS).
+  Future<void> playLineOrFallback({
+    required String scriptId,
+    required String arabicText,
+    String? assetPath,
+    bool animateVisemes = true,
+  }) async {
+    if (_disposed || !_voiceEnabled || _isRecordingActive) {
+      return;
+    }
+
+    if (assetPath != null && YasserPrompt.byWordId.containsKey(scriptId)) {
+      final played = await playWordPrompt(YasserPrompt.byWordId[scriptId]!);
+      if (played) return;
+    }
+
+    // Play subtle warm marimba chime if SFX allowed, and drive honest
+    // approximate Arabic phoneme visemes locally with zero paid API calls.
+    if (_sfxEnabled && _enablePlatformAudio) {
+      await playSfx(YasserSfx.buttonTap);
+    }
+
+    if (!animateVisemes || _disposed || _isRecordingActive) return;
+
+    final cues = YasserPrompt.cuesForWord(
+      wordId: scriptId,
+      arabicWord: arabicText,
+      duration: Duration(
+        milliseconds: (arabicText.length * 42).clamp(450, 2200),
+      ),
+    );
+
+    _isPlayingVoice = true;
+    notifyListeners();
+    try {
+      int elapsed = 0;
+      for (final cue in cues) {
+        if (_disposed || _isRecordingActive || !_voiceEnabled) break;
+        final waitMs = cue.startMs - elapsed;
+        if (waitMs > 0) {
+          await Future<void>.delayed(Duration(milliseconds: waitMs));
+          elapsed = cue.startMs;
+        }
+        if (_disposed || _isRecordingActive || !_voiceEnabled) break;
+        if (visemeNotifier.value != cue.pose) {
+          visemeNotifier.value = cue.pose;
+        }
+      }
+    } finally {
+      if (!_disposed) {
+        _resetVoiceState();
+      }
+    }
+  }
+
   /// Plays a gentle, harmonic, non-intrusive PCM16 WAV sound effect.
   Future<void> playSfx(YasserSfx effect) async {
     final sfx = _sfxPlayer;

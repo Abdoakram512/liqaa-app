@@ -9,6 +9,81 @@
     "tail_silence_trim_ms": 60,
     "runtime_paid_tts_policy": "PROHIBITED — only verified local WAV assets or graceful speech-bubble + gentle chime fallback."
   },
+  "elevenlabs_voice_casting_shortlist": {
+    "status": "preview_shortlist_ready_zero_credits_spent",
+    "recommended_voice_id": "PmRaqkJ2uk3Y9jrp9UjJ",
+    "estimate_reference": {
+      "model_id": "eleven_multilingual_v2",
+      "sample_prompt_chars": 59,
+      "estimated_credits_per_sample": 59.0,
+      "estimated_price_cents_per_sample": 1.18,
+      "estimated_credits_150_scripts_approx": 7800,
+      "flow_id_preview": "g2xvPxRggxl4rN1t0ltc"
+    },
+    "candidates": [
+      {
+        "voice_id": "PmRaqkJ2uk3Y9jrp9UjJ",
+        "name": "Mawardy - Warm, Natural Egyptian",
+        "category": "professional",
+        "age": "young",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "Primary recommended voice: young Egyptian male speaking everyday Masri with clear diction and warm storytelling tone for children.",
+        "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/feb2e0da58024f4583f359c4ba50147e/voices/PmRaqkJ2uk3Y9jrp9UjJ/427186ca-1cbe-4753-95af-6481dcf74de9.mp3"
+      },
+      {
+        "voice_id": "Y65Dz2XsznJl6gZHkXPi",
+        "name": "Sattar - Warm Egyptian explainer",
+        "category": "professional",
+        "age": "young",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "Runner-up educational explainer voice: warm, colloquial Egyptian like a friendly older brother.",
+        "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/500df67da44b49aea742646a793cbf07/voices/Y65Dz2XsznJl6gZHkXPi/OGnZaZFil8m8jIhbakyO.mp3"
+      },
+      {
+        "voice_id": "IES4nrmZdUBHByLBde0P",
+        "name": "Haytham - Conversation",
+        "category": "professional",
+        "age": "middle_aged",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "Crisp Egyptian narrative/storytelling option (slightly older tone; suited for Story City narrator).",
+        "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/a2bfb04e0f004a808d30b9b123c4092f/voices/IES4nrmZdUBHByLBde0P/Y8RuRq66G8IOa64qczlV.mp3"
+      },
+      {
+        "voice_id": "QvNF0qyyt1Tuy1YAmnzH",
+        "name": "Mostafa - Bold and Spirited",
+        "category": "professional",
+        "age": "young",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "Energetic young Egyptian option; best reserved if more excited celebration lines are desired.",
+        "preview_url": "https://api.us.elevenlabs.io/v1/voices/QvNF0qyyt1Tuy1YAmnzH/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJjdXN0b20iLCJ3b3Jrc3BhY2VfaWQiOiIxZGEwNmVhNjc5YTU0OTc1YWQ5NmEyMjIxZmU2NTMwZCIsImZpbGVuYW1lIjoiOE1kdU9HYzZtTzN0OGpjYnVWQUgubXAzIiwidGltZXN0YW1wIjoxNzk1NzY2NDAwMDAwMDAwfQ%3D%3D"
+      },
+      {
+        "voice_id": "5REPlS2Ja1VZ7zNA0ykn",
+        "name": "Ziad - Dynamic and Vibrant",
+        "category": "professional",
+        "age": "young",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "Bright energetic delivery.",
+        "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/1da06ea679a54975ad96a2221fe6530d/voices/5REPlS2Ja1VZ7zNA0ykn/EesUeOCyzmCNGyz1NvEp.mp3"
+      },
+      {
+        "voice_id": "4mZ0H4Jh5iqmgAWK97eF",
+        "name": "Omarii - Confident Customer Care Agent",
+        "category": "professional",
+        "age": "young",
+        "gender": "male",
+        "accent": "egyptian",
+        "suitability_notes": "Clear Egyptian articulation; more formal/supportive cadence.",
+        "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/ed9b05e6324c457685490352e9a1ec90/voices/4mZ0H4Jh5iqmgAWK97eF/7t7Cu3EbK9EVmKdNsYPy.mp3"
+      }
+    ]
+  },
+  "script_library_ref": "assets/pronunciation/yasser_voice_script_library.json",
   "bundled_recorded_prompts": [
     {
       "id": "word_kora",
@@ -23,50 +98,6 @@
       "arabic_script": "سمكة",
       "status": "bundled_verified",
       "viseme_cues_ms": [140, 229, 324, 410, 523, 562, 645]
-    }
-  ],
-  "planned_studio_recording_manifest": [
-    {
-      "id": "welcome_hero",
-      "target_asset_path": "assets/pronunciation/prompts/welcome_hero.wav",
-      "arabic_script": "أهلاً يا بطل! أنا ياسر، يلا نلعب بالأصوات!",
-      "tone_direction": "Warm, smiling, energetic older-brother greeting",
-      "status": "script_ready_text_fallback_active"
-    },
-    {
-      "id": "listen_example_first",
-      "target_asset_path": "assets/pronunciation/prompts/listen_example_first.wav",
-      "arabic_script": "اسمع الكلمة من ياسر الأول، وبعدها قولها بصوتك الجميل!",
-      "tone_direction": "Clear, calm, supportive instruction",
-      "status": "script_ready_text_fallback_active"
-    },
-    {
-      "id": "praise_bravo",
-      "target_asset_path": "assets/pronunciation/prompts/praise_bravo.wav",
-      "arabic_script": "برافو عليك يا بطل! نطقك واضح وممتاز!",
-      "tone_direction": "Joyful celebration without shouting",
-      "status": "script_ready_text_fallback_active"
-    },
-    {
-      "id": "retry_supportive",
-      "target_asset_path": "assets/pronunciation/prompts/retry_supportive.wav",
-      "arabic_script": "محاولة حلوة! معلش، يلا نسمع الكلمة ونجرب تاني بهدوء.",
-      "tone_direction": "Gentle, reassuring, zero frustration",
-      "status": "script_ready_text_fallback_active"
-    },
-    {
-      "id": "silence_hint",
-      "target_asset_path": "assets/pronunciation/prompts/silence_hint.wav",
-      "arabic_script": "مسمعتش صوتك كويس.. قرّب شوية من المايك وجرّب تاني!",
-      "tone_direction": "Curious, friendly encouragement",
-      "status": "script_ready_text_fallback_active"
-    },
-    {
-      "id": "session_completed",
-      "target_asset_path": "assets/pronunciation/prompts/session_completed.wav",
-      "arabic_script": "الله ينور يا بطل! خلصت جلسة التدريب بنجاح!",
-      "tone_direction": "Proud milestone celebration",
-      "status": "script_ready_text_fallback_active"
     }
   ]
 }

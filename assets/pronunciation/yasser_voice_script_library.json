@@ -1,0 +1,1211 @@
+{
+  "version": "1.0.0",
+  "character": "Yasser (ياسر)",
+  "dialect": "Egyptian Arabic (العامية المصرية الدافئة للأطفال)",
+  "total_scripts": 150,
+  "recommended_voice_id": "PmRaqkJ2uk3Y9jrp9UjJ",
+  "recommended_voice_name": "Mawardy - Warm, Natural Egyptian",
+  "credit_spend_status": "ZERO_CREDITS_SPENT_AWAITING_USER_APPROVAL",
+  "scripts": [
+    {
+      "id": "g01",
+      "category": "greetings",
+      "arabic_script": "أهلاً يا بطل! أنا ياسر، مبسوط إني شوفتك النهاردة!",
+      "estimated_chars": 49,
+      "target_asset_path": "assets/pronunciation/prompts/g01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g02",
+      "category": "greetings",
+      "arabic_script": "يا أهلاً وسهلاً بصديقي الجميل! جاهز نلعب سوا؟",
+      "estimated_chars": 45,
+      "target_asset_path": "assets/pronunciation/prompts/g02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g03",
+      "category": "greetings",
+      "arabic_script": "صباح الفل يا بطل! عالمنا كله منوّر بيك.",
+      "estimated_chars": 39,
+      "target_asset_path": "assets/pronunciation/prompts/g03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g04",
+      "category": "greetings",
+      "arabic_script": "أهلاً بيك في بيتك التاني.. أنا ياسر مستنيك من بدري!",
+      "estimated_chars": 51,
+      "target_asset_path": "assets/pronunciation/prompts/g04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g05",
+      "category": "greetings",
+      "arabic_script": "نورت يا صديقي! تحب نروح فين النهاردة؟",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/g05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g06",
+      "category": "greetings",
+      "arabic_script": "إزيك يا بطل؟ يلا نكتشف صوت جديد وكلمة جديدة!",
+      "estimated_chars": 44,
+      "target_asset_path": "assets/pronunciation/prompts/g06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g07",
+      "category": "greetings",
+      "arabic_script": "أهلاً يا نجم! النهاردة يوم جميل لمغامرة صغيرة.",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/g07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "g08",
+      "category": "greetings",
+      "arabic_script": "يا مرحباً! أنا هنا جنبك في كل خطوة.",
+      "estimated_chars": 35,
+      "target_asset_path": "assets/pronunciation/prompts/g08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob01",
+      "category": "onboarding",
+      "arabic_script": "أهلاً! أنا ياسر، صاحبك في رحلة الأصوات والكلمات.",
+      "estimated_chars": 48,
+      "target_asset_path": "assets/pronunciation/prompts/ob01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob02",
+      "category": "onboarding",
+      "arabic_script": "في عالمنا مش بنمتحن.. إحنا بنلعب ونسمع ونكتشف سوا!",
+      "estimated_chars": 50,
+      "target_asset_path": "assets/pronunciation/prompts/ob02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob03",
+      "category": "onboarding",
+      "arabic_script": "دوس عليّا في أي وقت عشان أسلّم عليك أو أشرحلك تاني.",
+      "estimated_chars": 51,
+      "target_asset_path": "assets/pronunciation/prompts/ob03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob04",
+      "category": "onboarding",
+      "arabic_script": "دي الكورة! اضغط عليها واسمع صوتها الجميل معايا.",
+      "estimated_chars": 47,
+      "target_asset_path": "assets/pronunciation/prompts/ob04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob05",
+      "category": "onboarding",
+      "arabic_script": "كل كلمة جديدة هنتعلمها هتفتح زهرة أو كنز جديد في بيتك!",
+      "estimated_chars": 54,
+      "target_asset_path": "assets/pronunciation/prompts/ob05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob06",
+      "category": "onboarding",
+      "arabic_script": "تقدر تختار ألوان بيتك وحيوانك المفضل زي ما تحب.",
+      "estimated_chars": 47,
+      "target_asset_path": "assets/pronunciation/prompts/ob06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob07",
+      "category": "onboarding",
+      "arabic_script": "لو احتجت مساعدة، أنا جنبك دايماً نجرّب سوا براحتنا.",
+      "estimated_chars": 51,
+      "target_asset_path": "assets/pronunciation/prompts/ob07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ob08",
+      "category": "onboarding",
+      "arabic_script": "يلا بينا نفتح باب المغامرة!",
+      "estimated_chars": 27,
+      "target_asset_path": "assets/pronunciation/prompts/ob08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi01",
+      "category": "world_introductions",
+      "arabic_script": "ده بيت ياسر! هنا بتزرع زهورك وتزور كنوزك وحيواناتك.",
+      "estimated_chars": 51,
+      "target_asset_path": "assets/pronunciation/prompts/wi01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi02",
+      "category": "world_introductions",
+      "arabic_script": "أهلاً في حديقة الأصوات! الجو هادي والورد مستني كلماتنا.",
+      "estimated_chars": 55,
+      "target_asset_path": "assets/pronunciation/prompts/wi02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi03",
+      "category": "world_introductions",
+      "arabic_script": "وصلنا غابة الحيوانات! تعال نسمع أصوات أصحابنا الحلوين.",
+      "estimated_chars": 54,
+      "target_asset_path": "assets/pronunciation/prompts/wi03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi04",
+      "category": "world_introductions",
+      "arabic_script": "دي جزيرة الكلمات! عدّينا الكوبري عشان نكتشف كنوز البحر.",
+      "estimated_chars": 55,
+      "target_asset_path": "assets/pronunciation/prompts/wi04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi05",
+      "category": "world_introductions",
+      "arabic_script": "مرحباً بيك في مدينة الحكايات! كل بيت هنا جواه قصة ظريفة.",
+      "estimated_chars": 56,
+      "target_asset_path": "assets/pronunciation/prompts/wi05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi06",
+      "category": "world_introductions",
+      "arabic_script": "وصلنا قلعة الأبطال! هنا التحديات الممتعة للشجعان زيك.",
+      "estimated_chars": 53,
+      "target_asset_path": "assets/pronunciation/prompts/wi06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi07",
+      "category": "world_introductions",
+      "arabic_script": "شايف الخريطة؟ اختار أي مكان يعجبك واضغط عليه عشان نروحه.",
+      "estimated_chars": 56,
+      "target_asset_path": "assets/pronunciation/prompts/wi07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "wi08",
+      "category": "world_introductions",
+      "arabic_script": "تقدر كمان تقلب الخريطة لقائمة لو ده أسهل لك!",
+      "estimated_chars": 44,
+      "target_asset_path": "assets/pronunciation/prompts/wi08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex01",
+      "category": "exploration",
+      "arabic_script": "أوه! لمست الزهرة الجميلة.. ريحتها بتفكرنا بصوت جديد!",
+      "estimated_chars": 52,
+      "target_asset_path": "assets/pronunciation/prompts/ex01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex02",
+      "category": "exploration",
+      "arabic_script": "بص الأرنب بيضحك إزاي لما سمع صوتك!",
+      "estimated_chars": 34,
+      "target_asset_path": "assets/pronunciation/prompts/ex02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex03",
+      "category": "exploration",
+      "arabic_script": "الصندوق السري فيه حاجة مستخبية.. تحب نفتحه؟",
+      "estimated_chars": 43,
+      "target_asset_path": "assets/pronunciation/prompts/ex03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex04",
+      "category": "exploration",
+      "arabic_script": "السمكة الصغيرة بتسلّم عليك في النهر!",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/ex04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex05",
+      "category": "exploration",
+      "arabic_script": "تعال نشوف الكلمة دي اسمها إيه ونسمعها مع بعض.",
+      "estimated_chars": 45,
+      "target_asset_path": "assets/pronunciation/prompts/ex05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex06",
+      "category": "exploration",
+      "arabic_script": "الفراشة طارت فوق الورد! شكلها مبسوطة بيك.",
+      "estimated_chars": 41,
+      "target_asset_path": "assets/pronunciation/prompts/ex06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex07",
+      "category": "exploration",
+      "arabic_script": "كل ما تلمس حاجة في الحديقة هتلاقي حكاية صغيرة مستنياك.",
+      "estimated_chars": 54,
+      "target_asset_path": "assets/pronunciation/prompts/ex07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ex08",
+      "category": "exploration",
+      "arabic_script": "واو! اكتشفت مكان جديد على الخريطة!",
+      "estimated_chars": 34,
+      "target_asset_path": "assets/pronunciation/prompts/ex08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai01",
+      "category": "activity_instructions",
+      "arabic_script": "اسمع الكلمة الأول كويس، وبعدين دوس على الصورة اللي شبهها.",
+      "estimated_chars": 57,
+      "target_asset_path": "assets/pronunciation/prompts/ai01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai02",
+      "category": "activity_instructions",
+      "arabic_script": "هتسمع صوتين.. قولي الاتنين زي بعض ولا مختلفين؟",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/ai02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai03",
+      "category": "activity_instructions",
+      "arabic_script": "افتح الصندوق السري، واسمع الصوت عشان توصّله بالصورة الصح.",
+      "estimated_chars": 57,
+      "target_asset_path": "assets/pronunciation/prompts/ai03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai04",
+      "category": "activity_instructions",
+      "arabic_script": "خلّينا نبقى محققين! دور معايا على كل حاجة بتبدأ بنفس الصوت.",
+      "estimated_chars": 59,
+      "target_asset_path": "assets/pronunciation/prompts/ai04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai05",
+      "category": "activity_instructions",
+      "arabic_script": "اسمع الحكاية دي، واختار الكلمة الناقصة اللي تكمل الصورة.",
+      "estimated_chars": 56,
+      "target_asset_path": "assets/pronunciation/prompts/ai05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai06",
+      "category": "activity_instructions",
+      "arabic_script": "اضغط على المايك واتكلم بهدوء وبصوت واضح، ولما تخلص دوس تاني.",
+      "estimated_chars": 60,
+      "target_asset_path": "assets/pronunciation/prompts/ai06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai07",
+      "category": "activity_instructions",
+      "arabic_script": "المس الصورة عشان تعرف اسمها وتسمع صوت أول حرف فيها.",
+      "estimated_chars": 51,
+      "target_asset_path": "assets/pronunciation/prompts/ai07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ai08",
+      "category": "activity_instructions",
+      "arabic_script": "لو حابب تسمعني تاني، اضغط على زر السماعة في أي وقت!",
+      "estimated_chars": 51,
+      "target_asset_path": "assets/pronunciation/prompts/ai08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev01",
+      "category": "educational_vocabulary",
+      "arabic_script": "كورة! كـ كـ كورة.. بنلعب بيها في الجنينة.",
+      "estimated_chars": 41,
+      "target_asset_path": "assets/pronunciation/prompts/ev01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev02",
+      "category": "educational_vocabulary",
+      "arabic_script": "سمكة! سـ سـ سمكة.. بتعوم في الميه بالراحة.",
+      "estimated_chars": 42,
+      "target_asset_path": "assets/pronunciation/prompts/ev02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev03",
+      "category": "educational_vocabulary",
+      "arabic_script": "بطة! بـ طـ بطة.. صوت الطاء تخين وقوي!",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/ev03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev04",
+      "category": "educational_vocabulary",
+      "arabic_script": "قطة! قـ طـ قطة.. قطة ناعمة وجميلة.",
+      "estimated_chars": 34,
+      "target_asset_path": "assets/pronunciation/prompts/ev04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev05",
+      "category": "educational_vocabulary",
+      "arabic_script": "أرنب! أ ر ن ب.. بينط بسرعة أرنب!",
+      "estimated_chars": 32,
+      "target_asset_path": "assets/pronunciation/prompts/ev05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev06",
+      "category": "educational_vocabulary",
+      "arabic_script": "شمس! شـ شـ شمس.. منوّرة السما الصبح.",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/ev06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev07",
+      "category": "educational_vocabulary",
+      "arabic_script": "كلب! كـ كـ كلب.. صاحب وفيّ في الغابة.",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/ev07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev08",
+      "category": "educational_vocabulary",
+      "arabic_script": "تفاحة! تـ فـ ا حة.. حمرا ولذيذة!",
+      "estimated_chars": 32,
+      "target_asset_path": "assets/pronunciation/prompts/ev08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev09",
+      "category": "educational_vocabulary",
+      "arabic_script": "موزة! مـ و ز ة.. صفرا وجميلة.",
+      "estimated_chars": 29,
+      "target_asset_path": "assets/pronunciation/prompts/ev09.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev10",
+      "category": "educational_vocabulary",
+      "arabic_script": "جمل! جـ مـ ل.. بيمشي في الصحرا بصبر.",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/ev10.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev11",
+      "category": "educational_vocabulary",
+      "arabic_script": "حصان! حـ صـ ا ن.. بيجري في المزرعة.",
+      "estimated_chars": 35,
+      "target_asset_path": "assets/pronunciation/prompts/ev11.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev12",
+      "category": "educational_vocabulary",
+      "arabic_script": "فيل! فـ يـ ل.. ودانه كبيرة وطيّب.",
+      "estimated_chars": 33,
+      "target_asset_path": "assets/pronunciation/prompts/ev12.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev13",
+      "category": "educational_vocabulary",
+      "arabic_script": "قلم! قـ لـ م.. بنرسم بيه في الكراسة.",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/ev13.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev14",
+      "category": "educational_vocabulary",
+      "arabic_script": "كتاب! كـ تـ ا ب.. مليان حكايات وصور.",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/ev14.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev15",
+      "category": "educational_vocabulary",
+      "arabic_script": "بيت! بـ يـ ت.. دافي وهادي.",
+      "estimated_chars": 26,
+      "target_asset_path": "assets/pronunciation/prompts/ev15.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev16",
+      "category": "educational_vocabulary",
+      "arabic_script": "عربية! عـ ر بـ يـ ة.. ماشية على الطريق.",
+      "estimated_chars": 39,
+      "target_asset_path": "assets/pronunciation/prompts/ev16.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev17",
+      "category": "educational_vocabulary",
+      "arabic_script": "باب! بـ ا ب.. بنفتحه بالراحة.",
+      "estimated_chars": 29,
+      "target_asset_path": "assets/pronunciation/prompts/ev17.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev18",
+      "category": "educational_vocabulary",
+      "arabic_script": "طيارة! طـ يـ ا ر ة.. طايرة فوق السحاب.",
+      "estimated_chars": 38,
+      "target_asset_path": "assets/pronunciation/prompts/ev18.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev19",
+      "category": "educational_vocabulary",
+      "arabic_script": "ولد! و لـ د.. بطل شاطر ومجتهد.",
+      "estimated_chars": 30,
+      "target_asset_path": "assets/pronunciation/prompts/ev19.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev20",
+      "category": "educational_vocabulary",
+      "arabic_script": "بنت! بـ نـ ت.. بطلة جميلة وذكية.",
+      "estimated_chars": 32,
+      "target_asset_path": "assets/pronunciation/prompts/ev20.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev21",
+      "category": "educational_vocabulary",
+      "arabic_script": "عين! عـ يـ ن.. بنشوف بيها الدنيا.",
+      "estimated_chars": 33,
+      "target_asset_path": "assets/pronunciation/prompts/ev21.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev22",
+      "category": "educational_vocabulary",
+      "arabic_script": "إيد! إ يـ د.. بنسلّم بيها على أصحابنا.",
+      "estimated_chars": 38,
+      "target_asset_path": "assets/pronunciation/prompts/ev22.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev23",
+      "category": "educational_vocabulary",
+      "arabic_script": "رجل! ر جـ ل.. بنمشي ونجري بيها.",
+      "estimated_chars": 31,
+      "target_asset_path": "assets/pronunciation/prompts/ev23.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev24",
+      "category": "educational_vocabulary",
+      "arabic_script": "تعلب! تـ عـ لـ ب.. ذكي ومستخبي ورا الشجرة.",
+      "estimated_chars": 42,
+      "target_asset_path": "assets/pronunciation/prompts/ev24.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev25",
+      "category": "educational_vocabulary",
+      "arabic_script": "دهب! د هـ ب.. بيلمع زي الشمس.",
+      "estimated_chars": 29,
+      "target_asset_path": "assets/pronunciation/prompts/ev25.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev26",
+      "category": "educational_vocabulary",
+      "arabic_script": "زرافة! ز ر ا فـ ة.. رقبتها طويلة فوق الشجر.",
+      "estimated_chars": 43,
+      "target_asset_path": "assets/pronunciation/prompts/ev26.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev27",
+      "category": "educational_vocabulary",
+      "arabic_script": "هدهد! هـ د هـ د.. طائر جميل لونه حلو.",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/ev27.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ev28",
+      "category": "educational_vocabulary",
+      "arabic_script": "فراشة! فـ ر ا شـ ة.. ألوانها مبهجة بتطير بين الزهور.",
+      "estimated_chars": 52,
+      "target_asset_path": "assets/pronunciation/prompts/ev28.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le01",
+      "category": "listening_exercises",
+      "arabic_script": "ركّز بودانك الحلوين.. الكلمة الأولى دي!",
+      "estimated_chars": 39,
+      "target_asset_path": "assets/pronunciation/prompts/le01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le02",
+      "category": "listening_exercises",
+      "arabic_script": "ودلوقتي اسمع الكلمة التانية كويس!",
+      "estimated_chars": 33,
+      "target_asset_path": "assets/pronunciation/prompts/le02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le03",
+      "category": "listening_exercises",
+      "arabic_script": "هل الكلمتين طلعوا بنفس الصوت بالظبط؟",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/le03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le04",
+      "category": "listening_exercises",
+      "arabic_script": "انتبه لأول صوت في الكلمة.. طالع إزاي؟",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/le04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le05",
+      "category": "listening_exercises",
+      "arabic_script": "اسمع الهمسة اللي جوه الصندوق السري ده.",
+      "estimated_chars": 38,
+      "target_asset_path": "assets/pronunciation/prompts/le05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le06",
+      "category": "listening_exercises",
+      "arabic_script": "تحب نعيد الاستماع مرة كمان؟ ولا يهمك!",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/le06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le07",
+      "category": "listening_exercises",
+      "arabic_script": "فرق صغير في الصوت بيعمل كلمة مختلفة تماماً!",
+      "estimated_chars": 43,
+      "target_asset_path": "assets/pronunciation/prompts/le07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "le08",
+      "category": "listening_exercises",
+      "arabic_script": "ودانك بقيت سريعة وممتازة في التمييز!",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/le08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en01",
+      "category": "encouragement",
+      "arabic_script": "مكملين سوا خطوة بخطوة!",
+      "estimated_chars": 22,
+      "target_asset_path": "assets/pronunciation/prompts/en01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en02",
+      "category": "encouragement",
+      "arabic_script": "أنا فخور بمحاولتك الجميلة دي.",
+      "estimated_chars": 29,
+      "target_asset_path": "assets/pronunciation/prompts/en02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en03",
+      "category": "encouragement",
+      "arabic_script": "خد وقتك خالص، إحنا مش مستعجلين.",
+      "estimated_chars": 31,
+      "target_asset_path": "assets/pronunciation/prompts/en03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en04",
+      "category": "encouragement",
+      "arabic_script": "إنت بتتقدم بالراحة وبثقة كل مرة.",
+      "estimated_chars": 32,
+      "target_asset_path": "assets/pronunciation/prompts/en04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en05",
+      "category": "encouragement",
+      "arabic_script": "محاولة حلوة! المحاولة هي سر الشطارة.",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/en05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en06",
+      "category": "encouragement",
+      "arabic_script": "شايف تركيزك؟ حاجة تفرح بجد!",
+      "estimated_chars": 27,
+      "target_asset_path": "assets/pronunciation/prompts/en06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en07",
+      "category": "encouragement",
+      "arabic_script": "كفاية إنك جربت بنفسك يا بطل.",
+      "estimated_chars": 28,
+      "target_asset_path": "assets/pronunciation/prompts/en07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "en08",
+      "category": "encouragement",
+      "arabic_script": "يلا نكمل لما تحب، ولو عايز ترتاح تمام جداً.",
+      "estimated_chars": 43,
+      "target_asset_path": "assets/pronunciation/prompts/en08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca01",
+      "category": "correct_answers",
+      "arabic_script": "برافو عليك! اختيارك كان في مكانه بالظبط.",
+      "estimated_chars": 40,
+      "target_asset_path": "assets/pronunciation/prompts/ca01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca02",
+      "category": "correct_answers",
+      "arabic_script": "يا سلام عليك! ودانك صاحية جداً.",
+      "estimated_chars": 31,
+      "target_asset_path": "assets/pronunciation/prompts/ca02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca03",
+      "category": "correct_answers",
+      "arabic_script": "ممتاز يا بطل! لقيت الصوت الصح من أول مرة.",
+      "estimated_chars": 41,
+      "target_asset_path": "assets/pronunciation/prompts/ca03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca04",
+      "category": "correct_answers",
+      "arabic_script": "شاطر جداً! النطق طلع واضح ومظبوط.",
+      "estimated_chars": 33,
+      "target_asset_path": "assets/pronunciation/prompts/ca04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca05",
+      "category": "correct_answers",
+      "arabic_script": "الله ينور! جمّعت قطعة جديدة لكتاب مغامرتك.",
+      "estimated_chars": 42,
+      "target_asset_path": "assets/pronunciation/prompts/ca05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca06",
+      "category": "correct_answers",
+      "arabic_script": "صح مية في المية! كمل يا نجم.",
+      "estimated_chars": 28,
+      "target_asset_path": "assets/pronunciation/prompts/ca06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca07",
+      "category": "correct_answers",
+      "arabic_script": "واو! كسبت زهرة جميلة نزرعها في بيتنا.",
+      "estimated_chars": 37,
+      "target_asset_path": "assets/pronunciation/prompts/ca07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ca08",
+      "category": "correct_answers",
+      "arabic_script": "إبداع يا صديقي! الصوت طالع نضيف وواضح.",
+      "estimated_chars": 38,
+      "target_asset_path": "assets/pronunciation/prompts/ca08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic01",
+      "category": "incorrect_choices",
+      "arabic_script": "قريب جداً! تعال نسمع الصوت تاني ونختار سوا.",
+      "estimated_chars": 43,
+      "target_asset_path": "assets/pronunciation/prompts/ic01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic02",
+      "category": "incorrect_choices",
+      "arabic_script": "مفيش مشكلة خالص! يلا نجرب واحدة تانية.",
+      "estimated_chars": 38,
+      "target_asset_path": "assets/pronunciation/prompts/ic02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic03",
+      "category": "incorrect_choices",
+      "arabic_script": "دي كلمة قريبة ليها، بس إحنا بندور على صوت تاني.. اسمع كده!",
+      "estimated_chars": 58,
+      "target_asset_path": "assets/pronunciation/prompts/ic03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic04",
+      "category": "incorrect_choices",
+      "arabic_script": "محاولة ذكية! جرّب الصندوق التاني وشوف فيه إيه.",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/ic04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic05",
+      "category": "incorrect_choices",
+      "arabic_script": "لأ، دي بتبدأ بحرف مختلف.. تعال نسمعها بهدوء.",
+      "estimated_chars": 44,
+      "target_asset_path": "assets/pronunciation/prompts/ic05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic06",
+      "category": "incorrect_choices",
+      "arabic_script": "عادي جداً يا بطل، كلنا بنتلخبط في الأول!",
+      "estimated_chars": 40,
+      "target_asset_path": "assets/pronunciation/prompts/ic06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic07",
+      "category": "incorrect_choices",
+      "arabic_script": "نسمع الكلمة ببطء المرة دي، وأنا متأكد هتعرفها.",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/ic07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ic08",
+      "category": "incorrect_choices",
+      "arabic_script": "حلو إنك حاولت! بص على الصورة التانية كده.",
+      "estimated_chars": 41,
+      "target_asset_path": "assets/pronunciation/prompts/ic08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "us01",
+      "category": "uncertain_speech_assessment",
+      "arabic_script": "قربت قوي! الصوت ما كانش واضح تماماً، تحب نقولها سوا مرة كمان؟",
+      "estimated_chars": 61,
+      "target_asset_path": "assets/pronunciation/prompts/us01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "us02",
+      "category": "uncertain_speech_assessment",
+      "arabic_script": "سمعت طرف الصوت، يلا نجرّب نعلي صوتنا سنة بسيطة.",
+      "estimated_chars": 47,
+      "target_asset_path": "assets/pronunciation/prompts/us02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "us03",
+      "category": "uncertain_speech_assessment",
+      "arabic_script": "أحياناً الكمبيوتر ما بيسمعش الهمس كويس.. نقولها تاني بهدوء؟",
+      "estimated_chars": 59,
+      "target_asset_path": "assets/pronunciation/prompts/us03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "us04",
+      "category": "uncertain_speech_assessment",
+      "arabic_script": "المهم إنك نطقتها معايا! لو تحب جرّب مرة تانية أو نكمل.",
+      "estimated_chars": 54,
+      "target_asset_path": "assets/pronunciation/prompts/us04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "us05",
+      "category": "uncertain_speech_assessment",
+      "arabic_script": "الصوت جه متقطع شوية، خلّينا ناخد نفس ونجرب تاني.",
+      "estimated_chars": 48,
+      "target_asset_path": "assets/pronunciation/prompts/us05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "us06",
+      "category": "uncertain_speech_assessment",
+      "arabic_script": "شاطر في محاولتك، يلا نقولها بوضوح أكتر شوية.",
+      "estimated_chars": 44,
+      "target_asset_path": "assets/pronunciation/prompts/us06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rp01",
+      "category": "recording_problems",
+      "arabic_script": "مسمعتش صوت خالص المرة دي.. قرّب من المايك وقول تاني!",
+      "estimated_chars": 52,
+      "target_asset_path": "assets/pronunciation/prompts/rp01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rp02",
+      "category": "recording_problems",
+      "arabic_script": "في دوشة بسيطة حوالينا، خلّينا نجرب في مكان أهدى شوية.",
+      "estimated_chars": 53,
+      "target_asset_path": "assets/pronunciation/prompts/rp02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rp03",
+      "category": "recording_problems",
+      "arabic_script": "يبدو المايك ما لحقش يسجل، دوس واضغط بعد ثانية واحدة.",
+      "estimated_chars": 52,
+      "target_asset_path": "assets/pronunciation/prompts/rp03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rp04",
+      "category": "recording_problems",
+      "arabic_script": "ولا يهمك، الخطأ من الميكروفون مش منك! يلا نعيدها.",
+      "estimated_chars": 49,
+      "target_asset_path": "assets/pronunciation/prompts/rp04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rp05",
+      "category": "recording_problems",
+      "arabic_script": "تأكد بس إن إذن الميكروفون مفتوح عشان أسمعك كويس.",
+      "estimated_chars": 48,
+      "target_asset_path": "assets/pronunciation/prompts/rp05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rp06",
+      "category": "recording_problems",
+      "arabic_script": "التسجيل اتقطع بدري، المرة دي قول الكلمة كاملة وبعدين اقفل المايك.",
+      "estimated_chars": 65,
+      "target_asset_path": "assets/pronunciation/prompts/rp06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw01",
+      "category": "rewards",
+      "arabic_script": "مبروك! فتحت زهرة جديدة لحديقة بيتنا!",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/rw01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw02",
+      "category": "rewards",
+      "arabic_script": "يا بختك! انضم لينا حيوان جديد يسلّم عليك في البيت.",
+      "estimated_chars": 50,
+      "target_asset_path": "assets/pronunciation/prompts/rw02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw03",
+      "category": "rewards",
+      "arabic_script": "ملصق جديد انضاف لكتاب مغامرتك!",
+      "estimated_chars": 30,
+      "target_asset_path": "assets/pronunciation/prompts/rw03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw04",
+      "category": "rewards",
+      "arabic_script": "دي زينة حلوة لبيت ياسر.. تقدر تحطها في أي وقت.",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/rw04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw05",
+      "category": "rewards",
+      "arabic_script": "كسبت وسام المغامر النهاردة بمجهودك!",
+      "estimated_chars": 35,
+      "target_asset_path": "assets/pronunciation/prompts/rw05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw06",
+      "category": "rewards",
+      "arabic_script": "صندوق الكنز نور بكنز جديد عشانك.",
+      "estimated_chars": 32,
+      "target_asset_path": "assets/pronunciation/prompts/rw06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw07",
+      "category": "rewards",
+      "arabic_script": "تحب تزرع الزهرة الجديدة في حديقتك دلوقتي؟",
+      "estimated_chars": 41,
+      "target_asset_path": "assets/pronunciation/prompts/rw07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rw08",
+      "category": "rewards",
+      "arabic_script": "صفحة حكاية جديدة اتفتحت في ألبومك!",
+      "estimated_chars": 34,
+      "target_asset_path": "assets/pronunciation/prompts/rw08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ss01",
+      "category": "session_summaries",
+      "arabic_script": "عاش يا بطل! النهاردة استكشفنا كلمات جميلة ولعبنا سوا.",
+      "estimated_chars": 53,
+      "target_asset_path": "assets/pronunciation/prompts/ss01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ss02",
+      "category": "session_summaries",
+      "arabic_script": "إنجاز حلو النهاردة: عرفت أصوات جديدة وشاركت بكل حماس!",
+      "estimated_chars": 53,
+      "target_asset_path": "assets/pronunciation/prompts/ss02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ss03",
+      "category": "session_summaries",
+      "arabic_script": "كل حاجة عملتها اتحفظت في بيتك وكتاب مغامرتك.",
+      "estimated_chars": 44,
+      "target_asset_path": "assets/pronunciation/prompts/ss03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ss04",
+      "category": "session_summaries",
+      "arabic_script": "مستنيك المرة الجاية نكمّل رحلة حديقة الأصوات لو حابب!",
+      "estimated_chars": 53,
+      "target_asset_path": "assets/pronunciation/prompts/ss04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ss05",
+      "category": "session_summaries",
+      "arabic_script": "شوف قد إيه الحديقة بقت مبهجة بمشاركتك النهاردة.",
+      "estimated_chars": 47,
+      "target_asset_path": "assets/pronunciation/prompts/ss05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "ss06",
+      "category": "session_summaries",
+      "arabic_script": "إنت عملت شغل ممتاز النهاردة.. وقت الراحة جه!",
+      "estimated_chars": 44,
+      "target_asset_path": "assets/pronunciation/prompts/ss06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg01",
+      "category": "return_greetings",
+      "arabic_script": "أهلاً بعودتك يا بطل! افتكرت الكلمات اللي زرعناها المرة اللي فاتت؟",
+      "estimated_chars": 65,
+      "target_asset_path": "assets/pronunciation/prompts/rg01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg02",
+      "category": "return_greetings",
+      "arabic_script": "يا أهلاً! عندنا مغامرة جديدة في انتظارك لما تكون جاهز.",
+      "estimated_chars": 54,
+      "target_asset_path": "assets/pronunciation/prompts/rg02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg03",
+      "category": "return_greetings",
+      "arabic_script": "وحشتني يا صديقي! بيتنا والزهور كانوا مستنيينك.",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/rg03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg04",
+      "category": "return_greetings",
+      "arabic_script": "لسه فاكر اللعبة اللي وقفنا عندها؟ تقدر تكملها من مكان ما وقفنا.",
+      "estimated_chars": 63,
+      "target_asset_path": "assets/pronunciation/prompts/rg04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg05",
+      "category": "return_greetings",
+      "arabic_script": "أهلاً يا بطل! الأخصائي بتاعك سابلك مغامرة ظريفة على مقاسك النهاردة.",
+      "estimated_chars": 67,
+      "target_asset_path": "assets/pronunciation/prompts/rg05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg06",
+      "category": "return_greetings",
+      "arabic_script": "نورت من تاني بعد الغيبة الحلوة دي! نبدأ بهدوء من بيتك.",
+      "estimated_chars": 54,
+      "target_asset_path": "assets/pronunciation/prompts/rg06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg07",
+      "category": "return_greetings",
+      "arabic_script": "بص كده في صندوق الكنز.. في هدية حلوة مستنياك تشوفها!",
+      "estimated_chars": 52,
+      "target_asset_path": "assets/pronunciation/prompts/rg07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "rg08",
+      "category": "return_greetings",
+      "arabic_script": "أهلاً يا نجم! جاهز نزود زهرة جديدة في الحديقة؟",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/rg08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw01",
+      "category": "farewell",
+      "arabic_script": "مع السلامة يا بطل! استمتعت جداً باللعب معاك النهاردة.",
+      "estimated_chars": 53,
+      "target_asset_path": "assets/pronunciation/prompts/fw01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw02",
+      "category": "farewell",
+      "arabic_script": "باي باي يا صديقي! أستناك في مغامرة تانية قريب.",
+      "estimated_chars": 46,
+      "target_asset_path": "assets/pronunciation/prompts/fw02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw03",
+      "category": "farewell",
+      "arabic_script": "ارتاح كويس، وكل كنوزك محفوظة هنا في أمان!",
+      "estimated_chars": 41,
+      "target_asset_path": "assets/pronunciation/prompts/fw03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw04",
+      "category": "farewell",
+      "arabic_script": "أشوفك على خير يا نجم! ياسر دايماً صاحبك.",
+      "estimated_chars": 40,
+      "target_asset_path": "assets/pronunciation/prompts/fw04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw05",
+      "category": "farewell",
+      "arabic_script": "يوم جميل خلص بانبساط.. مع السلامة!",
+      "estimated_chars": 34,
+      "target_asset_path": "assets/pronunciation/prompts/fw05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw06",
+      "category": "farewell",
+      "arabic_script": "خلي بالك من نفسك، وهتلاقيني مستنيك أول ما ترجع.",
+      "estimated_chars": 47,
+      "target_asset_path": "assets/pronunciation/prompts/fw06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw07",
+      "category": "farewell",
+      "arabic_script": "تقدر تقفل في أي وقت، كل شغلك متشال في أمان!",
+      "estimated_chars": 43,
+      "target_asset_path": "assets/pronunciation/prompts/fw07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "fw08",
+      "category": "farewell",
+      "arabic_script": "سلاام يا بطل المغامرات! نتقابل قريب.",
+      "estimated_chars": 36,
+      "target_asset_path": "assets/pronunciation/prompts/fw08.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st01",
+      "category": "short_stories",
+      "arabic_script": "في يوم مشمس، طلع ياسر الجنينة ولعب بالكورة الحمرا جنب الورد.",
+      "estimated_chars": 60,
+      "target_asset_path": "assets/pronunciation/prompts/st01.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st02",
+      "category": "short_stories",
+      "arabic_script": "عند النهر الأزرق، شافت البطة الصفرا سمكة صغيرة بتعوم وتضحك.",
+      "estimated_chars": 59,
+      "target_asset_path": "assets/pronunciation/prompts/st02.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st03",
+      "category": "short_stories",
+      "arabic_script": "نط الأرنب الأبيض ورا الشجرة عشان يلاقي تفاحة حلوة ياكلها.",
+      "estimated_chars": 57,
+      "target_asset_path": "assets/pronunciation/prompts/st03.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st04",
+      "category": "short_stories",
+      "arabic_script": "جوه البيت الدافي، القطة الصغيرة نامت جنب الكتاب والقلم.",
+      "estimated_chars": 55,
+      "target_asset_path": "assets/pronunciation/prompts/st04.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st05",
+      "category": "short_stories",
+      "arabic_script": "فوق السحاب العالي، طارت الطيارة بسرعة وشفنا شمس منوّرة.",
+      "estimated_chars": 55,
+      "target_asset_path": "assets/pronunciation/prompts/st05.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st06",
+      "category": "short_stories",
+      "arabic_script": "في الغابة الخضرا، قابلت الفراشة الملونة زرافة طويلة وصحبوها.",
+      "estimated_chars": 60,
+      "target_asset_path": "assets/pronunciation/prompts/st06.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st07",
+      "category": "short_stories",
+      "arabic_script": "فتح ياسر باب القلعة ولقى صندوق دهب مليان حروف بتغني!",
+      "estimated_chars": 52,
+      "target_asset_path": "assets/pronunciation/prompts/st07.wav",
+      "status": "script_ready_pending_voice_approval"
+    },
+    {
+      "id": "st08",
+      "category": "short_stories",
+      "arabic_script": "وتوتة توتة، خلصت الحدوتة.. بس مغامرتنا لسه مستمرة!",
+      "estimated_chars": 50,
+      "target_asset_path": "assets/pronunciation/prompts/st08.wav",
+      "status": "script_ready_pending_voice_approval"
+    }
+  ]
+}

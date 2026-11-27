@@ -102,4 +102,35 @@ abstract final class AppColors {
     end: Alignment.bottomRight,
     colors: [primaryLight, primary],
   );
+
+  // 9. World Location Accents (Harmonized Story Destinations — Never Disconnected)
+  // بيت ياسر (Yasser's Personal Home)
+  static const Color worldHomeAccent = Color(0xFFF69820);
+  static const Color worldHomeSoft = Color(0xFFFFF0DB);
+  static const Color worldHomeDeep = Color(0xFFA85800);
+
+  // حديقة الأصوات (Sound Garden)
+  static const Color worldGardenAccent = Color(0xFF19A98B);
+  static const Color worldGardenSoft = Color(0xFFE2F8F1);
+  static const Color worldGardenDeep = Color(0xFF0C6F5A);
+
+  // غابة الحيوانات (Animal Forest)
+  static const Color worldForestAccent = Color(0xFFD97736);
+  static const Color worldForestSoft = Color(0xFFFDEEE2);
+  static const Color worldForestDeep = Color(0xFF8F4414);
+
+  // جزيرة الكلمات (Word Island)
+  static const Color worldIslandAccent = Color(0xFF2E86DE);
+  static const Color worldIslandSoft = Color(0xFFE5F2FF);
+  static const Color worldIslandDeep = Color(0xFF18589A);
+
+  // مدينة الحكايات (Story City)
+  static const Color worldStoryAccent = Color(0xFF6C5CE7);
+  static const Color worldStorySoft = Color(0xFFEFEAFF);
+  static const Color worldStoryDeep = Color(0xFF4333B0);
+
+  // قلعة الأبطال (Hero Castle)
+  static const Color worldCastleAccent = Color(0xFFD99100);
+  static const Color worldCastleSoft = Color(0xFFFFF5D6);
+  static const Color worldCastleDeep = Color(0xFF8C5C00);
 }
