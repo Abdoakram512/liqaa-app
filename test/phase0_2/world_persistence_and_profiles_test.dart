@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:liqaa_app/features/pronunciation_game/models/yasser_prompt.dart';
 import 'package:liqaa_app/features/specialist/data/models/specialist_models.dart';
 import 'package:liqaa_app/features/specialist/data/repos/specialist_repository.dart';
 import 'package:liqaa_app/features/specialist/presentation/cubits/specialist_cubit.dart';
@@ -271,6 +276,68 @@ void main() {
         await cubit2.removeAssignment(created.id);
         expect(cubit2.state.assignmentsForCase(c.id), isEmpty);
         await cubit2.close();
+      },
+    );
+
+    test(
+      'all 150 bundled ElevenLabs Egyptian Arabic WAV assets exist as 24kHz mono PCM16 RIFF WAVE and resolve via YasserPrompt',
+      () {
+        final manifestFile = File(
+          'assets/pronunciation/yasser_voice_script_library.json',
+        );
+        expect(manifestFile.existsSync(), isTrue);
+
+        final decoded =
+            jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+        final scripts = (decoded['scripts'] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+
+        expect(scripts.length, 150);
+        expect(YasserPrompt.bundledScriptDurationsMs.length, 150);
+
+        for (final entry in scripts) {
+          final id = entry['id'] as String;
+          final targetAssetPath = entry['target_asset_path'] as String;
+          final wavFile = File(targetAssetPath);
+          expect(wavFile.existsSync(), isTrue, reason: 'Missing WAV for $id');
+
+          final bytes = wavFile.readAsBytesSync();
+          expect(bytes.length, greaterThan(44), reason: '$id too small');
+
+          final riff = ascii.decode(bytes.sublist(0, 4));
+          final wave = ascii.decode(bytes.sublist(8, 12));
+          final bd = ByteData.sublistView(bytes);
+          final channels = bd.getUint16(22, Endian.little);
+          final sampleRate = bd.getUint32(24, Endian.little);
+          final bitsPerSample = bd.getUint16(34, Endian.little);
+
+          expect(riff, 'RIFF', reason: '$id bad RIFF');
+          expect(wave, 'WAVE', reason: '$id bad WAVE');
+          expect(channels, 1, reason: '$id must be mono');
+          expect(sampleRate, 24000, reason: '$id must be 24kHz');
+          expect(bitsPerSample, 16, reason: '$id must be PCM16');
+
+          final resolved = YasserPrompt.resolvePrompt(
+            scriptId: id,
+            arabicText: entry['arabic_script'] as String,
+          );
+          expect(resolved, isNotNull, reason: 'Unresolved prompt for $id');
+          expect(resolved!.assetPath, 'pronunciation/prompts/$id.wav');
+          expect(resolved.cues, isNotEmpty);
+        }
+
+        // Studio word prompts remain intact while all catalog words resolve.
+        expect(
+          YasserPrompt.byWordId['word_kora']?.assetPath,
+          'pronunciation/prompts/kora.wav',
+        );
+        expect(
+          YasserPrompt.resolvePrompt(
+            scriptId: 'word_batta',
+            arabicText: 'بطة',
+          )?.assetPath,
+          'pronunciation/prompts/ev03.wav',
+        );
       },
     );
   });

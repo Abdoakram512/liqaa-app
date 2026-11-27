@@ -284,8 +284,13 @@ class YasserAudioCoordinator extends ChangeNotifier
       return;
     }
 
-    if (assetPath != null && YasserPrompt.byWordId.containsKey(scriptId)) {
-      final played = await playWordPrompt(YasserPrompt.byWordId[scriptId]!);
+    final resolvedPrompt = YasserPrompt.resolvePrompt(
+      scriptId: scriptId,
+      arabicText: arabicText,
+      explicitAssetPath: assetPath,
+    );
+    if (resolvedPrompt != null) {
+      final played = await playWordPrompt(resolvedPrompt);
       if (played) return;
     }
 

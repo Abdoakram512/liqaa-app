@@ -10,7 +10,7 @@
     "runtime_paid_tts_policy": "PROHIBITED — only verified local WAV assets or graceful speech-bubble + gentle chime fallback."
   },
   "elevenlabs_voice_casting_shortlist": {
-    "status": "voice_approved_by_user_awaiting_batch_scope",
+    "status": "bundled_150_verified_v4",
     "approved_voice_id": "QfMIySsRuJWjZPZCnDQp",
     "approved_voice_name": "Ashraf - Warm and Genial",
     "recommended_voice_id": "QfMIySsRuJWjZPZCnDQp",
@@ -94,7 +94,27 @@
         "suitability_notes": "Clear Egyptian articulation; more formal/supportive cadence.",
         "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/ed9b05e6324c457685490352e9a1ec90/voices/4mZ0H4Jh5iqmgAWK97eF/7t7Cu3EbK9EVmKdNsYPy.mp3"
       }
-    ]
+    ],
+    "synthesis_summary": {
+      "flow_id": "MwnSpDXo6QYU7nbfpSRX",
+      "model_id": "eleven_v4",
+      "voice_id": "QfMIySsRuJWjZPZCnDQp",
+      "voice_name": "Ashraf - Warm and Genial",
+      "synthesized_count": 150,
+      "verified_wav_count": 150,
+      "reused_qa_clips": [
+        "g01",
+        "ev01",
+        "ev23",
+        "us02"
+      ],
+      "total_duration_ms": 506150,
+      "total_file_bytes": 24306934,
+      "v4_flow_credits": 11782,
+      "account_character_count": 22593,
+      "account_character_limit": 40000,
+      "account_characters_remaining": 17407
+    }
   },
   "script_library_ref": "assets/pronunciation/yasser_voice_script_library.json",
   "bundled_recorded_prompts": [
@@ -103,14 +123,28 @@
       "asset_path": "assets/pronunciation/prompts/kora.wav",
       "arabic_script": "كورة",
       "status": "bundled_verified",
-      "viseme_cues_ms": [188, 219, 309, 330, 383]
+      "viseme_cues_ms": [
+        188,
+        219,
+        309,
+        330,
+        383
+      ]
     },
     {
       "id": "word_samaka",
       "asset_path": "assets/pronunciation/prompts/samaka.wav",
       "arabic_script": "سمكة",
       "status": "bundled_verified",
-      "viseme_cues_ms": [140, 229, 324, 410, 523, 562, 645]
+      "viseme_cues_ms": [
+        140,
+        229,
+        324,
+        410,
+        523,
+        562,
+        645
+      ]
     }
   ]
 }

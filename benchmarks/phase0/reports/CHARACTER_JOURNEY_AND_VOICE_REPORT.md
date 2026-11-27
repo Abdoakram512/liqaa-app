@@ -25,16 +25,22 @@
 
 ---
 
-## 3. ElevenLabs Voice Casting & Approved Selection (`0` Generation Credits Spent Yet)
+## 3. ElevenLabs Voice Synthesis, Diacritization & Offline Bundle (`150/150` Verified WAVs)
 
-All voice casting discovery and cost estimation used authenticated **ElevenLabs Hosted MCP (`https://api.elevenlabs.io/v1/mcp`)** tools (`creative_list_voices`, `account_get_usage`, and `creative_generate_speech` with `estimate_only: true`).
+All voice casting discovery, cost estimation, and final batch generation used authenticated **ElevenLabs Hosted MCP (`https://api.elevenlabs.io/v1/mcp`)** tools (`creative_list_voices`, `account_get_usage`, `creative_generate_speech`, and `creative_get_flow_run_status`).
 
-- **Approved Primary Voice (`status: voice_approved_by_user_awaiting_batch_scope`):**
+- **Approved Primary Voice (`status: bundled_150_verified_v4`):**
   - **Voice ID:** `QfMIySsRuJWjZPZCnDQp`
   - **Name:** `Ashraf - Warm and Genial` (Egyptian Arabic)
+  - **Model:** `eleven_v4` (selected over `eleven_multilingual_v2` and `eleven_v3` after A/B user QA listening)
+  - **Flow ID:** `MwnSpDXo6QYU7nbfpSRX`
+- **Linguistic Cleanup & Phonetic Conditioning:**
+  - Removed disjointed letter-by-letter tatweel segmentation (e.g., `كـ كـ كورة`, `أ ر ن ب`) and normalized ellipsis hesitations across all `150` scripts.
+  - Corrected lexical/grammar defects (`st06`, `rp03`, `fw08`, `ev03`) and added full Egyptian Arabic diacritization (*tashkeel*) + `eleven_v4` expression tags (`[warmly]`, `[happy]`, `[excited]`, `[curious]`, `[slowly]`, `[short pause]`).
 - **Workspace Quota Verified (`account_get_usage`):**
   - **Tier:** `starter` (`active`)
-  - **Used:** `4,164` / `40,000` characters (`35,836` remaining)
+  - **Used (cumulative after all QA + final `eleven_v4` bundle):** `22,593` / `40,000` characters (`17,407` remaining)
+  - **Exact `eleven_v4` Bundle Flow Credits (`150` scripts):** `11,782` credits (including `4` reused QA samples `g01`, `ev01`, `ev23`, `us02` totaling `332` credits).
 
 ### Egyptian Arabic Shortlist (`assets/pronunciation/yasser_voice_manifest.json`)
 
@@ -50,19 +56,17 @@ All voice casting discovery and cost estimation used authenticated **ElevenLabs 
 
 ---
 
-## 4. Script Library & Exact Cost Estimate (Awaiting Batch Scope Approval)
+## 4. Bundled Script Library & Runtime Wiring Verification
 
-- **Generated Script Library:** `assets/pronunciation/yasser_voice_script_library.json`
-  - **Total Scripts:** `150` child-friendly Egyptian Arabic lines (greetings, 6 region intros, 8 mini-game instructions, encouragement, gentle retry hints, adventure milestones, and reviewed word prompts).
-  - **Total Characters:** `6,574` characters.
-- **Verified Cost Estimate for Approved Voice `QfMIySsRuJWjZPZCnDQp` (`estimate_only: true`, Flow `MwnSpDXo6QYU7nbfpSRX` on `eleven_multilingual_v2`):**
-  - Sample prompt length: `64` characters
-  - Estimated cost per `64`-char sample (`generations_count: 1`): **`64.0` credits** (`1.28` cents / **`$0.0128` USD**, `1.0` credit/char)
-  - Projected total for pilot batch (15–20 core greetings/game prompts): **~`900` credits** (`~2.5%` of remaining `35,836` credits)
-  - Projected total for full `150`-script batch (`6,574` chars): **`~6,574` credits** (`~18.3%` of remaining `35,836` credits)
-- **Speech Credits Spent So Far:** **`0.0` credits** on `QfMIySsRuJWjZPZCnDQp` (`estimate_only: true`).
-
-### Next Step Requiring Batch Scope Confirmation
-Voice `QfMIySsRuJWjZPZCnDQp` (*Ashraf - Warm and Genial*) is now locked in `yasser_voice_manifest.json`. Confirm whether to run:
-1. A **pilot batch** (e.g., 15–20 core greetings & game instructions, ~`900` credits), OR
-2. The **full `150`-script batch** (`6,574` characters ≈ `6,574` credits out of `35,836` remaining).
+- **Script Library & Manifests (`status: BATCH_150_SYNTHESIZED_AND_BUNDLED_V4`):**
+  - `assets/pronunciation/yasser_voice_script_library.json` (`150` scripts across greetings, onboarding, world intros, explorations, activity instructions, 28 vocabulary explanations, encouragement, gentle retry hints, rewards, session endings, returning greetings, farewells, and stories).
+  - `assets/pronunciation/yasser_voice_manifest.json`
+- **Audio Normalization & Verification (`assets/pronunciation/prompts/<id>.wav`):**
+  - Normalized every clip to **RIFF WAVE PCM 16-bit Mono `24,000 Hz`** (`loudnorm=I=-16:TP=-1.5:LRA=11` + tail silence trim `>= 0.08 s` below `-50 dBFS`).
+  - **Total Bundled WAVs Verified (`150/150` + existing `kora.wav`, `samaka.wav`):**
+    - Total duration (`g01`–`st08`): **`506,150 ms`** (~`8.44` minutes)
+    - Total disk size (`g01`–`st08`): **`24,306,934` bytes** (`~23.18 MB`)
+- **Runtime Playback Wiring:**
+  - `lib/features/pronunciation_game/models/yasser_prompt.dart`: preserves studio word cues (`word_kora`, `word_samaka`), embeds exact verified durations for all `150` scripts (`bundledScriptDurationsMs`), maps vocabulary IDs (`word_*`) to `ev01`–`ev28`, and provides `YasserPrompt.resolvePrompt(...)`.
+  - `lib/core/audio/yasser_audio_coordinator.dart`: `playLineOrFallback(...)` resolves all `150` scripts and vocabulary words offline from bundled WAV assets with synchronized viseme playback, strict `_isRecordingActive` microphone exclusion, and `0` runtime cloud TTS calls.
+  - Automated RIFF WAVE & resolver verification test added in `test/phase0_2/world_persistence_and_profiles_test.dart` (`150/150` verified passing).
