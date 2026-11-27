@@ -36,4 +36,5 @@ abstract final class AppRoutes {
   static const String aiLabBlind = '/ai-lab/blind';
   static const String aiLabNegative = '/ai-lab/negative';
   static const String aiLabSuite = '/ai-lab/suite';
+  static const String aiLabGovernance = '/ai-lab/governance';
 }

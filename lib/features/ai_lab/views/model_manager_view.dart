@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -19,6 +21,13 @@ class ModelManagerView extends StatelessWidget {
         title: const Text('1. إدارة النماذج (Model Manager)'),
         backgroundColor: Colors.white,
         elevation: 1,
+        actions: [
+          IconButton(
+            tooltip: 'سجل الحوكمة والبيانات (Phase 0)',
+            icon: const Icon(Icons.verified_user_rounded),
+            onPressed: () => context.push(AppRoutes.aiLabGovernance),
+          ),
+        ],
       ),
       body: BlocBuilder<AiLabCubit, AiLabState>(
         builder: (context, state) {

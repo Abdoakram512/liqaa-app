@@ -233,6 +233,14 @@ class _AiLabHubViewState extends State<AiLabHubView> {
                   color: Colors.teal.shade700,
                   onTap: () => context.push(AppRoutes.aiLabSuite),
                 ),
+                _buildTestCard(
+                  title: '12. حوكمة المرحلة 0 ومنع التسرب (Phase 0 Governance)',
+                  subtitle:
+                      'سجل النماذج والبيانات، كاشف التكرار، القفل الأعمى، و15 فحص نزاهة',
+                  icon: Icons.verified_user_rounded,
+                  color: Colors.indigo.shade800,
+                  onTap: () => context.push(AppRoutes.aiLabGovernance),
+                ),
               ],
             ),
           );

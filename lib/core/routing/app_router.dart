@@ -14,6 +14,7 @@ import '../../features/ai_lab/views/mic_vad_view.dart';
 import '../../features/ai_lab/views/model_comparison_view.dart';
 import '../../features/ai_lab/views/model_manager_view.dart';
 import '../../features/ai_lab/views/noise_reduction_view.dart';
+import '../../features/ai_lab/views/phase0_governance_view.dart';
 import '../../features/ai_lab/views/phoneme_recognition_view.dart';
 import '../../features/ai_lab/views/speech_to_text_view.dart';
 import '../../features/animation_lab/presentation/views/animation_lab_view.dart';
@@ -319,6 +320,11 @@ abstract final class AppRouter {
             path: 'suite',
             name: 'aiLabSuite',
             builder: (context, state) => const AiBenchmarkLabView(),
+          ),
+          GoRoute(
+            path: 'governance',
+            name: 'aiLabGovernance',
+            builder: (context, state) => const Phase0GovernanceView(),
           ),
         ],
       ),

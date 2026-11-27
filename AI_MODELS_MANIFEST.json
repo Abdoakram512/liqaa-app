@@ -1,93 +1,153 @@
 {
-  "version": "1.1.0",
-  "generated_by": "download_models.py",
+  "manifest_version": "2.0.0-phase0",
+  "reconciled_utc": "2026-11-27T07:10:00Z",
+  "architecture": "Offline On-Device Speech Therapy Pipeline (Silero VAD + GTCRN Denoiser + Wav2Vec2-LV60-eSpeak Q4F16 + Whisper Tiny INT8 + Rule-Based Egyptian Arabic Phoneme Alignment)",
   "models": {
     "silero_vad": {
-      "name": "Silero VAD v4",
-      "format": "ONNX",
-      "sample_rate": 16000,
+      "name": "Silero VAD (v4/v5 ONNX)",
+      "ready": true,
+      "runtime_key": "silero_vad",
+      "required_for_runtime": true,
+      "source": "https://github.com/snakers4/silero-vad | https://huggingface.co/onnx-community/silero-vad",
       "license": "MIT",
-      "target_dir": "assets/ai_models/silero",
       "files": {
-        "silero_vad.onnx": {
+        "model": {
           "path": "assets/ai_models/silero/silero_vad.onnx",
           "size_bytes": 2204103,
-          "size_mb": 2.1,
-          "sha256": "f6f4407b41e05e277e7f5cfd9b9ae957b1dfe763c6076a934734c0b448e09b31",
-          "status": "ready"
+          "sha256": "f6f4407b41e05e277e7f5cfd9b9ae957b1dfe763c6076a934734c0b448e09b31"
         }
       },
-      "ready": true
+      "notes": "Verified local SHA-256; handles dual v4 (h/c) and v5 (state) ONNX tensor interfaces."
     },
-    "rnnoise": {
-      "name": "RNNoise Denoiser",
-      "format": "ONNX",
-      "sample_rate": 48000,
-      "license": "BSD-3-Clause",
-      "target_dir": "assets/ai_models/rnnoise",
+    "gtcrn_denoiser": {
+      "name": "GTCRN Speech Enhancement (ONNX)",
+      "ready": true,
+      "runtime_key": "gtcrn_denoiser",
+      "required_for_runtime": true,
+      "source": "https://github.com/Xiaobin-Rong/gtcrn | https://github.com/k2-fsa/sherpa-onnx",
+      "license": "MIT (GTCRN) / Apache-2.0 (sherpa-onnx)",
       "files": {
-        "rnnoise.onnx": {
-          "path": "assets/ai_models/rnnoise/rnnoise.onnx",
-          "size_bytes": 1020606,
-          "size_mb": 0.97,
-          "sha256": "22123b85825b413e7c97de8334c6b609f0c6aa1cd5290ab672bb1b85bae20403",
-          "status": "ready"
+        "model": {
+          "path": "assets/ai_models/gtcrn/gtcrn_simple.onnx",
+          "size_bytes": 535638,
+          "sha256": "e77603ac0c23dac3227dd2d7135b3a585cbee2679048aecfa886657d3ae1b534"
         }
       },
-      "ready": true
+      "notes": "Active neural denoiser gated at <14 dB estimated SNR in PronunciationRepository."
+    },
+    "wav2vec2_espeak": {
+      "name": "Wav2Vec2-LV60-eSpeak-CV-FT (ONNX Q4F16)",
+      "ready": true,
+      "runtime_key": "wav2vec2_espeak",
+      "required_for_runtime": true,
+      "source": "https://huggingface.co/facebook/wav2vec2-lv-60-espeak-cv-ft",
+      "license": "Apache-2.0",
+      "files": {
+        "model": {
+          "path": "assets/ai_models/wav2vec2_espeak/model_q4f16.onnx",
+          "size_bytes": 196911845,
+          "sha256": "9978e7cba1bf721699b2cb673be461ccf09f6ef5dfc257f2f6ed2c4113d4e54c"
+        },
+        "vocab": {
+          "path": "assets/ai_models/wav2vec2_espeak/vocab.json",
+          "size_bytes": 4637,
+          "sha256": "d732ab2456c0c017930001dc9af0b41b3b93d25b2eb9740bf9d925508d7d87d0"
+        }
+      },
+      "notes": "Blind acoustic IPA CTC phoneme recognizer (zero target-word hint input)."
     },
     "whisper_tiny": {
-      "name": "Sherpa-ONNX Whisper Tiny Multilingual (Arabic supported)",
-      "format": "ONNX (int8 quantized)",
-      "sample_rate": 16000,
-      "license": "MIT",
-      "target_dir": "assets/ai_models/whisper_tiny",
+      "name": "OpenAI Whisper Tiny (INT8 Multilingual)",
+      "ready": true,
+      "runtime_key": "whisper_tiny",
+      "required_for_runtime": false,
+      "source": "https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models",
+      "license": "MIT / Apache-2.0",
       "files": {
-        "tiny-encoder.int8.onnx": {
+        "encoder": {
           "path": "assets/ai_models/whisper_tiny/tiny-encoder.int8.onnx",
-          "size_bytes": 12937966,
-          "size_mb": 12.34,
-          "sha256": "418fa553250fbdfd4d46cfb70503f5727027ae45c6198f121df0c9e6dcf3ae0a",
-          "status": "ready"
+          "size_bytes": 12937772,
+          "sha256": "d24fb083ae3b1041fc24e97971d60e280c9342201fbb67b0ab428a8b4a51a434"
         },
-        "tiny-decoder.int8.onnx": {
+        "decoder": {
           "path": "assets/ai_models/whisper_tiny/tiny-decoder.int8.onnx",
-          "size_bytes": 89855519,
-          "size_mb": 85.69,
-          "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925",
-          "status": "ready"
+          "size_bytes": 89855401,
+          "sha256": "d2fece8dd42771f1df975c6c0445770d0c292bf7547c2cae04a6c0cc57540925"
         },
-        "tiny-tokens.txt": {
+        "tokens": {
           "path": "assets/ai_models/whisper_tiny/tiny-tokens.txt",
           "size_bytes": 816730,
-          "size_mb": 0.78,
-          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126",
-          "status": "ready"
+          "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
         }
       },
-      "ready": true
+      "notes": "Reconciled Phase 0 SHA-256 checksums. Auxiliary Arabic STT only; not a pediatric phoneme scorer."
+    },
+    "rnnoise": {
+      "name": "RNNoise Speech Denoiser (DEPRECATED UNUSED)",
+      "ready": false,
+      "deprecated_unused": true,
+      "runtime_key": "gtcrn_denoiser",
+      "required_for_runtime": false,
+      "source": "https://github.com/xiph/rnnoise",
+      "license": "BSD-3-Clause",
+      "files": {
+        "model": {
+          "path": "assets/ai_models/rnnoise/rnnoise.onnx",
+          "size_bytes": 1020606,
+          "sha256": "22123b85825b413e7c97de8334c6b609f0c6aa1cd5290ab672bb1b85bae20403"
+        }
+      },
+      "notes": "48kHz BFCC legacy artifact not loaded at runtime (AiModelManager aliases 'rnnoise' -> 'gtcrn_denoiser'). Scheduled for bundle cleanup after Phase 1."
     },
     "zipformer_v3": {
-      "name": "Zipformer Arabic V3",
-      "format": "ONNX",
-      "sample_rate": 16000,
-      "license": "NPL-1.3 (Non-Profit)",
-      "target_dir": "assets/ai_models/zipformer_v3",
+      "name": "Quran-Lab Zipformer Arabic CTC v3",
+      "ready": false,
+      "required_for_runtime": false,
+      "source": "https://huggingface.co/Quran-Lab/zipformer_p-arabic-v3",
+      "license": "other (manually gated on Hugging Face)",
       "files": {
-        "tokens.txt": {
+        "tokens": {
           "path": "assets/ai_models/zipformer_v3/tokens.txt",
           "size_bytes": 2420,
-          "size_mb": 0.01,
-          "status": "ready"
+          "sha256": "270a8cb8e1ec62c2bb2996b3cf4387262bc9b3a50d2b21c026ae6dd6d377e24c"
         },
-        "phoneme_units.json": {
+        "phoneme_units": {
           "path": "assets/ai_models/zipformer_v3/phoneme_units.json",
           "size_bytes": 4380,
-          "size_mb": 0.02,
-          "status": "ready"
+          "sha256": "4a69a9cace493bf6e2e67fa47d3ffa2549bf22fac463e2486152e4e72103f268"
+        },
+        "encoder": {
+          "path": "assets/ai_models/zipformer_v3/encoder.onnx",
+          "size_bytes": 0,
+          "sha256": "MISSING"
         }
       },
-      "ready": false
+      "notes": "Tokens bundled only; ONNX weights absent and upstream HF repo requires manual gating + non-commercial license review."
+    },
+    "zipformer_v2": {
+      "name": "Quran-Lab Zipformer Arabic CTC v2",
+      "ready": false,
+      "required_for_runtime": false,
+      "source": "https://huggingface.co/Quran-Lab/zipformer_p-arabic-v2",
+      "license": "UNKNOWN",
+      "files": {
+        "tokens": {
+          "path": "assets/ai_models/zipformer_v2/tokens.txt",
+          "size_bytes": 2420,
+          "sha256": "270a8cb8e1ec62c2bb2996b3cf4387262bc9b3a50d2b21c026ae6dd6d377e24c"
+        },
+        "phoneme_units": {
+          "path": "assets/ai_models/zipformer_v2/phoneme_units.json",
+          "size_bytes": 4380,
+          "sha256": "4a69a9cace493bf6e2e67fa47d3ffa2549bf22fac463e2486152e4e72103f268"
+        },
+        "encoder": {
+          "path": "assets/ai_models/zipformer_v2/encoder-epoch-99-avg-1.int8.onnx",
+          "size_bytes": 0,
+          "sha256": "MISSING"
+        }
+      },
+      "notes": "Duplicate token files of zipformer_v3; ONNX weights missing."
     }
   }
 }

@@ -108,6 +108,7 @@ flutter:
     - assets/ai_models/wav2vec2_espeak/
     - assets/ai_models/zipformer_v3/
     - assets/ai_models/zipformer_v2/
+    - assets/ai_governance/
     - assets/pronunciation/
     - assets/audio_samples/
     - assets/pronunciation/prompts/

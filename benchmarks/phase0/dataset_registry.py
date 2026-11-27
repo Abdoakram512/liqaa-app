@@ -1,0 +1,358 @@
+"""Phase 0 Dataset Registry, taxonomy, and Stage A / Stage B / 130k governance."""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from .workspace_config import PHASE0_DIR, REPO_ROOT
+
+DATASET_REGISTRY_PATH = PHASE0_DIR / "DATASET_REGISTRY.json"
+
+PRIMARY_CATEGORIES = [
+    "pediatric_correct",
+    "pediatric_mispronounced",
+    "pediatric_noise_or_weak",
+    "adult_arabic_speech",
+    "non_speech_noise_and_silence",
+    "controlled_synthetic",
+    "unassigned_unknown",
+]
+
+MUTUAL_EXCLUSION_RULES = {
+    "rule_1_single_primary_category": "Every sample MUST hold exactly one mutually exclusive primary_category from PRIMARY_CATEGORIES.",
+    "rule_2_strict_human_vs_synthetic": "Controlled synthetic TTS / artificially mixed SNR pairs go in controlled_synthetic (or noise/augmented metadata) and are FORBIDDEN in Stage B Blind Holdout.",
+    "rule_3_cross_stage_isolation": "No speaker_id, canonical_pcm_sha256, acoustic near-duplicate cluster, or custom recording session may appear in more than one split.",
+    "rule_4_zero_relabeling": "Original dataset labels are preserved verbatim; weak or missing phone alignments stay marked ground_truth_reliability='word_level_only' or 'UNKNOWN'.",
+}
+
+STAGE_A_QUOTAS = {
+    "stage_name": "Stage A — Calibration / Diagnostic Dev",
+    "total_target_samples": 2000,
+    "allow_synthetic": "CONTROLLED_SEPARATE_ONLY (100 max, excluded from human KPI)",
+    "speaker_disjoint_from_stage_b": True,
+    "category_quotas": {
+        "pediatric_correct": 450,
+        "pediatric_mispronounced": 450,
+        "pediatric_noise_or_weak": 350,
+        "adult_arabic_speech": 400,
+        "non_speech_noise_and_silence": 250,
+        "controlled_synthetic": 100,
+    },
+}
+
+STAGE_B_QUOTAS = {
+    "stage_name": "Stage B — Immutable Blind Holdout",
+    "total_target_samples": 1500,
+    "allow_synthetic": False,
+    "speaker_disjoint_from_stage_a": True,
+    "human_only_required": True,
+    "category_quotas": {
+        "pediatric_correct": 450,
+        "pediatric_mispronounced": 450,
+        "pediatric_noise_or_weak": 250,
+        "adult_arabic_speech": 200,
+        "non_speech_noise_and_silence": 150,
+        "controlled_synthetic": 0,
+    },
+}
+
+FUTURE_TRAINING_POOL = {
+    "stage_name": "Future Phase 3+ Training & Adaptation Scale",
+    "target_samples": 130000,
+    "contamination_firewall": "Any sample overlapping Stage A or Stage B by speaker, SHA-256, acoustic cluster, or utterance session is quarantined BEFORE training ingestion.",
+    "public_vs_private": "Combines clean Egyptian/MSA public speech + MUSAN noise augmentation + IRB/parent-consented private Egyptian pediatric recordings.",
+}
+
+REQUIRED_DATASET_FIELDS = [
+    "dataset_id",
+    "display_name",
+    "source_url",
+    "license",
+    "commercial_use_allowed",
+    "redistribution_allowed",
+    "access_status",
+    "language_dialect",
+    "age_group",
+    "domain_type",
+    "reported_size",
+    "annotation_granularity",
+    "ground_truth_reliability",
+    "allowed_stages",
+    "known_contamination_risks",
+    "privacy_constraints",
+    "last_verified_timestamp",
+]
+
+
+def _inspect_local_benchmark_usage() -> dict[str, int]:
+    manifest_file = REPO_ROOT / "benchmarks" / "audio" / "manifest.jsonl"
+    counts: dict[str, int] = {}
+    if manifest_file.exists():
+        for line in manifest_file.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            ds = row.get("original_dataset", "UNKNOWN")
+            counts[ds] = counts.get(ds, 0) + 1
+    return counts
+
+
+def build_dataset_registry(verified_ts: str | None = None) -> dict[str, Any]:
+    ts = verified_ts or datetime.now(timezone.utc).isoformat()
+    local_counts = _inspect_local_benchmark_usage()
+
+    datasets: list[dict[str, Any]] = [
+        {
+            "dataset_id": "asmdd",
+            "display_name": "ASMDD (Arabic Speech Mispronunciation Detection Dataset)",
+            "source_url": "https://data.mendeley.com/datasets/x54dg53rmr/1 (DOI: 10.17632/x54dg53rmr.1)",
+            "license": "CC0 1.0",
+            "commercial_use_allowed": True,
+            "redistribution_allowed": True,
+            "access_status": "PUBLIC_VERIFIED_LOCAL_SUBSET",
+            "local_phase0_sample_count": local_counts.get("ASMDD (Mendeley 10.17632/x54dg53rmr.1)", 0),
+            "language_dialect": "Egyptian Arabic",
+            "age_group": "Pediatric (reported ~2-8 years)",
+            "domain_type": "Child single-word pronunciation (correct vs _N mispronounced)",
+            "reported_size": "UNKNOWN exact full zip file count in local Phase 0 manifest (41 clips audited locally from folder-based speakers)",
+            "annotation_granularity": "Word-level correct vs _N expert flag + speaker folder ID; no phoneme timestamps",
+            "ground_truth_reliability": "verified_word_level_expert_label (exact mispronounced phone segment UNSPECIFIED in filename)",
+            "allowed_stages": ["Stage_A_Dev", "Stage_B_Blind_Disjoint_Speakers", "Phase3_FineTune_Disjoint_Speakers"],
+            "known_contamination_risks": [
+                "Folder-level speaker IDs MUST never be split across Stage A, Stage B, and train.",
+                "41 clips already inspected in Phase 0 historical 100-sample benchmark -> reserve those speaker folders ONLY for Stage A or exclude from Stage B blind!",
+            ],
+            "privacy_constraints": "Public CC0 pediatric audio; DO NOT re-commit extracted WAVs to GitHub.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "abjad_kids",
+            "display_name": "Abjad-Kids (Aziz-snoubra/Abjad-Kids)",
+            "source_url": "https://huggingface.co/datasets/Aziz-snoubra/Abjad-Kids",
+            "license": "MIT",
+            "commercial_use_allowed": True,
+            "redistribution_allowed": True,
+            "access_status": "PUBLIC_HF_VERIFIED_LOCAL_SUBSET",
+            "local_phase0_sample_count": local_counts.get("Abjad-Kids (Aziz-snoubra/Abjad-Kids)", 0),
+            "language_dialect": "Multi-Dialect / Modern Standard Arabic",
+            "age_group": "Pediatric (reported ~3-12 years)",
+            "domain_type": "Child isolated letters and vocabulary words",
+            "reported_size": "HF size category 10K<n<100K (39 clips audited locally)",
+            "annotation_granularity": "Word/letter prompt label + filename/speaker hash token; no phoneme alignment",
+            "ground_truth_reliability": "verified_word_level_dataset_label (noisy crowdsourced/classroom clips possible)",
+            "allowed_stages": ["Stage_A_Dev", "Stage_B_Blind_Disjoint_Speakers", "Phase3_FineTune_Disjoint_Speakers"],
+            "known_contamination_risks": [
+                "Verify speaker IDs strictly; keep 39 previously audited clips isolated from Stage B blind.",
+            ],
+            "privacy_constraints": "Public MIT dataset; keep raw WAVs external in D:\\YasserML.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "arayoungvoices",
+            "display_name": "AraYoungVoices",
+            "source_url": "https://arxiv.org/abs/2506.00000 (published literature reference; no standard HF/LDC direct URL verified)",
+            "license": "UNKNOWN (literature-reported CC BY-NC-SA 4.0 / academic release — requires direct license inspection prior to use)",
+            "commercial_use_allowed": False,
+            "redistribution_allowed": "UNKNOWN",
+            "access_status": "LITERATURE_VERIFIED_PUBLIC_REPO_UNVERIFIED",
+            "local_phase0_sample_count": 0,
+            "language_dialect": "Modern Standard Arabic + L1/L2 young speakers",
+            "age_group": "Child & Adolescent (reported 7-18 years)",
+            "domain_type": "Read speech",
+            "reported_size": "~151.72 hours reported in literature",
+            "annotation_granularity": "Sentence/prompt read-speech orthographic transcripts",
+            "ground_truth_reliability": "UNKNOWN (not yet audited directly)",
+            "allowed_stages": ["Research_Benchmark_Only_Unless_License_Cleared"],
+            "known_contamination_risks": [
+                "NC-SA / unverified license blocks commercial mobile deployment unless cleared.",
+            ],
+            "privacy_constraints": "Pediatric/minor voices — obtain exact author access terms & keep offline in D:\\YasserML.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "arabic_egy_cleaned",
+            "display_name": "Egyptian Arabic ASR Clean (MAdel121/arabic-egy-cleaned)",
+            "source_url": "https://huggingface.co/datasets/MAdel121/arabic-egy-cleaned",
+            "license": "UNKNOWN (HF card license field null — DO NOT assume commercial clearance without upstream verification)",
+            "commercial_use_allowed": False,
+            "redistribution_allowed": "UNKNOWN",
+            "access_status": "PUBLIC_HF_VERIFIED_NOT_DOWNLOADED",
+            "local_phase0_sample_count": 0,
+            "language_dialect": "Egyptian Arabic",
+            "age_group": "Adult (predominantly adult conversational/media)",
+            "domain_type": "ASR sentence transcripts",
+            "reported_size": "HF size category 100K<n<1M (exact hours/clips NOT verified in Phase 0)",
+            "annotation_granularity": "Utterance-level Arabic orthographic transcripts (no phoneme boundaries)",
+            "ground_truth_reliability": "UNKNOWN (automatic/curated ASR cleaning unverified)",
+            "allowed_stages": ["Stage_A_Adult_ASR_Dev_Excluded_For_MAdel121_Model", "Phase3_Adult_Pretrain_If_License_Cleared"],
+            "known_contamination_risks": [
+                "CRITICAL_MODEL_OVERLAP: MAdel121/whisper-small-egyptian-arabic explicitly declares dataset:MAdel121/arabic-egy-cleaned.",
+            ],
+            "privacy_constraints": "License is null on HF card; resolve license provenance before commercial fine-tuning.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "egyspeak",
+            "display_name": "EGYSpeak (MohamedGomaa30/EGYSpeak)",
+            "source_url": "https://huggingface.co/datasets/MohamedGomaa30/EGYSpeak",
+            "license": "CC-BY-4.0",
+            "commercial_use_allowed": True,
+            "redistribution_allowed": True,
+            "access_status": "PUBLIC_HF_VERIFIED_NOT_DOWNLOADED",
+            "local_phase0_sample_count": 0,
+            "language_dialect": "Egyptian Arabic",
+            "age_group": "Adult",
+            "domain_type": "Single-speaker / curated Egyptian Arabic ASR/TTS corpus",
+            "reported_size": "HF size category 100K<n<1M (speaker diversity check required)",
+            "annotation_granularity": "Utterance-level Arabic text",
+            "ground_truth_reliability": "UNKNOWN (requires sample inspection)",
+            "allowed_stages": ["Stage_A_Dev", "Phase3_Egyptian_Adaptation"],
+            "known_contamination_risks": [
+                "Single-speaker heavy dominance would overfit speaker traits if used in Stage B speaker-diverse evaluation.",
+            ],
+            "privacy_constraints": "CC-BY-4.0 attribution required.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "arabic_little_stt",
+            "display_name": "Arabic Little STT (Classroom Levantine Child Speech)",
+            "source_url": "https://arxiv.org/abs/2510.23319 (HF public search returned 404/empty in Phase 0)",
+            "license": "UNKNOWN_UNVERIFIED_FROM_PUBLIC_REPO (paper cites research release)",
+            "commercial_use_allowed": False,
+            "redistribution_allowed": "UNKNOWN",
+            "access_status": "PAPER_VERIFIED_HF_MIRROR_UNAVAILABLE_404",
+            "local_phase0_sample_count": 0,
+            "language_dialect": "Levantine Arabic",
+            "age_group": "Pediatric (6-13 years)",
+            "domain_type": "Classroom child speech (programming/robotics/IT topics)",
+            "reported_size": "355 utterances across 288 speakers (arXiv:2510.23319)",
+            "annotation_granularity": "Utterance orthographic transcription",
+            "ground_truth_reliability": "Human-transcribed classroom speech (per paper)",
+            "allowed_stages": ["Unavailable_Until_Repo_Access_Resolved"],
+            "known_contamination_risks": [
+                "Levantine dialect differs from Egyptian Arabic target domain; public HF URL unreachable (404).",
+            ],
+            "privacy_constraints": "Minor classroom recordings; requires verified download agreement.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "arabic_speech_corpus",
+            "display_name": "Arabic Speech Corpus (tunis-ai/arabic_speech_corpus)",
+            "source_url": "https://huggingface.co/datasets/tunis-ai/arabic_speech_corpus",
+            "license": "CC-BY-4.0",
+            "commercial_use_allowed": True,
+            "redistribution_allowed": True,
+            "access_status": "PUBLIC_HF_VERIFIED_LOCAL_SUBSET",
+            "local_phase0_sample_count": local_counts.get("tunis-ai/arabic_speech_corpus", 0),
+            "language_dialect": "Modern Standard Arabic (Levantine/MSA speaker)",
+            "age_group": "Adult (single speaker + expert phonetic alignment)",
+            "domain_type": "Studio phonetic & orthographic MSA speech",
+            "reported_size": "HF size category 1K<n<10K (~3.7 hours classic ASC; 3 test clips locally)",
+            "annotation_granularity": "Expert Buckwalter/phonetic alignment + orthographic text",
+            "ground_truth_reliability": "verified_phonetic_corpus",
+            "allowed_stages": ["Stage_A_Dev", "Excluded_Clean_Eval_For_MostafaMaroof"],
+            "known_contamination_risks": [
+                "CRITICAL_MODEL_OVERLAP: MostafaMaroof/wav2vec2-arabic-phoneme-asr declares dataset:tunis-ai/arabic_speech_corpus.",
+                "Single-speaker adult MSA studio voice — do NOT treat as proxy for Egyptian child performance.",
+            ],
+            "privacy_constraints": "CC-BY-4.0 attribution required.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "l2_ksu",
+            "display_name": "L2-KSU Native and Non-Native Arabic Speech",
+            "source_url": "https://catalog.ldc.upenn.edu/LDC2024S11",
+            "license": "LDC User Agreement (LDC2024S11 — Restricted / Paid Membership or License)",
+            "commercial_use_allowed": False,
+            "redistribution_allowed": False,
+            "access_status": "RESTRICTED_LDC_MANUAL_OBTAIN_REQUIRED",
+            "local_phase0_sample_count": 0,
+            "language_dialect": "Modern Standard Arabic (native + L2 accents)",
+            "age_group": "Adult",
+            "domain_type": "Read Arabic speech for pronunciation / accented speech research",
+            "reported_size": "~6 hours (per LDC2024S11 catalog)",
+            "annotation_granularity": "Prompt/read text + speaker nativeness metadata",
+            "ground_truth_reliability": "Catalog-verified academic corpus",
+            "allowed_stages": ["Restricted_Pending_LDC_Authorization"],
+            "known_contamination_risks": ["Cannot be redistributed or downloaded autonomously without valid LDC account."],
+            "privacy_constraints": "Strict LDC redistribution prohibition.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "musan_noise",
+            "display_name": "MUSAN Noise & Background Corpus",
+            "source_url": "https://www.openslr.org/17/ | https://huggingface.co/datasets/bilguun/musan-noise",
+            "license": "CC-BY-4.0",
+            "commercial_use_allowed": True,
+            "redistribution_allowed": True,
+            "access_status": "PUBLIC_VERIFIED_LOCAL_SUBSET",
+            "local_phase0_sample_count": local_counts.get("MUSAN (bilguun/musan-noise / OpenSLR SLR17)", 0),
+            "language_dialect": "Non-speech environmental noise (music/noise/babble subsets exist in full MUSAN)",
+            "age_group": "N/A (non-speech)",
+            "domain_type": "Background fans, street noise, room ambience, sound effects",
+            "reported_size": "~109 hours full OpenSLR SLR17 (5 local pure-noise clips + 18 controlled mixtures audited)",
+            "annotation_granularity": "Non-speech noise category label",
+            "ground_truth_reliability": "verified_non_speech_dataset (note: full MUSAN babble/music subtrees contain background voices — use noise subtree strictly for non-speech negatives)",
+            "allowed_stages": ["Stage_A_NonSpeech", "Stage_B_NonSpeech_Disjoint_Clips", "Phase3_Augmentation_Disjoint_Clips"],
+            "known_contamination_risks": [
+                "NEVER mix the same MUSAN noise file across train augmentation and Stage B blind noise evaluation.",
+            ],
+            "privacy_constraints": "Public CC-BY-4.0.",
+            "last_verified_timestamp": ts,
+        },
+        {
+            "dataset_id": "future_egyptian_pediatric_private_collection",
+            "display_name": "Future Private Egyptian Pediatric Speech Collection (Yasser Clinical Cohort)",
+            "source_url": "LOCAL_EXTERNAL_VAULT_ONLY (D:\\YasserML\\datasets\\raw\\private_pediatric — NEVER GitHub)",
+            "license": "Private Consented Clinical Research & Product Data (Parental Written Consent Required)",
+            "commercial_use_allowed": True,
+            "redistribution_allowed": False,
+            "access_status": "PLANNED_NOT_COLLECTED_PHASE0",
+            "local_phase0_sample_count": 0,
+            "language_dialect": "Egyptian Arabic (Cairene & regional target vocabulary)",
+            "age_group": "Pediatric (3-10 years, stratified by age & speech-disorder profile)",
+            "domain_type": "Prompted single words + clinical articulation probes + noisy home/clinic conditions",
+            "reported_size": "0 collected (target subset toward Stage A/B + 130k adaptation pool)",
+            "annotation_granularity": "Dual-SLP phoneme alignment + clinical error classification + audio quality flags",
+            "ground_truth_reliability": "Target gold standard (inter-annotator kappa >= 0.80 required)",
+            "allowed_stages": ["Stage_A_Dev", "Stage_B_Blind_Disjoint_Children", "Phase3_Adaptation_Disjoint_Children"],
+            "known_contamination_risks": [
+                "Must bind every recording to anonymized child_speaker_hash + session_id + recording_device BEFORE entering any manifest.",
+            ],
+            "privacy_constraints": "STRICT_NO_GITHUB_COMMIT: Child voice PII stays strictly in encrypted/external local vault & approved cloud storage under guardian consent.",
+            "last_verified_timestamp": ts,
+        },
+    ]
+
+    for d in datasets:
+        missing = [k for k in REQUIRED_DATASET_FIELDS if k not in d]
+        if missing:
+            raise ValueError(f"Dataset {d.get('dataset_id')} missing fields: {missing}")
+
+    return {
+        "schema_version": "0.1.0-phase0",
+        "generated_utc": ts,
+        "dataset_count": len(datasets),
+        "primary_categories": PRIMARY_CATEGORIES,
+        "mutual_exclusion_rules": MUTUAL_EXCLUSION_RULES,
+        "split_quotas": {
+            "stage_a": STAGE_A_QUOTAS,
+            "stage_b_blind": STAGE_B_QUOTAS,
+            "future_training_pool": FUTURE_TRAINING_POOL,
+        },
+        "datasets": datasets,
+    }
+
+
+def write_dataset_registry(path: Path = DATASET_REGISTRY_PATH) -> dict[str, Any]:
+    reg = build_dataset_registry()
+    path.write_text(json.dumps(reg, indent=2, ensure_ascii=False), encoding="utf-8")
+    return reg
+
+
+if __name__ == "__main__":
+    data = write_dataset_registry()
+    print(f"Wrote {DATASET_REGISTRY_PATH} with {data['dataset_count']} dataset specs")

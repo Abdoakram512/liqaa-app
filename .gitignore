@@ -49,3 +49,10 @@ app.*.map.json
 /benchmarks/audio/controlled/
 /benchmarks/results/samples/
 /benchmarks/audio/_raw_downloads/
+
+# Phase 0 ML Governance: NEVER commit private recordings, blind labels, or large caches/weights
+/benchmarks/phase0/quarantine/
+/benchmarks/phase0/blind_vault/
+**/*.local.wav
+*.tmp.jsonl
+/D_YasserML_mirror/

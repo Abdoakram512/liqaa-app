@@ -1,0 +1,141 @@
+model_id,dataset_id,contamination_status,eligible_for_clean_eval,evidence_and_rule
+silero_vad_v4,asmdd,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,abjad_kids,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,arayoungvoices,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,arabic_egy_cleaned,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,egyspeak,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,arabic_little_stt,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,arabic_speech_corpus,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,l2_ksu,RISK_LOW_GATE_ONLY,true,Silero pretrained speech+noise gate; zero Arabic word labels
+silero_vad_v4,musan_noise,SELF_AUGMENT_HAZARD,false,Pretrained noise mix unknown; track false alarms on held-out MUSAN clips
+silero_vad_v4,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+gtcrn_denoiser,asmdd,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,abjad_kids,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,arayoungvoices,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,arabic_egy_cleaned,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,egyspeak,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,arabic_little_stt,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,arabic_speech_corpus,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,l2_ksu,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,musan_noise,CLEAN_VERIFIED,true,Waveform denoiser without Arabic lexical targets
+gtcrn_denoiser,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+rnnoise_legacy_bundled,asmdd,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,abjad_kids,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,arayoungvoices,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,arabic_egy_cleaned,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,egyspeak,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,arabic_little_stt,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,arabic_speech_corpus,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,l2_ksu,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,musan_noise,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+rnnoise_legacy_bundled,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Deprecated 48kHz denoiser; unused in runtime
+deepfilternet3,asmdd,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,abjad_kids,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,arayoungvoices,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,arabic_egy_cleaned,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,egyspeak,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,arabic_little_stt,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,arabic_speech_corpus,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,l2_ksu,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,musan_noise,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+deepfilternet3,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,DNS4/VCTK trained enhancer; zero Arabic child label memorization
+wav2vec2_lv60_espeak_q4f16,asmdd,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,abjad_kids,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,arayoungvoices,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,arabic_egy_cleaned,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,egyspeak,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,arabic_little_stt,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,arabic_speech_corpus,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,l2_ksu,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,musan_noise,CLEAN_VERIFIED,true,Trained on Libri-Light + Common Voice eSpeak; warn if Common Voice Arabic added
+wav2vec2_lv60_espeak_q4f16,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+zipformer_arabic_v3,asmdd,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,abjad_kids,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,arayoungvoices,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,arabic_egy_cleaned,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,egyspeak,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,arabic_little_stt,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,arabic_speech_corpus,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,l2_ksu,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,musan_noise,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v3,future_egyptian_pediatric_private_collection,MODEL_UNAVAILABLE,false,Gated repo (license:other) + missing ONNX weights; exact recipe unverified
+zipformer_arabic_v2,asmdd,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,abjad_kids,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,arayoungvoices,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,arabic_egy_cleaned,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,egyspeak,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,arabic_little_stt,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,arabic_speech_corpus,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,l2_ksu,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,musan_noise,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+zipformer_arabic_v2,future_egyptian_pediatric_private_collection,MODEL_UNAVAILABLE,false,Missing local weights; Quranic/Arabic overlap unverified
+mostafamaroof_wav2vec2_arabic_phoneme,asmdd,CLEAN_VERIFIED,true,Egyptian pediatric CC0 Mendeley corpus not cited in HF model card
+mostafamaroof_wav2vec2_arabic_phoneme,abjad_kids,CLEAN_VERIFIED,true,Not cited in HF model card
+mostafamaroof_wav2vec2_arabic_phoneme,arayoungvoices,RISK_UNVERIFIED,false,XLSR-53 pretrain + Arabic phoneme fine-tune
+mostafamaroof_wav2vec2_arabic_phoneme,arabic_egy_cleaned,RISK_UNVERIFIED,false,XLSR-53 pretrain + Arabic phoneme fine-tune
+mostafamaroof_wav2vec2_arabic_phoneme,egyspeak,RISK_UNVERIFIED,false,XLSR-53 pretrain + Arabic phoneme fine-tune
+mostafamaroof_wav2vec2_arabic_phoneme,arabic_little_stt,RISK_UNVERIFIED,false,XLSR-53 pretrain + Arabic phoneme fine-tune
+mostafamaroof_wav2vec2_arabic_phoneme,arabic_speech_corpus,DIRECT_OVERLAP,false,CRITICAL: Explicitly tagged dataset:tunis-ai/arabic_speech_corpus on HF
+mostafamaroof_wav2vec2_arabic_phoneme,l2_ksu,RISK_UNVERIFIED,false,XLSR-53 pretrain + Arabic phoneme fine-tune
+mostafamaroof_wav2vec2_arabic_phoneme,musan_noise,RISK_UNVERIFIED,false,XLSR-53 pretrain + Arabic phoneme fine-tune
+mostafamaroof_wav2vec2_arabic_phoneme,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+kgnlp_allophant,asmdd,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,abjad_kids,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,arayoungvoices,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,arabic_egy_cleaned,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,egyspeak,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,arabic_little_stt,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,arabic_speech_corpus,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,l2_ksu,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,musan_noise,RISK_UNVERIFIED,false,XLS-R multilingual phoneme/feature recognizer; verify exact Arabic CV split
+kgnlp_allophant,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+whisper_tiny_int8,asmdd,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,abjad_kids,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,arayoungvoices,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,arabic_egy_cleaned,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,egyspeak,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,arabic_little_stt,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,arabic_speech_corpus,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,l2_ksu,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,musan_noise,RISK_UNVERIFIED,false,OpenAI 680k-hr web audio undisclosed; child datasets unlikely but unprovable
+whisper_tiny_int8,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+whisper_large_v3_turbo,asmdd,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,abjad_kids,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,arayoungvoices,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,arabic_egy_cleaned,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,egyspeak,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,arabic_little_stt,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,arabic_speech_corpus,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,l2_ksu,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,musan_noise,RISK_UNVERIFIED,false,OpenAI undisclosed web/pseudo-labeled audio
+whisper_large_v3_turbo,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+egyptalk_asr_v2,asmdd,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,abjad_kids,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,arayoungvoices,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,arabic_egy_cleaned,RISK_UNVERIFIED,false,Both draw from Egyptian public media/ASR pools; check acoustic similarity
+egyptalk_asr_v2,egyspeak,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,arabic_little_stt,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,arabic_speech_corpus,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,l2_ksu,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,musan_noise,RISK_UNVERIFIED,false,Egyptian web/media FastConformer; verify overlap with arabic_egy_cleaned/EGYSpeak
+egyptalk_asr_v2,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+whisper_small_egyptian_arabic,asmdd,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,abjad_kids,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,arayoungvoices,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,arabic_egy_cleaned,DIRECT_OVERLAP,false,CRITICAL: MAdel121/whisper-small-egyptian-arabic explicitly trained on MAdel121/arabic-egy-cleaned
+whisper_small_egyptian_arabic,egyspeak,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,arabic_little_stt,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,arabic_speech_corpus,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,l2_ksu,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,musan_noise,RISK_UNVERIFIED,false,Whisper Egyptian fine-tunes
+whisper_small_egyptian_arabic,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings
+smart_arabic_speech_therapy_scorer,asmdd,DIRECT_OVERLAP,false,"CRITICAL: HF Space MON3EMPASHA/SmartArabicSpeechTherapy bundles dataset_info/ASMDD.csv (5,298 rows; 4,235/1,059 split)"
+smart_arabic_speech_therapy_scorer,abjad_kids,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,arayoungvoices,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,arabic_egy_cleaned,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,egyspeak,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,arabic_little_stt,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,arabic_speech_corpus,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,l2_ksu,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,musan_noise,RISK_UNVERIFIED,false,Requires ASR backbone (FastConformer/Whisper) + prompt phoneme aligner
+smart_arabic_speech_therapy_scorer,future_egyptian_pediatric_private_collection,CLEAN_VERIFIED,true,Unseen private pediatric recordings (target-dependent scorer only)

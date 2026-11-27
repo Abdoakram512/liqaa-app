@@ -1,0 +1,673 @@
+{
+  "schema_version": "0.1.0-phase0",
+  "generated_utc": "2026-11-27T05:31:20.113915+00:00",
+  "phase_status": "PHASE_0_EXECUTED_PRE_STAGE_AB_ACQUISITION",
+  "blind_labels_included": false,
+  "blind_test_status": {
+    "stage_a_target_samples": 2000,
+    "stage_a_collected_legacy_audit_clips": 123,
+    "stage_b_target_samples": 1500,
+    "stage_b_frozen": false,
+    "stage_b_reason": "Awaiting independent human Stage B corpus build in Phase 3; zero Stage B labels exposed in app bundle.",
+    "synthetic_allowed_in_stage_b": false,
+    "vault_location": "D:\\YasserML\\manifests\\blind_vault_external"
+  },
+  "storage_audit": {
+    "checked_utc": "2026-11-27T05:31:02.991795+00:00",
+    "drives": {
+      "C": {
+        "path": "C:\\",
+        "probe_mount": "C:\\",
+        "exists": true,
+        "total_gb": 222.1,
+        "used_gb": 220.06,
+        "free_gb": 2.04
+      },
+      "D": {
+        "path": "D:\\",
+        "probe_mount": "D:\\",
+        "exists": true,
+        "total_gb": 931.5,
+        "used_gb": 660.77,
+        "free_gb": 270.72
+      },
+      "E": {
+        "path": "E:\\",
+        "probe_mount": "E:\\",
+        "exists": true,
+        "total_gb": 252.12,
+        "used_gb": 126.01,
+        "free_gb": 126.11
+      }
+    },
+    "ml_root": "D:\\YasserML",
+    "ml_root_exists": true,
+    "warnings": [
+      "CRITICAL_C_DRIVE_LOW: C: has only 2.04 GB free (< 5.0 GB policy minimum). Block C: installs/caches."
+    ]
+  },
+  "models_summary": [
+    {
+      "model_id": "silero_vad_v4",
+      "display_name": "Silero VAD v4/v5",
+      "category": "Voice Activity Detection",
+      "license": "MIT",
+      "commercial_use_allowed": true,
+      "availability_status": "LOCAL_BUNDLED_VERIFIED",
+      "artifact_size_mb": 2.102,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Low direct memorization risk (VAD gate only), though threshold tuning on Stage A must remain locked before Stage B."
+    },
+    {
+      "model_id": "gtcrn_denoiser",
+      "display_name": "GTCRN Speech Enhancement (ONNX)",
+      "category": "Noise Suppression",
+      "license": "MIT (GTCRN) / Apache-2.0 (sherpa-onnx)",
+      "commercial_use_allowed": true,
+      "availability_status": "LOCAL_BUNDLED_VERIFIED",
+      "artifact_size_mb": 0.511,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Signal distortion / consonant attenuation on clean speech observed in prior benchmark; no label memorization."
+    },
+    {
+      "model_id": "rnnoise_legacy_bundled",
+      "display_name": "RNNoise (Legacy Unused Artifact)",
+      "category": "Noise Suppression (Deprecated Artifact)",
+      "license": "BSD-3-Clause",
+      "commercial_use_allowed": true,
+      "availability_status": "LOCAL_DEPRECATED_UNUSED",
+      "artifact_size_mb": 0.973,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Listed as ready:true in legacy AI_MODELS_MANIFEST.json while runtime loads gtcrn_simple.onnx."
+    },
+    {
+      "model_id": "deepfilternet3",
+      "display_name": "DeepFilterNet3",
+      "category": "Noise Suppression (Candidate)",
+      "license": "MIT OR Apache-2.0 (dual-licensed)",
+      "commercial_use_allowed": true,
+      "availability_status": "EXTERNAL_CANDIDATE_NOT_DOWNLOADED",
+      "artifact_size_mb": null,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Cannot leak test Arabic labels; must evaluate consonant preservation vs GTCRN cleanly on paired noisy/clean clips."
+    },
+    {
+      "model_id": "wav2vec2_lv60_espeak_q4f16",
+      "display_name": "Wav2Vec2-LV60-eSpeak-CV-FT (ONNX Q4F16)",
+      "category": "Blind Phoneme Recognition (Current Baseline)",
+      "license": "Apache-2.0",
+      "commercial_use_allowed": true,
+      "availability_status": "LOCAL_BUNDLED_VERIFIED",
+      "artifact_size_mb": 187.794,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Any Common Voice Arabic clip matching CV-FT training split would be CONTAMINATED; Stage A/B avoid Common Voice Arabic overlap."
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "display_name": "Zipformer-p Arabic V3 (Quran-Lab)",
+      "category": "Blind Phoneme Recognition (Arabic Candidate)",
+      "license": "other (HF card specifies license:other, gated manual approval)",
+      "commercial_use_allowed": false,
+      "availability_status": "PARTIAL_TOKENS_ONLY_WEIGHTS_MISSING_GATED",
+      "artifact_size_mb": 0.006,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Domain shift hazard (Quranic adult recitation vs Egyptian pediatric everyday words); gated access + non-standard license."
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "display_name": "Zipformer-p Arabic V2 (Quran-Lab)",
+      "category": "Blind Phoneme Recognition (Arabic Candidate)",
+      "license": "UNKNOWN (likely matches Quran-Lab license:other)",
+      "commercial_use_allowed": false,
+      "availability_status": "PARTIAL_TOKENS_ONLY_WEIGHTS_MISSING",
+      "artifact_size_mb": 0.006,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "Duplicate token artifacts of v3; listed in legacy AI_MODELS_MANIFEST.json without weights."
+    },
+    {
+      "model_id": "mostafamaroof_wav2vec2_arabic_phoneme",
+      "display_name": "MostafaMaroof/wav2vec2-arabic-phoneme-asr",
+      "category": "Blind Phoneme Recognition (Arabic Candidate)",
+      "license": "Apache-2.0",
+      "commercial_use_allowed": true,
+      "availability_status": "REMOTE_HF_VERIFIED_NOT_DOWNLOADED",
+      "artifact_size_mb": null,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "CRITICAL_CONTAMINATION_DOCUMENTED: Trained on tunis-ai/arabic_speech_corpus and IqraEval! MUST NEVER be scored as clean zero-shot on Arabic Speech Corpus."
+    },
+    {
+      "model_id": "kgnlp_allophant",
+      "display_name": "Allophant (kgnlp/allophant Multilingual Articulatory Phoneme Recognizer)",
+      "category": "Blind Phoneme + Articulatory Feature Recognition (Candidate)",
+      "license": "Apache-2.0",
+      "commercial_use_allowed": true,
+      "availability_status": "REMOTE_HF_VERIFIED_NOT_DOWNLOADED",
+      "artifact_size_mb": null,
+      "supports_blind_phoneme_only": true,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "RISK_UNVERIFIED if Common Voice Arabic overlaps; zero overlap expected with ASMDD / Abjad-Kids / private Egyptian child data."
+    },
+    {
+      "model_id": "whisper_tiny_int8",
+      "display_name": "OpenAI Whisper Tiny INT8 (Sherpa-ONNX)",
+      "category": "Automatic Speech Recognition (Local Baseline)",
+      "license": "Apache-2.0 (HF model card) / MIT (OpenAI Whisper code)",
+      "commercial_use_allowed": true,
+      "availability_status": "LOCAL_BUNDLED_VERIFIED",
+      "artifact_size_mb": 98.81,
+      "supports_blind_phoneme_only": false,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "RISK_UNVERIFIED against public web datasets; weak Arabic child performance & silence hallucinations documented in MASTER_AI_BENCHMARK_REPORT.md. Also legacy AI_MODELS_MANIFEST.json has stale encoder/decoder byte sizes & hashes!"
+    },
+    {
+      "model_id": "whisper_large_v3_turbo",
+      "display_name": "OpenAI Whisper Large-v3-Turbo",
+      "category": "Automatic Speech Recognition (Cloud / Teacher Benchmark)",
+      "license": "MIT",
+      "commercial_use_allowed": true,
+      "availability_status": "REMOTE_HF_VERIFIED_NOT_DOWNLOADED",
+      "artifact_size_mb": null,
+      "supports_blind_phoneme_only": false,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "RISK_UNVERIFIED on web-scraped Arabic audio; risks hiding mispronunciations via language-model correction."
+    },
+    {
+      "model_id": "egyptalk_asr_v2",
+      "display_name": "NAMAA-Space/EgypTalk-ASR-v2",
+      "category": "Egyptian Arabic ASR (Candidate)",
+      "license": "CC-BY-4.0",
+      "commercial_use_allowed": true,
+      "availability_status": "REMOTE_HF_VERIFIED_NOT_DOWNLOADED",
+      "artifact_size_mb": null,
+      "supports_blind_phoneme_only": false,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "RISK_UNVERIFIED with public Egyptian YouTube/podcast datasets; cannot guarantee zero overlap with MASC-Arabic or arabic-egy-cleaned."
+    },
+    {
+      "model_id": "whisper_small_egyptian_arabic",
+      "display_name": "Whisper-Small Egyptian Arabic (MAdel121 & ismaeel-farag)",
+      "category": "Egyptian Arabic ASR (Candidate)",
+      "license": "MIT",
+      "commercial_use_allowed": true,
+      "availability_status": "REMOTE_HF_VERIFIED_NOT_DOWNLOADED",
+      "artifact_size_mb": null,
+      "supports_blind_phoneme_only": false,
+      "requires_target_word_hint": false,
+      "contamination_risk_notes": "CRITICAL_CONTAMINATION_DOCUMENTED: MAdel121/whisper-small-egyptian-arabic explicitly trains on MAdel121/arabic-egy-cleaned! Evaluating it on arabic-egy-cleaned violates holdout integrity."
+    },
+    {
+      "model_id": "smart_arabic_speech_therapy_scorer",
+      "display_name": "Pediatric Phoneme Scorer (MON3EMPASHA/SmartArabicSpeechTherapy)",
+      "category": "Pediatric Phoneme Quality Classifier (MLP on ASR+MFCC Features)",
+      "license": "MIT (Space cardData license:mit; runtime ASR dependencies e.g. NeMo/Whisper vary by choice)",
+      "commercial_use_allowed": true,
+      "availability_status": "REMOTE_HF_SPACE_VERIFIED_NOT_DOWNLOADED",
+      "artifact_size_mb": 0.074,
+      "supports_blind_phoneme_only": false,
+      "requires_target_word_hint": true,
+      "contamination_risk_notes": "CRITICAL_CONTAMINATION_DOCUMENTED: Space includes dataset_info/ASMDD.csv and trained phoneme_scorer_latest.pth on 4,235/1,059 ASMDD split! Must NOT evaluate cleanly on ASMDD."
+    }
+  ],
+  "legacy_manifest_reconciliation": {
+    "legacy_manifest_version": "2.0.0-phase0",
+    "runtime_keys_in_ai_model_manager": [
+      "gtcrn_denoiser",
+      "silero_vad",
+      "wav2vec2_espeak",
+      "whisper_tiny"
+    ],
+    "issue_count": 0,
+    "issues": []
+  },
+  "datasets_summary": [
+    {
+      "dataset_id": "asmdd",
+      "display_name": "ASMDD (Arabic Speech Mispronunciation Detection Dataset)",
+      "license": "CC0 1.0",
+      "commercial_use_allowed": true,
+      "access_status": "PUBLIC_VERIFIED_LOCAL_SUBSET",
+      "age_group": "Pediatric (reported ~2-8 years)",
+      "language_dialect": "Egyptian Arabic",
+      "local_phase0_sample_count": 41,
+      "known_contamination_risks": [
+        "Folder-level speaker IDs MUST never be split across Stage A, Stage B, and train.",
+        "41 clips already inspected in Phase 0 historical 100-sample benchmark -> reserve those speaker folders ONLY for Stage A or exclude from Stage B blind!"
+      ]
+    },
+    {
+      "dataset_id": "abjad_kids",
+      "display_name": "Abjad-Kids (Aziz-snoubra/Abjad-Kids)",
+      "license": "MIT",
+      "commercial_use_allowed": true,
+      "access_status": "PUBLIC_HF_VERIFIED_LOCAL_SUBSET",
+      "age_group": "Pediatric (reported ~3-12 years)",
+      "language_dialect": "Multi-Dialect / Modern Standard Arabic",
+      "local_phase0_sample_count": 39,
+      "known_contamination_risks": [
+        "Verify speaker IDs strictly; keep 39 previously audited clips isolated from Stage B blind."
+      ]
+    },
+    {
+      "dataset_id": "arayoungvoices",
+      "display_name": "AraYoungVoices",
+      "license": "UNKNOWN (literature-reported CC BY-NC-SA 4.0 / academic release — requires direct license inspection prior to use)",
+      "commercial_use_allowed": false,
+      "access_status": "LITERATURE_VERIFIED_PUBLIC_REPO_UNVERIFIED",
+      "age_group": "Child & Adolescent (reported 7-18 years)",
+      "language_dialect": "Modern Standard Arabic + L1/L2 young speakers",
+      "local_phase0_sample_count": 0,
+      "known_contamination_risks": [
+        "NC-SA / unverified license blocks commercial mobile deployment unless cleared."
+      ]
+    },
+    {
+      "dataset_id": "arabic_egy_cleaned",
+      "display_name": "Egyptian Arabic ASR Clean (MAdel121/arabic-egy-cleaned)",
+      "license": "UNKNOWN (HF card license field null — DO NOT assume commercial clearance without upstream verification)",
+      "commercial_use_allowed": false,
+      "access_status": "PUBLIC_HF_VERIFIED_NOT_DOWNLOADED",
+      "age_group": "Adult (predominantly adult conversational/media)",
+      "language_dialect": "Egyptian Arabic",
+      "local_phase0_sample_count": 0,
+      "known_contamination_risks": [
+        "CRITICAL_MODEL_OVERLAP: MAdel121/whisper-small-egyptian-arabic explicitly declares dataset:MAdel121/arabic-egy-cleaned."
+      ]
+    },
+    {
+      "dataset_id": "egyspeak",
+      "display_name": "EGYSpeak (MohamedGomaa30/EGYSpeak)",
+      "license": "CC-BY-4.0",
+      "commercial_use_allowed": true,
+      "access_status": "PUBLIC_HF_VERIFIED_NOT_DOWNLOADED",
+      "age_group": "Adult",
+      "language_dialect": "Egyptian Arabic",
+      "local_phase0_sample_count": 0,
+      "known_contamination_risks": [
+        "Single-speaker heavy dominance would overfit speaker traits if used in Stage B speaker-diverse evaluation."
+      ]
+    },
+    {
+      "dataset_id": "arabic_little_stt",
+      "display_name": "Arabic Little STT (Classroom Levantine Child Speech)",
+      "license": "UNKNOWN_UNVERIFIED_FROM_PUBLIC_REPO (paper cites research release)",
+      "commercial_use_allowed": false,
+      "access_status": "PAPER_VERIFIED_HF_MIRROR_UNAVAILABLE_404",
+      "age_group": "Pediatric (6-13 years)",
+      "language_dialect": "Levantine Arabic",
+      "local_phase0_sample_count": 0,
+      "known_contamination_risks": [
+        "Levantine dialect differs from Egyptian Arabic target domain; public HF URL unreachable (404)."
+      ]
+    },
+    {
+      "dataset_id": "arabic_speech_corpus",
+      "display_name": "Arabic Speech Corpus (tunis-ai/arabic_speech_corpus)",
+      "license": "CC-BY-4.0",
+      "commercial_use_allowed": true,
+      "access_status": "PUBLIC_HF_VERIFIED_LOCAL_SUBSET",
+      "age_group": "Adult (single speaker + expert phonetic alignment)",
+      "language_dialect": "Modern Standard Arabic (Levantine/MSA speaker)",
+      "local_phase0_sample_count": 3,
+      "known_contamination_risks": [
+        "CRITICAL_MODEL_OVERLAP: MostafaMaroof/wav2vec2-arabic-phoneme-asr declares dataset:tunis-ai/arabic_speech_corpus.",
+        "Single-speaker adult MSA studio voice — do NOT treat as proxy for Egyptian child performance."
+      ]
+    },
+    {
+      "dataset_id": "l2_ksu",
+      "display_name": "L2-KSU Native and Non-Native Arabic Speech",
+      "license": "LDC User Agreement (LDC2024S11 — Restricted / Paid Membership or License)",
+      "commercial_use_allowed": false,
+      "access_status": "RESTRICTED_LDC_MANUAL_OBTAIN_REQUIRED",
+      "age_group": "Adult",
+      "language_dialect": "Modern Standard Arabic (native + L2 accents)",
+      "local_phase0_sample_count": 0,
+      "known_contamination_risks": [
+        "Cannot be redistributed or downloaded autonomously without valid LDC account."
+      ]
+    },
+    {
+      "dataset_id": "musan_noise",
+      "display_name": "MUSAN Noise & Background Corpus",
+      "license": "CC-BY-4.0",
+      "commercial_use_allowed": true,
+      "access_status": "PUBLIC_VERIFIED_LOCAL_SUBSET",
+      "age_group": "N/A (non-speech)",
+      "language_dialect": "Non-speech environmental noise (music/noise/babble subsets exist in full MUSAN)",
+      "local_phase0_sample_count": 5,
+      "known_contamination_risks": [
+        "NEVER mix the same MUSAN noise file across train augmentation and Stage B blind noise evaluation."
+      ]
+    },
+    {
+      "dataset_id": "future_egyptian_pediatric_private_collection",
+      "display_name": "Future Private Egyptian Pediatric Speech Collection (Yasser Clinical Cohort)",
+      "license": "Private Consented Clinical Research & Product Data (Parental Written Consent Required)",
+      "commercial_use_allowed": true,
+      "access_status": "PLANNED_NOT_COLLECTED_PHASE0",
+      "age_group": "Pediatric (3-10 years, stratified by age & speech-disorder profile)",
+      "language_dialect": "Egyptian Arabic (Cairene & regional target vocabulary)",
+      "local_phase0_sample_count": 0,
+      "known_contamination_risks": [
+        "Must bind every recording to anonymized child_speaker_hash + session_id + recording_device BEFORE entering any manifest."
+      ]
+    }
+  ],
+  "leakage_audit_summary": {
+    "manifest_records_scanned": 123,
+    "audio_files_hashed": 123,
+    "has_critical_leakage": true,
+    "counts": {
+      "exact_file_duplicates": 0,
+      "canonical_pcm_duplicates": 0,
+      "acoustic_near_duplicates": 57,
+      "speaker_overlaps": 0,
+      "missing_speaker_records": 1,
+      "session_overlaps": 0,
+      "lineage_overlaps": 3,
+      "cross_dataset_overlaps": 17,
+      "transcript_overlaps": 0,
+      "quarantined_sample_ids": 24
+    },
+    "historical_split_warning": "The historical 100-sample benchmark clips + 23 controlled entries belong to Stage A calibration/historical audit ONLY; they MUST NEVER enter Stage B Blind Holdout."
+  },
+  "contamination_highlights": [
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "asmdd",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "abjad_kids",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "arayoungvoices",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "arabic_egy_cleaned",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "egyspeak",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "arabic_little_stt",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "arabic_speech_corpus",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "l2_ksu",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "musan_noise",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v3",
+      "dataset_id": "future_egyptian_pediatric_private_collection",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Gated repo (license:other) + missing ONNX weights; exact recipe unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "asmdd",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "abjad_kids",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "arayoungvoices",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "arabic_egy_cleaned",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "egyspeak",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "arabic_little_stt",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "arabic_speech_corpus",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "l2_ksu",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "musan_noise",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "zipformer_arabic_v2",
+      "dataset_id": "future_egyptian_pediatric_private_collection",
+      "contamination_status": "MODEL_UNAVAILABLE",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "Missing local weights; Quranic/Arabic overlap unverified"
+    },
+    {
+      "model_id": "mostafamaroof_wav2vec2_arabic_phoneme",
+      "dataset_id": "arabic_speech_corpus",
+      "contamination_status": "DIRECT_OVERLAP",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "CRITICAL: Explicitly tagged dataset:tunis-ai/arabic_speech_corpus on HF"
+    },
+    {
+      "model_id": "whisper_small_egyptian_arabic",
+      "dataset_id": "arabic_egy_cleaned",
+      "contamination_status": "DIRECT_OVERLAP",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "CRITICAL: MAdel121/whisper-small-egyptian-arabic explicitly trained on MAdel121/arabic-egy-cleaned"
+    },
+    {
+      "model_id": "smart_arabic_speech_therapy_scorer",
+      "dataset_id": "asmdd",
+      "contamination_status": "DIRECT_OVERLAP",
+      "eligible_for_clean_eval": "false",
+      "evidence_and_rule": "CRITICAL: HF Space MON3EMPASHA/SmartArabicSpeechTherapy bundles dataset_info/ASMDD.csv (5,298 rows; 4,235/1,059 split)"
+    }
+  ],
+  "anti_cheating_summary": {
+    "total_tests": 15,
+    "passed_count": 15,
+    "failed_count": 0,
+    "all_passed": true,
+    "tests": [
+      {
+        "test_id": "T01",
+        "title": "Silence input rejected by real VAD and blind Wav2Vec2",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": false,
+        "detail": "Silero max_prob=0.0181, Wav2Vec2 tokens=[]"
+      },
+      {
+        "test_id": "T02",
+        "title": "White noise rejected by real VAD and blind Wav2Vec2",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": false,
+        "detail": "Silero max_prob=0.0376, Wav2Vec2 tokens=[]"
+      },
+      {
+        "test_id": "T03",
+        "title": "Generated stationary noise floor fails VAD speech gate",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "Silero max_prob=0.0385"
+      },
+      {
+        "test_id": "T04",
+        "title": "Unrelated spoken word (word_madrasa.wav) rejected against target 'كورة' via real ONNX",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "Real Wav2Vec2 tokens=['m', 'ɛ', 'd', 'r', 'a', 's'], kora_score=0.0%"
+      },
+      {
+        "test_id": "T05",
+        "title": "Minimal-pair error_tora.wav yields worse distance than correct_kora.wav on real ONNX",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "correct_kora=['k', 'oː', 'r', 'ə'] (dist=2) vs error_tora=['t', 'uː', 'r', 'a'] (dist=1) [synthetic TTS probe only]"
+      },
+      {
+        "test_id": "T06",
+        "title": "Truncated speech yields severely incomplete sequence vs full utterance",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": false,
+        "detail": "Full tokens=47 vs 220ms cut tokens=0 ([])"
+      },
+      {
+        "test_id": "T07",
+        "title": "Quiet-floor and clipped signal anomaly detection",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "quiet_rms=0.00050, clipped_samples=11760"
+      },
+      {
+        "test_id": "T08",
+        "title": "Corrupted/truncated WAV raises structured ValueError",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "Blocked with ValueError (zero silent pass)"
+      },
+      {
+        "test_id": "T09",
+        "title": "44.1kHz stereo downmixed & resampled to 16kHz mono",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "orig_sr=44100, out_len=16000"
+      },
+      {
+        "test_id": "T10",
+        "title": "Target-word hint blocked in blind inference & Dart PhonemeRecognitionEngine",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": false,
+        "detail": "Signature firewall blocked leaky_model=True; Dart engine targetWord-free=True"
+      },
+      {
+        "test_id": "T11",
+        "title": "Cross-split exact duplicate, 8kHz resampled duplicate & speaker leakage caught",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "exact=1, acoustic=2, spk=1"
+      },
+      {
+        "test_id": "T12",
+        "title": "Random label permutation collapses accuracy to ~50% chance",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "orig_acc=1.00 -> shuffled_acc=0.49"
+      },
+      {
+        "test_id": "T13",
+        "title": "Post-freeze threshold/artifact lock blocks drift",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": true,
+        "detail": "Changing pass_score 70->60 raised BlindAuthorizationError"
+      },
+      {
+        "test_id": "T14",
+        "title": "Bitwise, VAD, and Wav2Vec2-eSpeak deterministic repeatability verified",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": false,
+        "detail": "sha_equal=True, vad_equal=True, tokens_equal=True (n=47)"
+      },
+      {
+        "test_id": "T15",
+        "title": "Active ONNX SHA-256 manifest integrity & missing-model handling verified",
+        "status": "PASS",
+        "passed": true,
+        "uses_synthetic_fixture": false,
+        "detail": "active_manifest_mismatches=0, missing_zipformer_weights_honest=True, disk_artifacts_locked=8"
+      }
+    ]
+  }
+}
